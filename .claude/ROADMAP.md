@@ -12,11 +12,11 @@ plugin-extensible .NET 10 + WPF desktop product.
 | Sprint | Title | Outcome |
 |---|---|---|
 | 00 | Architecture Validation & Spike | Architecture approved; contracts + `.apistudio` structure defined; ADRs; dependency graph validated |
-| **01** | **Foundation (current)** | **Buildable solution: Clean Architecture, DI, logging, plugin host, empty shell, storage skeleton, tests. No business features.** |
+| 01 | Foundation | Buildable solution: Clean Architecture, DI, logging, plugin host, empty shell, storage skeleton, tests. No business features. |
 | 02 | Workspace Storage | SQLite/EF Core workspace lifecycle, metadata, recent workspaces, package metadata |
 | 03 | Plugin Infrastructure | Hardened loader/registry, version compatibility, lifecycle, dynamic loading |
-| 04 | Shell UI | AvalonDock shell, toolbar, status bar, theme, layout persistence |
-| 05 | Service Explorer | Service tree, endpoint CRUD, search, context menu |
+| 04 | Shell UI ✅ | AvalonDock shell, toolbar, status bar, theme, layout persistence (global per-user layout + manual light/dark) |
+| **05** | **Service Explorer (next)** | **Service tree, endpoint CRUD, search, context menu** |
 | 06 | API Runner | Request builder, response viewer, headers, cookies, timing, history |
 | 07 | Import System | cURL / OpenAPI / Swagger / Scalar / Postman import + auto-detection + wizard |
 | 08 | Workflow Engine | Execution engine: nodes, edges, context, loop, parallel, delay, condition |

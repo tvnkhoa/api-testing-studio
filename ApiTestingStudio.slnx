@@ -45,5 +45,6 @@
     <Project Path="tests/ApiTestingStudio.Domain.Tests/ApiTestingStudio.Domain.Tests.csproj" />
     <Project Path="tests/ApiTestingStudio.Infrastructure.Tests/ApiTestingStudio.Infrastructure.Tests.csproj" />
     <Project Path="tests/ApiTestingStudio.PluginHost.Tests/ApiTestingStudio.PluginHost.Tests.csproj" />
+    <Project Path="tests/ApiTestingStudio.UI.Tests/ApiTestingStudio.UI.Tests.csproj" />
   </Folder>
 </Solution>

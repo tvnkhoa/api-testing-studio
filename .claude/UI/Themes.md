@@ -23,11 +23,21 @@ scale. Everything is offline; no web fonts or remote assets.
 
 ## Structure
 
-- Theme resources are merged `ResourceDictionary` files (base tokens + light/dark overrides +
-  control styles), merged in `App.xaml` at startup. Colours are `Color`/`Brush` resources keyed by
-  semantic name (not raw hex at call sites), so a re-theme touches only the dictionaries.
+- Theme resources are merged `ResourceDictionary` files, merged in `Host/App.xaml` from the `UI`
+  assembly: `Themes/MaterialTheme.xaml` (Material Design `BundledTheme` + `MaterialDesign2.Defaults`)
+  and `Themes/Tokens.xaml` (spacing scale, typography ramp, and semantic `Color`/`Brush` resources
+  keyed by name — `Semantic.Success/Error/Warning/Info` — never raw hex at call sites).
 - All controls consume brushes/styles by key; no view hard-codes colours or sizes. This keeps
   light/dark and accent changes a pure resource swap with no per-view code.
+
+## Current state (Sprint 04 — implemented)
+
+Light/dark is a **manual toggle** (View → Dark Theme, or the toolbar Theme button) driven by
+`IThemeManager`/`ThemeManager` (UI), which swaps the Material Design base theme via `PaletteHelper`
+and persists the choice as `ThemeMode` in `AppSettings` through `IAppSettingsService` (Application) →
+`AppSettingsService` (Infrastructure, `app-settings.json` under app-data). The persisted theme is
+applied at startup before the window is shown. Follow-OS preference and user-defined accents remain
+future items. See `DECISIONS/ADR-0008-Shell-UI-Layout-Theme-Persistence.md`.
 
 ## UI
 

@@ -7,5 +7,14 @@
         main window explicitly so the window and its view model are dependency-injected.
     -->
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Material Design base theme + our design tokens and panel templates, all from the
+                     UI assembly so the shell and every panel read from one palette. -->
+                <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Themes/MaterialTheme.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Themes/Tokens.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Resources/PanelTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

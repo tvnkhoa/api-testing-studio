@@ -21,6 +21,8 @@ namespace ApiTestingStudio.Infrastructure.DependencyInjection;
 public static class InfrastructureServiceCollectionExtensions
 {
     private const string RecentWorkspacesFileName = "recent-workspaces.json";
+    private const string AppSettingsFileName = "app-settings.json";
+    private const string LayoutFileName = "dock-layout.xml";
 
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
@@ -43,6 +45,20 @@ public static class InfrastructureServiceCollectionExtensions
             new RecentWorkspacesService(
                 recentStorePath,
                 sp.GetRequiredService<ILogger<RecentWorkspacesService>>()));
+
+        // Shell preferences (theme) and docking layout live alongside the MRU store under app-data,
+        // outside any workspace database, so they survive restarts and workspace switches.
+        var appSettingsPath = Path.Combine(appDataDirectory, AppSettingsFileName);
+        services.AddSingleton<IAppSettingsService>(sp =>
+            new AppSettingsService(
+                appSettingsPath,
+                sp.GetRequiredService<ILogger<AppSettingsService>>()));
+
+        var layoutPath = Path.Combine(appDataDirectory, LayoutFileName);
+        services.AddSingleton<ILayoutPersistenceService>(sp =>
+            new LayoutPersistenceService(
+                layoutPath,
+                sp.GetRequiredService<ILogger<LayoutPersistenceService>>()));
 
         return services;
     }
