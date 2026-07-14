@@ -1,17 +1,23 @@
-# Normalize line endings: Git stores text as LF, checks out native on each OS.
-* text=auto
+# Line-ending policy for this Windows-only .NET / WPF solution.
+#
+# Text is stored as LF in the repository and checked out as CRLF on every
+# machine, matching .editorconfig (end_of_line = crlf). Pinning eol=crlf makes
+# working trees deterministic regardless of each developer's core.autocrlf.
+* text=auto eol=crlf
 
-# Windows-native / VS-managed files stay CRLF
-*.sln    text eol=crlf
-*.slnx   text eol=crlf
-*.csproj text eol=crlf
-*.props  text eol=crlf
-*.targets text eol=crlf
-*.xaml   text eol=crlf
+# Files that must stay LF even on Windows (shells / tooling).
+*.sh   text eol=lf
+*.bash text eol=lf
 
-# Binary assets
-*.png binary
-*.jpg binary
-*.ico binary
-*.db  binary
-*.sqlite binary
+# Binary assets — never converted or diffed as text.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.db        binary
+*.sqlite    binary
+*.apistudio binary
+*.zip       binary
+*.dll       binary
+*.exe       binary
