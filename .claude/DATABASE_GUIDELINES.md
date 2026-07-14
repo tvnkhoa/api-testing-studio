@@ -42,9 +42,18 @@ relational model**: each child references its owner by a `*Id` foreign-key colum
 this keeps EF mapping and migrations simple and predictable.
 
 Mapped entities & tables (`WorkspaceDbContext`):
-`Workspace`, `Service`, `Endpoint`, `ProfileDefinition`, `EnvironmentDefinition`, `Variable`,
-`WorkflowDefinition`, `TestCaseDefinition`, `Run`, `RunStep`, `Attachment`, `WorkspaceSetting`,
-`LogEntry`, `PackageMetadata`.
+`Workspace`, `Service`, `EndpointFolder`, `Endpoint`, `ProfileDefinition`, `EnvironmentDefinition`,
+`Variable`, `WorkflowDefinition`, `TestCaseDefinition`, `Run`, `RunStep`, `Attachment`,
+`WorkspaceSetting`, `LogEntry`, `PackageMetadata`.
+
+The Service Explorer catalog (Sprint 05) is `Service` → `EndpointFolder` (nestable via
+`ParentFolderId`) → `Endpoint`. Endpoints reference their owner by `ServiceId` plus an optional
+`FolderId` (null = directly under the service). Services, folders, and endpoints each carry a
+`SortOrder` for sibling ordering. Indexes exist on `Service.WorkspaceId`, `Endpoint.ServiceId`,
+`Endpoint.FolderId`, `EndpointFolder.ServiceId`, `EndpointFolder.ParentFolderId`. The catalog is
+read/written via `IServiceRepository`, `IEndpointFolderRepository`, `IEndpointRepository`; the
+per-workspace `Settings` table is accessed via `IWorkspaceSettingRepository` (used for the
+Explorer's tree expansion/selection state).
 
 `PackageMetadata` (`Packages` table) records which plugins a workspace depends on
 (`PluginId`, `PluginName`, `Version`, `InstalledUtc`), with a **unique index on `PluginId`** so
@@ -66,7 +75,14 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 ## Migrations
 
 - Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
-  `AddPackageMetadata`.
+  `AddPackageMetadata`, `AddServiceCatalogHierarchy`.
+  - `AddServiceCatalogHierarchy` (Sprint 05) adds the `EndpointFolders` table and the
+    `Endpoints.FolderId`, `Endpoints.SortOrder`, `Services.SortOrder` columns + indexes. It is
+    additive/back-compatible (the `Services`/`Endpoints` base tables already existed from
+    `InitialCreate`, so this migration extends rather than creates them — the Sprint doc's proposed
+    `AddServiceCatalog` name predates that fact). Paired with a `Workspace.CurrentSchemaVersion` bump
+    to **2**; existing v1 workspaces self-provision the new schema via `MigrateAsync` on open and stay
+    compatible.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
 - At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**

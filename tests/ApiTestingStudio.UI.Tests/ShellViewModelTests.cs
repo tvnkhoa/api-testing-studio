@@ -1,5 +1,7 @@
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.UI.ViewModels;
+using ApiTestingStudio.UI.ViewModels.Explorer;
+using CommunityToolkit.Mvvm.Messaging;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -19,8 +21,17 @@ public sealed class ShellViewModelTests
 
         var statusVm = new StatusBarViewModel(session, status);
         var recentVm = new RecentWorkspacesMenuViewModel(recent);
+        var explorer = new ServiceExplorerViewModel(
+            new FakeServiceExplorerService(),
+            new FakeEndpointCrudService(),
+            new FakeExplorerStateService(),
+            new WeakReferenceMessenger(),
+            new FakeDialogService(),
+            session,
+            status,
+            NullLogger<ServiceExplorerViewModel>.Instance);
         var vm = new ShellViewModel(
-            workspaceService, session, theme, dock, status, dialog, statusVm, recentVm,
+            workspaceService, session, theme, dock, status, dialog, statusVm, recentVm, explorer,
             NullLogger<ShellViewModel>.Instance);
 
         return new ShellHarness(vm, workspaceService, session, recent, theme, dock, status, dialog);

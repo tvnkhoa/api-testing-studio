@@ -1,0 +1,106 @@
+<UserControl x:Class="ApiTestingStudio.UI.Views.Panels.ServiceExplorerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:ApiTestingStudio.UI.Converters"
+             xmlns:explorer="clr-namespace:ApiTestingStudio.UI.ViewModels.Explorer">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <converters:HttpVerbToBrushConverter x:Key="VerbToBrush" />
+
+        <!-- Shared right-click menu; DataContext resolves to the panel view model via the tree. -->
+        <ContextMenu x:Key="NodeContextMenu"
+                     DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+            <MenuItem Header="New Service" Command="{Binding AddServiceCommand}" />
+            <MenuItem Header="New Folder" Command="{Binding AddFolderCommand}" />
+            <MenuItem Header="New Endpoint" Command="{Binding AddEndpointCommand}" />
+            <Separator />
+            <MenuItem Header="Rename / Edit…" Command="{Binding EditCommand}" />
+            <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" />
+            <MenuItem Header="Delete" Command="{Binding DeleteCommand}" />
+            <Separator />
+            <MenuItem Header="Move Up" Command="{Binding MoveUpCommand}" />
+            <MenuItem Header="Move Down" Command="{Binding MoveDownCommand}" />
+        </ContextMenu>
+    </UserControl.Resources>
+
+    <DockPanel LastChildFill="True">
+        <!-- Toolbar -->
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Content="+ Service" Command="{Binding AddServiceCommand}" ToolTip="New service" />
+                <Button Content="+ Folder" Command="{Binding AddFolderCommand}" ToolTip="New folder in the selection" />
+                <Button Content="+ Endpoint" Command="{Binding AddEndpointCommand}" ToolTip="New endpoint in the selection" />
+                <Separator />
+                <Button Content="Edit" Command="{Binding EditCommand}" ToolTip="Rename / edit the selection" />
+                <Button Content="Duplicate" Command="{Binding DuplicateCommand}" ToolTip="Duplicate the selected endpoint" />
+                <Button Content="Delete" Command="{Binding DeleteCommand}" ToolTip="Delete the selection" />
+                <Separator />
+                <Button Content="↑" Command="{Binding MoveUpCommand}" ToolTip="Move up" />
+                <Button Content="↓" Command="{Binding MoveDownCommand}" ToolTip="Move down" />
+                <Separator />
+                <Button Content="Refresh" Command="{Binding RefreshCommand}" ToolTip="Reload the tree" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- Search -->
+        <TextBox DockPanel.Dock="Top"
+                 Margin="8"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 ToolTip="Filter services, folders and endpoints" />
+
+        <!-- Tree -->
+        <TreeView ItemsSource="{Binding Roots}"
+                  BorderThickness="0"
+                  ContextMenu="{StaticResource NodeContextMenu}"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  ScrollViewer.CanContentScroll="True">
+
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                    <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVisibility}}" />
+                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="OnItemPreviewRightButtonDown" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+
+            <TreeView.Resources>
+                <!-- Service -->
+                <HierarchicalDataTemplate DataType="{x:Type explorer:ServiceNodeViewModel}"
+                                          ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🗂" Margin="0,0,6,0" />
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <!-- Folder -->
+                <HierarchicalDataTemplate DataType="{x:Type explorer:FolderNodeViewModel}"
+                                          ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📁" Margin="0,0,6,0" />
+                        <TextBlock Text="{Binding Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <!-- Endpoint -->
+                <DataTemplate DataType="{x:Type explorer:EndpointNodeViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Background="{Binding Method, Converter={StaticResource VerbToBrush}}"
+                                CornerRadius="3"
+                                Padding="4,1"
+                                Margin="0,0,6,0"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="{Binding MethodLabel}"
+                                       Foreground="White"
+                                       FontSize="10"
+                                       FontWeight="Bold" />
+                        </Border>
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+    </DockPanel>
+</UserControl>

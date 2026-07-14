@@ -1,5 +1,7 @@
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels;
+using ApiTestingStudio.UI.ViewModels.Explorer;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ApiTestingStudio.UI.DependencyInjection;
@@ -15,15 +17,21 @@ public static class UiServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        // Cross-panel messaging (Sprint 05): the Service Explorer publishes endpoint selection; the
+        // API Runner (Sprint 06) subscribes. First wiring of the CommunityToolkit messenger seam.
+        services.AddSingleton<IMessenger>(WeakReferenceMessenger.Default);
+
         // WPF-facing services.
         services.AddSingleton<IThemeManager, ThemeManager>();
         services.AddSingleton<IDockManager, DockManagerService>();
         services.AddSingleton<IStatusBarService, StatusBarService>();
         services.AddSingleton<IFileDialogService, FileDialogService>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         // View models. The shell composes its menu/toolbar/panel view models internally.
         services.AddSingleton<StatusBarViewModel>();
         services.AddSingleton<RecentWorkspacesMenuViewModel>();
+        services.AddSingleton<ServiceExplorerViewModel>();
         services.AddSingleton<ShellViewModel>();
 
         return services;

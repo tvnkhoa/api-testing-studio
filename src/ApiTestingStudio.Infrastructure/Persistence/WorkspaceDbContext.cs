@@ -21,6 +21,8 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<Endpoint> Endpoints => Set<Endpoint>();
 
+    public DbSet<EndpointFolder> EndpointFolders => Set<EndpointFolder>();
+
     public DbSet<ProfileDefinition> Profiles => Set<ProfileDefinition>();
 
     public DbSet<EnvironmentDefinition> Environments => Set<EnvironmentDefinition>();
@@ -49,8 +51,25 @@ public sealed class WorkspaceDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Workspace>().HasKey(x => x.Id);
-        modelBuilder.Entity<Service>().HasKey(x => x.Id);
-        modelBuilder.Entity<Endpoint>().HasKey(x => x.Id);
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
+        modelBuilder.Entity<EndpointFolder>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.ServiceId);
+            entity.HasIndex(x => x.ParentFolderId);
+        });
+
+        modelBuilder.Entity<Endpoint>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.ServiceId);
+            entity.HasIndex(x => x.FolderId);
+        });
         modelBuilder.Entity<ProfileDefinition>().HasKey(x => x.Id);
         modelBuilder.Entity<EnvironmentDefinition>().HasKey(x => x.Id);
         modelBuilder.Entity<Variable>().HasKey(x => x.Id);

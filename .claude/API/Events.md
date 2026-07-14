@@ -4,7 +4,12 @@ Planned **in-process** application/domain events. The product is 100% offline; t
 notifications only — no external bus, no telemetry. They will be delivered through an in-process
 **mediator / messenger** (e.g. CommunityToolkit.Mvvm `IMessenger` for UI-facing notifications, or a
 lightweight application-layer dispatcher) introduced when the first publisher lands. Payloads are
-immutable records. Until then this is the intended contract, not yet wired.
+immutable records.
+
+**Status:** the UI-facing `IMessenger` seam is **wired as of Sprint 05** — `WeakReferenceMessenger`
+is registered as `IMessenger` in `AddUi`, and the Service Explorer is the first publisher
+(`EndpointSelected`). The application-layer dispatcher and the workspace/run events below remain
+intended contracts, not yet wired.
 
 ## Event catalogue
 
@@ -16,6 +21,7 @@ immutable records. Until then this is the intended contract, not yet wired.
 | **RunStepCompleted** | `RunId`, `StepId`, `RunStatus`, `DurationMs` | Workflow engine / runner | Workflow Designer (live node state), Logs, Dashboard |
 | **RunCompleted** | `RunId`, `RunStatus`, `TotalMs`, counts | Workflow engine / runner | Dashboard (aggregate refresh), Logs, status bar |
 | **PluginRegistered** | `Name`, `Version`, `Assembly` | Plugin host (`AddPluginHost`, Core) | `IPluginRegistry` consumers, shell (tool windows/widgets), diagnostics |
+| **EndpointSelected** *(wired, Sprint 05)* | `EndpointId`, `ServiceId`, `Name`, `Method`, `Path` | Service Explorer (`ServiceExplorerViewModel`, UI) via `IMessenger` | API Runner (Sprint 06); today the status bar |
 
 ## Notes
 
