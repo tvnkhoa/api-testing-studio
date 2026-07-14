@@ -1,0 +1,25 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:panels="clr-namespace:ApiTestingStudio.UI.ViewModels.Panels"
+                    xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels">
+
+    <!--
+        Implicit data templates mapping each panel view model to its view. AvalonDock renders the
+        content of every document/tool pane through these templates. Adding a feature panel in a
+        later sprint is a matter of adding its view model + view + one template here (or, for
+        plugins, contributing an IToolWindow that the shell materialises the same way).
+    -->
+
+    <DataTemplate DataType="{x:Type panels:WelcomeDocumentViewModel}">
+        <views:WelcomeDocumentView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type panels:ExplorerPlaceholderViewModel}">
+        <views:ExplorerPlaceholderView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type panels:LogsPlaceholderViewModel}">
+        <views:LogsPlaceholderView />
+    </DataTemplate>
+
+</ResourceDictionary>

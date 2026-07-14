@@ -1,0 +1,36 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+
+    <!--
+        Design tokens shared across every surface. Colours are referenced by semantic key, never by
+        raw hex at the call site, so a re-theme touches only this file (see UI/Themes.md). Semantic
+        colours are chosen to read on both the light and dark Material palettes.
+    -->
+
+    <!-- Spacing scale (device-independent pixels) -->
+    <sys:Double x:Key="Spacing.Xs">4</sys:Double>
+    <sys:Double x:Key="Spacing.Sm">8</sys:Double>
+    <sys:Double x:Key="Spacing.Md">12</sys:Double>
+    <sys:Double x:Key="Spacing.Lg">16</sys:Double>
+    <sys:Double x:Key="Spacing.Xl">24</sys:Double>
+    <sys:Double x:Key="Spacing.Xxl">32</sys:Double>
+
+    <!-- Typography ramp (font sizes) -->
+    <sys:Double x:Key="Typography.Headline">28</sys:Double>
+    <sys:Double x:Key="Typography.Title">20</sys:Double>
+    <sys:Double x:Key="Typography.Body">14</sys:Double>
+    <sys:Double x:Key="Typography.Caption">12</sys:Double>
+
+    <!-- Semantic state colours + brushes -->
+    <Color x:Key="Semantic.Success.Color">#2E7D32</Color>
+    <Color x:Key="Semantic.Error.Color">#C62828</Color>
+    <Color x:Key="Semantic.Warning.Color">#EF6C00</Color>
+    <Color x:Key="Semantic.Info.Color">#1565C0</Color>
+
+    <SolidColorBrush x:Key="Semantic.Success.Brush" Color="{StaticResource Semantic.Success.Color}" />
+    <SolidColorBrush x:Key="Semantic.Error.Brush" Color="{StaticResource Semantic.Error.Color}" />
+    <SolidColorBrush x:Key="Semantic.Warning.Brush" Color="{StaticResource Semantic.Warning.Color}" />
+    <SolidColorBrush x:Key="Semantic.Info.Brush" Color="{StaticResource Semantic.Info.Color}" />
+
+</ResourceDictionary>

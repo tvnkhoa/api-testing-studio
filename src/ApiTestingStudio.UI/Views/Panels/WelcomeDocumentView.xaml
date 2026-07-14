@@ -1,0 +1,15 @@
+<UserControl x:Class="ApiTestingStudio.UI.Views.Panels.WelcomeDocumentView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="32" VerticalAlignment="Top">
+        <TextBlock Text="{Binding Headline}"
+                   FontSize="28"
+                   FontWeight="Light"
+                   Margin="0,0,0,12" />
+        <TextBlock Text="{Binding Message}"
+                   TextWrapping="Wrap"
+                   MaxWidth="520"
+                   HorizontalAlignment="Left"
+                   Opacity="0.8" />
+    </StackPanel>
+</UserControl>

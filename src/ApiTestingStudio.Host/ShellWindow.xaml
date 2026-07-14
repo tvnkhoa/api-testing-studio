@@ -1,0 +1,97 @@
+<Window x:Class="ApiTestingStudio.Host.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:avalonDock="https://github.com/Dirkster99/AvalonDock"
+        Title="{Binding Title}"
+        Height="720"
+        Width="1180"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="N" Command="{Binding Menu.NewWorkspaceCommand}" />
+        <KeyBinding Modifiers="Control" Key="O" Command="{Binding Menu.OpenWorkspaceCommand}" />
+        <KeyBinding Modifiers="Control" Key="S" Command="{Binding Menu.SaveWorkspaceCommand}" />
+    </Window.InputBindings>
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Main menu (bound to MainMenuViewModel) -->
+        <Menu DockPanel.Dock="Top" DataContext="{Binding Menu}">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New Workspace" Command="{Binding NewWorkspaceCommand}" InputGestureText="Ctrl+N" />
+                <MenuItem Header="_Open Workspace…" Command="{Binding OpenWorkspaceCommand}" InputGestureText="Ctrl+O" />
+                <MenuItem Header="Open _Recent"
+                          ItemsSource="{Binding RecentWorkspaces.Items}"
+                          IsEnabled="{Binding RecentWorkspaces.HasItems}">
+                    <MenuItem.ItemContainerStyle>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Header" Value="{Binding DisplayText}" />
+                            <Setter Property="Command" Value="{Binding OpenCommand}" />
+                        </Style>
+                    </MenuItem.ItemContainerStyle>
+                </MenuItem>
+                <Separator />
+                <MenuItem Header="_Save Workspace" Command="{Binding SaveWorkspaceCommand}" InputGestureText="Ctrl+S" />
+                <MenuItem Header="_Close Workspace" Command="{Binding CloseWorkspaceCommand}" />
+                <Separator />
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Explorer" Command="{Binding ToggleExplorerCommand}" />
+                <MenuItem Header="_Logs" Command="{Binding ToggleLogsCommand}" />
+                <Separator />
+                <MenuItem Header="_Dark Theme"
+                          IsCheckable="True"
+                          IsChecked="{Binding Shell.IsDarkTheme, Mode=OneWay}"
+                          Command="{Binding ToggleThemeCommand}" />
+                <Separator />
+                <MenuItem Header="_Reset Layout" Command="{Binding ResetLayoutCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Command="{Binding AboutCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Toolbar (bound to ToolbarViewModel) -->
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar DataContext="{Binding Toolbar}">
+                <Button Content="New" Command="{Binding NewWorkspaceCommand}" ToolTip="New Workspace (Ctrl+N)" />
+                <Button Content="Open" Command="{Binding OpenWorkspaceCommand}" ToolTip="Open Workspace (Ctrl+O)" />
+                <Button Content="Save" Command="{Binding SaveWorkspaceCommand}" ToolTip="Save Workspace (Ctrl+S)" />
+                <Separator />
+                <Button Content="Theme" Command="{Binding ToggleThemeCommand}" ToolTip="Toggle light/dark theme" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- Status bar (bound to StatusBarViewModel) -->
+        <StatusBar DockPanel.Dock="Bottom" DataContext="{Binding StatusBar}">
+            <StatusBarItem>
+                <TextBlock Text="{Binding WorkspaceName}" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock Text="{Binding ConnectionStatus}" />
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="{Binding BackgroundStatus}" Opacity="0.8" />
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Docking shell. Documents/tools are supplied by the ShellViewModel collections; each
+             pane's content is rendered by the implicit DataTemplates in PanelTemplates.xaml. -->
+        <avalonDock:DockingManager x:Name="DockManager"
+                                   DocumentsSource="{Binding Documents}"
+                                   AnchorablesSource="{Binding Tools}">
+            <avalonDock:DockingManager.LayoutItemContainerStyle>
+                <Style TargetType="{x:Type avalonDock:LayoutItem}">
+                    <Setter Property="Title" Value="{Binding Model.Title}" />
+                    <Setter Property="ContentId" Value="{Binding Model.ContentId}" />
+                    <Setter Property="IsSelected" Value="{Binding Model.IsSelected, Mode=TwoWay}" />
+                    <Setter Property="IsActive" Value="{Binding Model.IsActive, Mode=TwoWay}" />
+                    <Setter Property="CanClose" Value="{Binding Model.CanClose}" />
+                </Style>
+            </avalonDock:DockingManager.LayoutItemContainerStyle>
+        </avalonDock:DockingManager>
+
+    </DockPanel>
+</Window>

@@ -7,7 +7,8 @@ using ApiTestingStudio.Core.Plugins;
 using ApiTestingStudio.Host.Composition;
 using ApiTestingStudio.Infrastructure.DependencyInjection;
 using ApiTestingStudio.Plugin.Abstractions.Storage;
-using ApiTestingStudio.UI.ViewModels;
+using ApiTestingStudio.UI.DependencyInjection;
+using ApiTestingStudio.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -43,8 +44,12 @@ public partial class App : System.Windows.Application
 
             LogStartupState();
 
-            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
-            mainWindow.Show();
+            // Apply the persisted theme before the window is shown so it never flashes the default.
+            var themeManager = _host.Services.GetRequiredService<IThemeManager>();
+            await themeManager.InitializeAsync().ConfigureAwait(true);
+
+            var shellWindow = _host.Services.GetRequiredService<ShellWindow>();
+            shellWindow.Show();
         }
         catch (Exception ex)
         {
@@ -99,8 +104,8 @@ public partial class App : System.Windows.Application
             bootstrapLoggerFactory);
 
         // UI composition
-        builder.Services.AddSingleton<MainViewModel>();
-        builder.Services.AddSingleton<MainWindow>();
+        builder.Services.AddUi();
+        builder.Services.AddSingleton<ShellWindow>();
 
         return builder.Build();
     }

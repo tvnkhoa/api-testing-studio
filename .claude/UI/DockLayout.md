@@ -7,13 +7,24 @@ surface. It separates **document panes** (the primary editing surfaces the user 
 **tool panes** (supporting side panels), and persists the arrangement so the app reopens exactly as
 the user left it. The shell lives in `src/ApiTestingStudio.Host/MainWindow.xaml`.
 
-## Current state (Phase 1)
+## Current state (Sprint 04 — implemented)
 
-`MainWindow.xaml` today is a `DockPanel` with an application **menu** (top), a **status bar**
-(bottom), and an **empty** `DockingManager` containing a single `LayoutDocumentPane`. The window
-`Title` and `StatusMessage` bind to `MainViewModel`. Menu items (New/Open Workspace, Explorer,
-Dashboard, Logs, About) are present but disabled — they light up in their own sprints.
-**Sprint 04** builds the docking shell out from here.
+The shell lives in `src/ApiTestingStudio.Host/ShellWindow.xaml`: a `DockPanel` with a **menu** and
+**toolbar** (top), a **status bar** (bottom), and a `DockingManager` whose
+`DocumentsSource`/`AnchorablesSource` bind to `ShellViewModel.Documents` / `ShellViewModel.Tools`.
+Each pane's view model derives from `PanelViewModel` (`ToolPanelViewModel` /
+`DocumentPanelViewModel`) and is rendered by implicit `DataTemplate`s in
+`src/ApiTestingStudio.UI/Resources/PanelTemplates.xaml`. Placeholder Explorer (tool, left) and Logs
+(tool, bottom) panes plus a Welcome document exercise docking; feature content lands in later
+sprints. Code-behind is limited to view wiring: it hands the `DockingManager` to `IDockManager` on
+load, restores the saved layout, and saves it on close.
+
+Layout is serialized with `XmlLayoutSerializer` to an opaque string via
+`DockManagerService`/`IDockManager` (UI) and stored by `ILayoutPersistenceService` (Application) →
+`LayoutPersistenceService` (Infrastructure) as a **single global per-user** `dock-layout.xml` under
+the app-data directory. **Reset Layout** restores the XAML default snapshot captured on attach.
+Per-workspace layouts remain a future item. See
+`DECISIONS/ADR-0008-Shell-UI-Layout-Theme-Persistence.md`.
 
 ## Scope / Capabilities
 
