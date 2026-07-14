@@ -4,6 +4,7 @@ using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.Services;
+using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Panels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -28,7 +29,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IFileDialogService _fileDialog;
     private readonly ILogger<ShellViewModel> _logger;
 
-    private readonly ExplorerPlaceholderViewModel _explorer = new();
+    private readonly ServiceExplorerViewModel _explorer;
     private readonly LogsPlaceholderViewModel _logs = new();
 
     public ShellViewModel(
@@ -40,6 +41,7 @@ public sealed partial class ShellViewModel : ObservableObject
         IFileDialogService fileDialog,
         StatusBarViewModel statusBarViewModel,
         RecentWorkspacesMenuViewModel recentWorkspaces,
+        ServiceExplorerViewModel explorer,
         ILogger<ShellViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(workspaceService);
@@ -50,6 +52,7 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(fileDialog);
         ArgumentNullException.ThrowIfNull(statusBarViewModel);
         ArgumentNullException.ThrowIfNull(recentWorkspaces);
+        ArgumentNullException.ThrowIfNull(explorer);
         ArgumentNullException.ThrowIfNull(logger);
 
         _workspaceService = workspaceService;
@@ -58,6 +61,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _dockManager = dockManager;
         _statusBar = statusBar;
         _fileDialog = fileDialog;
+        _explorer = explorer;
         _logger = logger;
 
         StatusBar = statusBarViewModel;
@@ -108,6 +112,7 @@ public sealed partial class ShellViewModel : ObservableObject
     {
         await RecentWorkspaces.RefreshAsync(cancellationToken).ConfigureAwait(true);
         SyncWorkspaceState();
+        await RefreshExplorerAsync(cancellationToken).ConfigureAwait(true);
     }
 
     [RelayCommand]
@@ -144,6 +149,7 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             SyncWorkspaceState();
             await RecentWorkspaces.RefreshAsync(cancellationToken).ConfigureAwait(true);
+            await RefreshExplorerAsync(cancellationToken).ConfigureAwait(true);
             _statusBar.SetMessage("Workspace closed.");
         }
         else
@@ -197,11 +203,24 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             SyncWorkspaceState();
             await RecentWorkspaces.RefreshAsync(cancellationToken).ConfigureAwait(true);
+            await RefreshExplorerAsync(cancellationToken).ConfigureAwait(true);
             _statusBar.SetMessage(successMessage);
         }
         else
         {
             _statusBar.SetMessage(result.Error.Message);
+        }
+    }
+
+    private async Task RefreshExplorerAsync(CancellationToken cancellationToken)
+    {
+        if (_session.IsOpen)
+        {
+            await _explorer.LoadAsync(cancellationToken).ConfigureAwait(true);
+        }
+        else
+        {
+            _explorer.Clear();
         }
     }
 

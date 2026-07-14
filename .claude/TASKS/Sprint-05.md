@@ -39,8 +39,11 @@ Provide the Service Explorer panel: a hierarchical tree of services and endpoint
 - `ITreeSearch` (uncertain — may be a plain method).
 
 ## Database Changes
-- New tables: `Services`, `EndpointFolders`, `Endpoints` (name, method, url template, parent id, ordering).
-- Migration: `AddServiceCatalog`.
+- `Services`/`Endpoints` tables already existed (`InitialCreate`); this sprint adds the
+  `EndpointFolders` table (nestable via `ParentFolderId`) plus `Endpoints.FolderId`,
+  `Endpoints.SortOrder`, `Services.SortOrder` columns and supporting indexes.
+- Migration: `AddServiceCatalogHierarchy` (renamed from the proposed `AddServiceCatalog` since it
+  extends existing tables rather than creating them). `Workspace.CurrentSchemaVersion` bumped 1 → 2.
 
 ## Plugin Changes
 - None. (Import plugins will *write* into this catalog in Sprint 07.)
@@ -60,6 +63,8 @@ Provide the Service Explorer panel: a hierarchical tree of services and endpoint
 - Request building/sending (Sprint 06).
 - Import (Sprint 07).
 - Bulk operations / tagging.
+- **Drag-and-drop reorganize** — moved to Future Improvements (backlog, unscheduled). Delivered this
+  sprint as Move + up/down ordering via context menu / toolbar instead.
 
 ## Risks
 - TreeView virtualization + drag/drop reliability in WPF.
@@ -67,13 +72,17 @@ Provide the Service Explorer panel: a hierarchical tree of services and endpoint
 - Performance on very large catalogs.
 
 ## Future Improvements
+- **Drag-and-drop tree reorganize** (backlog — not yet assigned to a sprint). Move + up/down ordering
+  ship this sprint; drag-drop is the polish follow-up.
 - Tags, favorites, and saved filters.
 - Multi-select bulk edit/delete.
 - Grouping by tag/environment.
 
 ## Checklist
-- [ ] Domain entities + repositories + migration.
-- [ ] Explorer panel with virtualized tree.
-- [ ] Endpoint/service/folder CRUD.
-- [ ] Search/filter.
-- [ ] Context menus + selection messaging.
+- [x] Domain entities + repositories + migration.
+- [x] Explorer panel with virtualized tree.
+- [x] Endpoint/service/folder CRUD.
+- [x] Search/filter (client-side, case-insensitive; auto-expands to reveal matches).
+- [x] Context menus + selection messaging (`IMessenger` → `EndpointSelectedMessage`).
+- [x] Per-workspace tree state (expansion/selection) persisted in the `Settings` table.
+- [x] Move + up/down ordering via context menu (drag-drop deferred to backlog).

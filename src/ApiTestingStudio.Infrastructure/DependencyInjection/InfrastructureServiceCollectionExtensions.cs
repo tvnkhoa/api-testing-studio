@@ -40,6 +40,13 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IStorageProvider, SqliteStorageProvider>();
         services.AddSingleton<IPackageMetadataRepository, PackageMetadataRepository>();
 
+        // Service Explorer catalog repositories (Sprint 05). Short-lived contexts per op, keyed off
+        // the open workspace's connection string held by the session.
+        services.AddSingleton<IServiceRepository, ServiceRepository>();
+        services.AddSingleton<IEndpointFolderRepository, EndpointFolderRepository>();
+        services.AddSingleton<IEndpointRepository, EndpointRepository>();
+        services.AddSingleton<IWorkspaceSettingRepository, WorkspaceSettingRepository>();
+
         var recentStorePath = Path.Combine(appDataDirectory, RecentWorkspacesFileName);
         services.AddSingleton<IRecentWorkspacesService>(sp =>
             new RecentWorkspacesService(

@@ -12,7 +12,7 @@ public sealed class WorkspaceTests
         var workspace = new Workspace { Name = "Sample" };
 
         workspace.Id.Should().NotBe(Guid.Empty);
-        workspace.SchemaVersion.Should().Be(1);
+        workspace.SchemaVersion.Should().Be(Workspace.CurrentSchemaVersion);
     }
 
     [Fact]
