@@ -116,20 +116,27 @@ public interface IStressRunner
 
 ## IStorageProvider
 
-Storage-agnostic workspace persistence (SQLite is the Phase 1 provider).
+Storage-agnostic workspace **lifecycle** + persistence (SQLite is the Phase 1 provider). A
+`location` is an opaque provider-specific locator (a file path for SQLite). Exactly one workspace
+is open at a time; recoverable failures come back as `Result`. See ADR-0006.
 
 ```csharp
 public interface IStorageProvider
 {
     string ProviderName { get; }                            // "sqlite"
-    Task InitializeAsync(CancellationToken cancellationToken = default);
-    Task<Workspace?> GetWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+    bool IsOpen { get; }
+    Task<Result> CreateAsync(string location, Workspace metadata, CancellationToken cancellationToken = default);
+    Task<Result> OpenAsync(string location, CancellationToken cancellationToken = default);
+    Task CloseAsync(CancellationToken cancellationToken = default);
+    Task<Result> DeleteAsync(string location, CancellationToken cancellationToken = default);
+    Task<Workspace?> GetWorkspaceAsync(CancellationToken cancellationToken = default);  // the open workspace
     Task SaveWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken = default);
 }
 ```
 
-*Implemented by:* `SqliteStorageProvider` (Infrastructure). Additional stores can be added without
-touching business logic.
+*Implemented by:* `SqliteStorageProvider` (Infrastructure), driven by the Application-layer
+`IWorkspaceService` and observed through the read-only `IWorkspaceSession`. Additional stores can
+be added without touching business logic.
 
 ## IDashboardWidget
 

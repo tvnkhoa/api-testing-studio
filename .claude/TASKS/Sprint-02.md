@@ -71,14 +71,39 @@ Deliver a robust, offline-first workspace persistence layer on SQLite/EF Core, c
 - MRU store location/format may need revisiting once Shell settings exist.
 
 ## Future Improvements
+- Recent-workspaces **pinning** (deferred this sprint): pin entries so they never age out.
 - Workspace templates and quick-start samples.
 - Encrypted workspace files.
 - WAL-mode tuning and vacuum-on-close.
 
 ## Checklist
-- [ ] Harden DbContext + migration and verify InitialCreate.
-- [ ] Implement workspace lifecycle service + tests.
-- [ ] Implement recent-workspaces MRU + persistence.
-- [ ] Add package metadata table + repository.
-- [ ] Error handling for locked/corrupt/missing DB.
-- [ ] Infrastructure + Application unit tests green.
+- [x] Harden DbContext + migration and verify InitialCreate.
+- [x] Implement workspace lifecycle service + tests.
+- [x] Implement recent-workspaces MRU + persistence.
+- [x] Add package metadata table + repository.
+- [x] Error handling for locked/corrupt/missing DB.
+- [x] Infrastructure + Application unit tests green.
+
+## Implementation notes (delivered)
+- **Contract:** `IStorageProvider` extended into a location-based lifecycle contract
+  (`IsOpen`, `CreateAsync`, `OpenAsync`, `CloseAsync`, `DeleteAsync`, `GetWorkspaceAsync`,
+  `SaveWorkspaceAsync`) returning `Result`. A `location` is an opaque provider-specific locator
+  (a file path for SQLite), so the abstraction stays storage-agnostic.
+- **One file per workspace, no global DB:** the connection string is chosen at runtime. There is
+  no fixed `AddDbContext`; `WorkspaceContextFactory` builds a short-lived `WorkspaceDbContext` per
+  unit of work from the `WorkspaceSession`'s current connection string. `AddInfrastructure` now
+  takes the **app data directory** instead of a connection string.
+- **Session:** `WorkspaceSession` (singleton) holds the open workspace; the rest of the app reads
+  it through the read-only `IWorkspaceSession` port. Exactly one workspace is open at a time;
+  create/open auto-close the current one first.
+- **Startup:** the Host no longer creates a global `workspace.db`; it starts with no workspace
+  open. Migrations run on create/open. Open/recent UI is Sprint 04.
+- **Errors:** `WorkspaceErrors` catalog; `SqliteException` mapped to `Locked`/`Corrupt`;
+  missing file → `NotFound`; newer file schema → `SchemaTooNew` via `SchemaVersionValidator`.
+- **File handles:** `SqliteConnection.ClearAllPools()` on close/delete releases the OS handle so
+  Windows reopen/delete works.
+- **MRU:** `RecentWorkspacesService` persists JSON at
+  `%LocalAppData%/ApiTestingStudio/recent-workspaces.json`, capped at 10, most-recent-first,
+  deduped by location. **Pinning deferred** (see Future Improvements).
+- **Package metadata:** `PackageMetadata` entity + `Packages` table (unique index on `PluginId`)
+  + `AddPackageMetadata` migration; `IPackageMetadataRepository` upsert/read/remove.

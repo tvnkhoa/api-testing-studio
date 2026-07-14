@@ -7,6 +7,13 @@ namespace ApiTestingStudio.Domain.Entities;
 /// </summary>
 public sealed record Workspace
 {
+    /// <summary>
+    /// The workspace schema version this build of the application creates and understands.
+    /// Opening a workspace whose <see cref="SchemaVersion"/> is greater than this must fail
+    /// safely — the file was written by a newer app. See <c>.claude/DATABASE_GUIDELINES.md</c>.
+    /// </summary>
+    public const int CurrentSchemaVersion = 1;
+
     public Guid Id { get; init; } = Guid.NewGuid();
 
     public required string Name { get; init; }
@@ -14,7 +21,7 @@ public sealed record Workspace
     public string? Description { get; init; }
 
     /// <summary>Schema version of the workspace, used for forward-compatible migrations.</summary>
-    public int SchemaVersion { get; init; } = 1;
+    public int SchemaVersion { get; init; } = CurrentSchemaVersion;
 
     public DateTimeOffset CreatedUtc { get; init; }
 

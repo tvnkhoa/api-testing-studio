@@ -41,6 +41,8 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<LogEntry> Logs => Set<LogEntry>();
 
+    public DbSet<PackageMetadata> Packages => Set<PackageMetadata>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -59,5 +61,12 @@ public sealed class WorkspaceDbContext : DbContext
         modelBuilder.Entity<Attachment>().HasKey(x => x.Id);
         modelBuilder.Entity<WorkspaceSetting>().HasKey(x => x.Id);
         modelBuilder.Entity<LogEntry>().HasKey(x => x.Id);
+
+        modelBuilder.Entity<PackageMetadata>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            // One dependency record per plugin within a workspace; upserts key off PluginId.
+            entity.HasIndex(x => x.PluginId).IsUnique();
+        });
     }
 }

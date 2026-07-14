@@ -75,19 +75,31 @@ only `PluginCatalog` — never the loader or business code. See `PLUGIN_DEVELOPM
 ## Storage (provider pattern)
 
 ```
-Workspace  →  IStorageProvider  →  SQLite (SqliteStorageProvider)
+IWorkspaceService  →  IStorageProvider  →  SQLite (SqliteStorageProvider)
+       │                     │
+       └── IWorkspaceSession ┘   (read-only view of the one open workspace)
 ```
 
 Business logic depends on `IStorageProvider`, never on EF Core directly. Adding SQL Server /
 PostgreSQL / a cloud store later means adding a new provider and one DI line in the Host — no
-business-logic change. `DATABASE_GUIDELINES.md` covers the schema and migration strategy.
+business-logic change.
+
+`IStorageProvider` is a **location-based lifecycle** contract (`IsOpen`, `Create/Open/Close/Delete`,
+`Get/Save` for the open workspace); a `location` is an opaque provider-specific locator (a file
+path for SQLite). **Each workspace is a self-contained file chosen at runtime — there is no global
+DB and no fixed connection string.** A singleton `WorkspaceSession` holds the open workspace;
+`WorkspaceContextFactory` builds a short-lived `WorkspaceDbContext` per unit of work from it. The
+rest of the app observes what is open via the read-only `IWorkspaceService`/`IWorkspaceSession`
+ports; exactly one workspace is open at a time. `DATABASE_GUIDELINES.md` and ADR-0006 cover the
+schema, lifecycle, and migration strategy.
 
 ## Composition root
 
 `src/ApiTestingStudio.Host/App.xaml.cs` builds a `Microsoft.Extensions.Hosting` container:
-configures Serilog → `AddApplication()` → `AddInfrastructure(connectionString)` →
+configures Serilog → `AddApplication()` → `AddInfrastructure(appDataDirectory)` →
 `AddPluginHost(PluginCatalog.GetPluginAssemblies())` → registers `MainViewModel` + `MainWindow`
-→ initializes storage (applies EF migrations) → shows the window.
+→ shows the window. **No workspace is opened at startup** (no global DB); EF migrations run when a
+workspace is created or opened via `IWorkspaceService`.
 
 ## Solution file
 

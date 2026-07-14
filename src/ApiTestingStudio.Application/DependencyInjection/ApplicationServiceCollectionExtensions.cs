@@ -1,11 +1,13 @@
+using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Workspaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ApiTestingStudio.Application.DependencyInjection;
 
 /// <summary>
-/// Registers application-layer services (use cases, handlers). Phase 1 has no concrete use
-/// cases yet; this seam exists so the composition root can call <c>AddApplication()</c> today
-/// and later sprints add registrations here without changing the host wiring.
+/// Registers application-layer use cases. Ports whose implementations live in Infrastructure
+/// (storage, recent-workspaces, clock) are bound by <c>AddInfrastructure</c>; this method wires
+/// only the pure application services.
 /// </summary>
 public static class ApplicationServiceCollectionExtensions
 {
@@ -13,7 +15,8 @@ public static class ApplicationServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Application use-case registrations are added here in later sprints.
+        services.AddSingleton<IWorkspaceService, WorkspaceService>();
+
         return services;
     }
 }

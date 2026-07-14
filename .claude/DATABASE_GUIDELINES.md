@@ -9,10 +9,30 @@
 
 ## Where the database lives
 
-- One SQLite file **per workspace**. At runtime the Host uses
-  `%LocalAppData%/ApiTestingStudio/workspace.db`. A `.apistudio` package embeds the file as
+- One SQLite file **per workspace**. There is **no shared/global database** — the file is chosen
+  at runtime when the user creates or opens a workspace. A `.apistudio` package embeds the file as
   `database.sqlite` (see ADR-0003 and `FEATURES/` packaging notes).
-- Connection string is built by the Host and passed to `AddInfrastructure(connectionString)`.
+- Because the file path is a runtime choice, there is **no fixed `AddDbContext`**. A
+  `WorkspaceSession` (singleton) holds the open workspace's connection string, and
+  `WorkspaceContextFactory` builds a short-lived `WorkspaceDbContext` per unit of work. Contexts
+  are disposed immediately so connection pooling manages the OS file handle.
+- `AddInfrastructure(appDataDirectory)` takes the app data directory (used for the MRU store and
+  logs), **not** a connection string.
+
+## Workspace lifecycle & session (Sprint 02)
+
+- `IStorageProvider` is a **location-based lifecycle** contract: `IsOpen`, `CreateAsync`,
+  `OpenAsync`, `CloseAsync`, `DeleteAsync`, plus `GetWorkspaceAsync` / `SaveWorkspaceAsync` for the
+  currently open workspace. A `location` is an opaque provider-specific locator (a file path for
+  SQLite). Recoverable failures come back as `Result` (see `WorkspaceErrors`), not exceptions.
+- Exactly **one workspace is open at a time**; `IWorkspaceService.CreateAsync`/`OpenAsync`
+  auto-close the current workspace first. The rest of the app observes the open workspace through
+  the read-only `IWorkspaceSession` port.
+- On close/delete the provider calls `SqliteConnection.ClearAllPools()` so Windows releases the
+  file handle, allowing reopen and delete.
+- The **recent-workspaces (MRU)** list lives **outside** any workspace database, as JSON at
+  `%LocalAppData%/ApiTestingStudio/recent-workspaces.json` (capped, most-recent-first, deduped by
+  location). Pinning is deferred.
 
 ## Entity model (Phase 1)
 
@@ -24,7 +44,11 @@ this keeps EF mapping and migrations simple and predictable.
 Mapped entities & tables (`WorkspaceDbContext`):
 `Workspace`, `Service`, `Endpoint`, `ProfileDefinition`, `EnvironmentDefinition`, `Variable`,
 `WorkflowDefinition`, `TestCaseDefinition`, `Run`, `RunStep`, `Attachment`, `WorkspaceSetting`,
-`LogEntry`.
+`LogEntry`, `PackageMetadata`.
+
+`PackageMetadata` (`Packages` table) records which plugins a workspace depends on
+(`PluginId`, `PluginName`, `Version`, `InstalledUtc`), with a **unique index on `PluginId`** so
+upserts key off the plugin id. It is read/written via `IPackageMetadataRepository`.
 
 Conventions:
 - Primary key: `Id` (`Guid`). Configured explicitly in `OnModelCreating`.
@@ -41,11 +65,12 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 
 ## Migrations
 
-- Migrations live in `Infrastructure/Persistence/Migrations`. Initial: `InitialCreate`.
+- Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
+  `AddPackageMetadata`.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
-- At runtime the app calls `IStorageProvider.InitializeAsync()` which runs
-  `Database.MigrateAsync()` on startup, so a fresh machine self-provisions the schema.
+- At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**
+  (not at startup), so each workspace file self-provisions its schema on first use.
 - A `WorkspaceDbContextFactory` (`IDesignTimeDbContextFactory`) supports the EF tooling.
 
 ### Migration rules

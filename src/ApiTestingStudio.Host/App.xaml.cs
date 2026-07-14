@@ -41,7 +41,7 @@ public partial class App : System.Windows.Application
             _host = BuildHost(appDataDir);
             await _host.StartAsync().ConfigureAwait(true);
 
-            await InitializeStorageAsync().ConfigureAwait(true);
+            LogStartupState();
 
             var mainWindow = _host.Services.GetRequiredService<MainWindow>();
             mainWindow.Show();
@@ -88,11 +88,8 @@ public partial class App : System.Windows.Application
         builder.Logging.ClearProviders();
         builder.Services.AddSerilog();
 
-        var dbPath = Path.Combine(appDataDir, "workspace.db");
-        var connectionString = $"Data Source={dbPath}";
-
         builder.Services.AddApplication();
-        builder.Services.AddInfrastructure(connectionString);
+        builder.Services.AddInfrastructure(appDataDir);
 
         using var bootstrapLoggerFactory = new SerilogLoggerFactory(Log.Logger);
         builder.Services.AddPluginHost(PluginCatalog.GetPluginAssemblies(), bootstrapLoggerFactory);
@@ -104,15 +101,15 @@ public partial class App : System.Windows.Application
         return builder.Build();
     }
 
-    private async Task InitializeStorageAsync()
+    private void LogStartupState()
     {
-        using var scope = _host!.Services.CreateScope();
-        var storage = scope.ServiceProvider.GetRequiredService<IStorageProvider>();
-        await storage.InitializeAsync().ConfigureAwait(true);
-
+        // No workspace is opened at startup: each workspace is a self-contained file the user
+        // creates or opens on demand (the shell's open/recent UI lands in Sprint 04). Migrations
+        // run when a workspace is created or opened, not here.
+        var storage = _host!.Services.GetRequiredService<IStorageProvider>();
         var registry = _host.Services.GetRequiredService<IPluginRegistry>();
         Log.Information(
-            "Startup complete. Storage provider '{Provider}' initialized; {Count} plugin(s) active: {Plugins}.",
+            "Startup complete. Storage provider '{Provider}' ready (no workspace open); {Count} plugin(s) active: {Plugins}.",
             storage.ProviderName,
             registry.Plugins.Count,
             string.Join(", ", registry.Plugins.Select(p => p.Name)));
