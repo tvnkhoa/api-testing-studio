@@ -27,6 +27,9 @@
   <Folder Name="/plugins/Runner.Stress/">
     <Project Path="plugins/Runner.Stress/ApiTestingStudio.Runner.Stress.csproj" />
   </Folder>
+  <Folder Name="/plugins/Sample.HelloWorld/">
+    <Project Path="plugins/Sample.HelloWorld/ApiTestingStudio.Sample.HelloWorld.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/ApiTestingStudio.Application/ApiTestingStudio.Application.csproj" />
     <Project Path="src/ApiTestingStudio.Core/ApiTestingStudio.Core.csproj" />

@@ -74,8 +74,16 @@ Harden the Phase 1 plugin foundation into a production-grade, directory-based dy
 - Per-plugin isolated settings and permissions.
 
 ## Checklist
-- [ ] Directory discovery + manifest parsing.
-- [ ] AssemblyLoadContext-based loading.
-- [ ] Version compatibility checks + quarantine.
-- [ ] Lifecycle manager + registry query API.
-- [ ] Sample plugin + PluginHost.Tests green.
+- [x] Directory discovery + manifest parsing. (`PluginDirectoryScanner`, `PluginManifestReader`, `PluginManifest`)
+- [x] AssemblyLoadContext-based loading. (`PluginLoadContext`, `PluginLoader.Load`)
+- [x] Version compatibility checks + quarantine. (`PluginCompatibilityChecker`, `VersionCompatibility`, `AddPluginHost` quarantine)
+- [x] Lifecycle manager + registry query API. (`PluginLifecycleManager`/`IPluginLifecycle`, `IPluginRegistry.GetByCapability`)
+- [x] Sample plugin + PluginHost.Tests green. (`plugins/Sample.HelloWorld`, 9 tests passing)
+
+## Outcome (2026-07-14)
+- Decisions: hybrid seam (compile-time + directory sources into one pipeline), optional lifecycle
+  (`IPluginModule` unchanged), collectible ALC with a verified unload GC test. See
+  `DECISIONS/ADR-0007-Dynamic-Plugin-Loading.md`.
+- Acceptance criteria verified by `PluginHost.Tests` (dynamic load, typed-reason compatibility
+  quarantine, throwing-plugin quarantine, capability query, lifecycle transitions, ALC unload).
+- Build clean (0 warnings); all 48 solution tests green.

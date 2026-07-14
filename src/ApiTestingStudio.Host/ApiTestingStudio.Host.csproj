@@ -17,6 +17,12 @@
     <ProjectReference Include="..\..\plugins\Assertion.Schema\ApiTestingStudio.Assertion.Schema.csproj" />
     <ProjectReference Include="..\..\plugins\Runner.Stress\ApiTestingStudio.Runner.Stress.csproj" />
     <ProjectReference Include="..\..\plugins\Export.ApiStudio\ApiTestingStudio.Export.ApiStudio.csproj" />
+    <!-- Sample plugin loads dynamically from the plugins/ directory, so it is deliberately NOT
+         referenced as an assembly (ReferenceOutputAssembly=false). The build dependency ensures it
+         is compiled before the DeploySamplePlugin target copies it next to the host. -->
+    <ProjectReference Include="..\..\plugins\Sample.HelloWorld\ApiTestingStudio.Sample.HelloWorld.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,5 +40,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <!-- Deploy the dynamically-loaded sample plugin into <output>/plugins/Sample.HelloWorld/ so the
+       host discovers it at startup through the directory-based loader. -->
+  <Target Name="DeploySamplePlugin" AfterTargets="Build">
+    <MSBuild Projects="..\..\plugins\Sample.HelloWorld\ApiTestingStudio.Sample.HelloWorld.csproj"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_SamplePluginDll" />
+    </MSBuild>
+    <ItemGroup>
+      <_SamplePluginArtifacts Include="@(_SamplePluginDll)" />
+      <_SamplePluginArtifacts Include="%(_SamplePluginDll.RootDir)%(_SamplePluginDll.Directory)%(_SamplePluginDll.Filename).deps.json"
+                              Condition="Exists('%(_SamplePluginDll.RootDir)%(_SamplePluginDll.Directory)%(_SamplePluginDll.Filename).deps.json')" />
+      <_SamplePluginArtifacts Include="%(_SamplePluginDll.RootDir)%(_SamplePluginDll.Directory)manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SamplePluginArtifacts)"
+          DestinationFolder="$(OutDir)plugins\Sample.HelloWorld\"
+          SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

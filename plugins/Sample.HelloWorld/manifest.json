@@ -1,0 +1,10 @@
+{
+  "id": "Sample.HelloWorld",
+  "name": "Hello World Sample",
+  "version": "1.0.0",
+  "entryAssembly": "ApiTestingStudio.Sample.HelloWorld.dll",
+  "entryType": "ApiTestingStudio.Sample.HelloWorld.HelloWorldPluginModule",
+  "minHostApiVersion": "1.0.0",
+  "maxHostApiVersion": null,
+  "description": "A minimal directory-loaded sample plugin demonstrating dynamic plugin loading."
+}

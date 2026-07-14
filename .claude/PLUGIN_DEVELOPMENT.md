@@ -41,15 +41,59 @@ public sealed class CurlImporter : IImporter
 | `IDashboardWidget` | Contribute a dashboard widget | dashboard plugins |
 | `IToolWindow` | Contribute a dockable tool window | UI plugins |
 
-## Lifecycle
+## Two ways a plugin is loaded
 
-1. **Provide** — the Host lists plugin assemblies in `Composition/PluginCatalog.cs`.
-2. **Discover** — `PluginLoader` (in `Core`) reflects over the assemblies and instantiates each
-   `IPluginModule` via its parameterless constructor.
-3. **Register** — `AddPluginHost` calls `module.ConfigureServices(services)` for each module and
-   registers an `IPluginRegistry` describing everything that loaded.
-4. **Resolve** — the app resolves contract implementations (`IEnumerable<IImporter>`, etc.) from
-   DI wherever it needs them.
+1. **Compile-time (first-party).** The Host references the plugin project and lists a representative
+   module type in `Composition/PluginCatalog.cs`. `PluginLoader.Discover` reflects over the assembly.
+2. **Directory (drop-in / third-party).** A folder under `plugins/` next to the executable, holding a
+   `manifest.json` and the entry assembly. `PluginDirectoryScanner` finds it and `PluginLoader.Load`
+   loads it into an isolated collectible `PluginLoadContext`. **This is the only path that needs a
+   manifest.**
+
+Both sources then run the same steps in `AddPluginHost`: **configure** (`module.ConfigureServices`),
+**infer capabilities** (the host diffs the service collection to see which contracts you registered),
+**record** a `PluginDescriptor` in `IPluginRegistry`, and **drive lifecycle** via
+`PluginLifecycleManager`. The app then **resolves** contract implementations
+(`IEnumerable<IImporter>`, etc.) from DI wherever it needs them.
+
+## Directory plugin manifest
+
+A directory plugin ships a `manifest.json` next to its entry assembly:
+
+```json
+{
+  "id": "Sample.HelloWorld",
+  "name": "Hello World Sample",
+  "version": "1.0.0",
+  "entryAssembly": "ApiTestingStudio.Sample.HelloWorld.dll",
+  "entryType": "ApiTestingStudio.Sample.HelloWorld.HelloWorldPluginModule",
+  "minHostApiVersion": "1.0.0",
+  "maxHostApiVersion": null,
+  "description": "..."
+}
+```
+
+- `entryType` is optional; when omitted, the loader reflects for the first `IPluginModule`. Set it
+  when the assembly contains more than one module.
+- `minHostApiVersion` / `maxHostApiVersion` gate the plugin against `PluginApiVersion.Current`. A
+  plugin outside the range is **quarantined** with a typed reason and never loaded.
+- `plugins/Sample.HelloWorld` is the reference implementation; see how the Host's
+  `DeploySamplePlugin` MSBuild target copies the DLL + manifest into `bin/.../plugins/`.
+
+## Optional lifecycle
+
+A module MAY also implement `IPluginLifecycle` (`InitializeAsync` → `StartAsync` on startup,
+`StopAsync` on shutdown). It is optional: `IPluginModule` alone is enough for a plugin that just
+registers services. Keep hooks fast and non-blocking; a hook that throws marks the plugin `Failed`
+and is isolated so the host keeps running.
+
+## Isolation & type identity (directory plugins)
+
+Directory plugins load in their own `AssemblyLoadContext`, so their private dependencies are
+isolated. **Contract assemblies must stay shared** — `Plugin.Abstractions`, `Domain`, `Shared`, and
+`Microsoft.Extensions.DependencyInjection.Abstractions` always resolve from the default context so
+`IImporter`, `IPluginModule`, etc. are the same `Type` on both sides. Do not ship private copies of
+those assemblies expecting different behaviour.
 
 ## Registration & discovery rules
 
@@ -65,14 +109,9 @@ public sealed class CurlImporter : IImporter
 - `IPluginModule.Version` is the plugin's own version.
 - Contract evolution follows **backward compatibility**: add new members via new interfaces or
   optional parameters; never break an existing contract. Breaking a contract is an ADR-level
-  decision. Compatibility gates (host ↔ plugin API version) are hardened in **Sprint 03**.
-
-## Future: dynamic loading
-
-Phase 1 references plugins at compile time and passes their assemblies to the loader. Because
-`PluginLoader.Discover` accepts **any** assembly enumeration, a future directory-based loader
-(scanning `/plugins` with `AssemblyLoadContext`, enabling drop-in third-party plugins) changes
-**only** `PluginCatalog` — the loader, contracts, and all business code stay the same.
+  decision and **bumps `PluginApiVersion.Current`** (see ADR-0007).
+- `IPluginModule.Version` and `PluginManifest.version` are the plugin's own version;
+  `minHostApiVersion` / `maxHostApiVersion` declare the host range the plugin supports.
 
 ## Testing a plugin
 

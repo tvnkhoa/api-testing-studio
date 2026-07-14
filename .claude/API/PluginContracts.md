@@ -23,6 +23,32 @@ public interface IPluginModule
 *Implemented by:* every plugin (e.g. `CurlImportPluginModule`, `JsonAssertionPluginModule`,
 `StressRunnerPluginModule`, `ApiStudioExportPluginModule`).
 
+## IPluginLifecycle (optional)
+
+An **optional** interface a module may also implement to receive lifecycle callbacks. The host's
+`PluginLifecycleManager` invokes `InitializeAsync` then `StartAsync` at startup, and `StopAsync` on
+shutdown. Modules that only register services need not implement it; a hook that throws isolates the
+plugin without crashing the host.
+
+```csharp
+public interface IPluginLifecycle
+{
+    Task InitializeAsync(CancellationToken cancellationToken = default);
+    Task StartAsync(CancellationToken cancellationToken = default);
+    Task StopAsync(CancellationToken cancellationToken = default);
+}
+```
+
+*Implemented by:* `HelloWorldPluginModule` (the `Sample.HelloWorld` reference plugin).
+
+## PluginManifest / PluginApiVersion
+
+Directory-loaded plugins declare metadata in `manifest.json`, deserialized into `PluginManifest`
+(`Id`, `Name`, `Version`, `EntryAssembly`, `MinHostApiVersion`, `MaxHostApiVersion?`, `EntryType?`,
+`Description?`). `PluginApiVersion.Current` is the SemVer of this contract surface; a plugin is
+loaded only when it falls within `[MinHostApiVersion, MaxHostApiVersion]`. See ADR-0007 and
+`PLUGIN_DEVELOPMENT.md`.
+
 ## IImporter
 
 Converts an external API description into workspace entities (`Service` / `Endpoint`).

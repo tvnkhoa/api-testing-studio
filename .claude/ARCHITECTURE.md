@@ -34,10 +34,10 @@ abstractions.
 | Project | TFM | Responsibility | May reference |
 |---|---|---|---|
 | **Domain** | net10.0 | Immutable entity records, enums. No framework deps. | — |
-| **Shared** | net10.0 | Cross-cutting primitives (`Result`, `Error`). | — |
-| **Plugin.Abstractions** | net10.0 | All plugin contracts (ports the plugins implement). | Domain, Shared |
+| **Shared** | net10.0 | Cross-cutting primitives (`Result`, `Error`, `VersionCompatibility`). | — |
+| **Plugin.Abstractions** | net10.0 | All plugin contracts + `PluginManifest`, `IPluginLifecycle`, `PluginApiVersion`, `PluginCapability`. | Domain, Shared |
 | **Application** | net10.0 | Use cases + ports (`IClock`, `ISecretProtector`, `IWorkspaceService`). | Domain, Shared, Plugin.Abstractions |
-| **Core** | net10.0 | Plugin host: `PluginLoader`, `IPluginRegistry`, `AddPluginHost`. | Application, Domain, Shared, Plugin.Abstractions |
+| **Core** | net10.0 | Plugin host: loader, registry, lifecycle, `PluginLoadContext` (ALC), `AddPluginHost`. | Application, Domain, Shared, Plugin.Abstractions |
 | **Infrastructure** | net10.0 | EF Core `WorkspaceDbContext`, `SqliteStorageProvider`, `SystemClock`, secret protector. | Application, Core, Domain, Shared, Plugin.Abstractions |
 | **UI** | net10.0-windows | WPF Views + ViewModels (MVVM). | Application, Core, Domain, Shared, Plugin.Abstractions |
 | **Host** | net10.0-windows (WinExe) | Composition root; the only project that knows concrete infrastructure + plugins. | everything + all plugins |
@@ -61,16 +61,25 @@ Every capability is a plugin behind an abstraction. Contracts live in `Plugin.Ab
 - `IImporter`, `IExporter`, `IWorkspaceSerializer`, `IAssertion`, `IWorkflowNode`,
   `IStressRunner`, `IStorageProvider`, `IDashboardWidget`, `IToolWindow`.
 
-**Discovery flow** (`Core`):
+**Two discovery sources feed one pipeline** (`Core`, hardened in Sprint 03 — see ADR-0007):
 
-1. `Host` provides the plugin assemblies (`Composition/PluginCatalog.cs`).
-2. `PluginLoader` reflects over them and instantiates every `IPluginModule`.
-3. `AddPluginHost` calls `module.ConfigureServices(services)` for each and registers an
-   `IPluginRegistry` describing what loaded.
+1. **Compile-time.** `Host` provides referenced plugin assemblies (`Composition/PluginCatalog.cs`);
+   `PluginLoader.Discover` reflects over them and instantiates every `IPluginModule`.
+2. **Directory (dynamic).** `PluginDirectoryScanner` scans the `plugins/` folder next to the
+   executable; each subfolder holds a `manifest.json` + entry assembly. `PluginCompatibilityChecker`
+   gates the manifest against `PluginApiVersion.Current`, then `PluginLoader.Load` loads the entry
+   assembly into an isolated collectible `PluginLoadContext : AssemblyLoadContext`.
 
-Phase 1 hands the loader assemblies referenced at compile time. The loader is written to accept
-**any** assembly source, so a future `/plugins` directory scan via `AssemblyLoadContext` changes
-only `PluginCatalog` — never the loader or business code. See `PLUGIN_DEVELOPMENT.md`.
+`AddPluginHost` runs both sources through the same steps: call `module.ConfigureServices(services)`,
+infer the plugin's `PluginCapability` set by diffing the service collection, and record a
+`PluginDescriptor`. Incompatible, unreadable, or throwing plugins are **quarantined** (logged, typed
+reason) instead of crashing the host. It registers an `IPluginRegistry` (query by capability) and a
+`PluginLifecycleManager` hosted service that drives optional `IPluginLifecycle` hooks
+(Initialize/Start/Stop) and unloads directory contexts on shutdown.
+
+**Isolation boundary:** shared contract assemblies (`Plugin.Abstractions`, `Domain`, `Shared`,
+`Microsoft.Extensions.DependencyInjection.Abstractions`) always resolve from the default context so
+plugin contract types have a single identity across host and plugin. See `PLUGIN_DEVELOPMENT.md`.
 
 ## Storage (provider pattern)
 
@@ -97,7 +106,7 @@ schema, lifecycle, and migration strategy.
 
 `src/ApiTestingStudio.Host/App.xaml.cs` builds a `Microsoft.Extensions.Hosting` container:
 configures Serilog → `AddApplication()` → `AddInfrastructure(appDataDirectory)` →
-`AddPluginHost(PluginCatalog.GetPluginAssemblies())` → registers `MainViewModel` + `MainWindow`
+`AddPluginHost(PluginCatalog.GetPluginAssemblies(), pluginsDirectory)` → registers `MainViewModel` + `MainWindow`
 → shows the window. **No workspace is opened at startup** (no global DB); EF migrations run when a
 workspace is created or opened via `IWorkspaceService`.
 

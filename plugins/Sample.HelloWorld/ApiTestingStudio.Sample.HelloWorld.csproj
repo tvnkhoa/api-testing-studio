@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ApiTestingStudio.Plugin.Abstractions\ApiTestingStudio.Plugin.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Emit a .deps.json so the plugin's AssemblyDependencyResolver can resolve any private
+         dependencies when loaded dynamically via AssemblyLoadContext. -->
+    <GenerateDependencyFile>true</GenerateDependencyFile>
+  </PropertyGroup>
+
+</Project>

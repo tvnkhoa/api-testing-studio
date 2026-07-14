@@ -1,30 +1,31 @@
 using System.Reflection;
 using ApiTestingStudio.Plugin.Abstractions;
+using ApiTestingStudio.Shared.Results;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ApiTestingStudio.Core.Plugins;
 
 /// <summary>
-/// Discovers <see cref="IPluginModule"/> implementations by reflecting over a supplied set of
-/// assemblies. This is the ONLY place that turns assemblies into plugin instances; the core
-/// never references a concrete plugin.
+/// Discovers <see cref="IPluginModule"/> implementations. It reflects over compile-time assemblies
+/// (Phase 1) and loads directory plugins into isolated collectible load contexts (Sprint 03). This
+/// is the ONLY place that turns assemblies into plugin instances; the core never references a
+/// concrete plugin.
 /// </summary>
-/// <remarks>
-/// Phase 1 receives assemblies that the host has already referenced. The design intentionally
-/// takes an assembly list so a future directory-scanning / <c>AssemblyLoadContext</c> mode can
-/// supply assemblies here without any change to the discovery logic or business code.
-/// </remarks>
-public sealed class PluginLoader
+public sealed class PluginLoader : IPluginLoader
 {
+    /// <summary>Error code when a module type cannot be found in a directory plugin's entry assembly.</summary>
+    public const string ModuleNotFoundCode = "plugin.module_not_found";
+
+    /// <summary>Error code when loading a directory plugin threw.</summary>
+    public const string LoadFailedCode = "plugin.load_failed";
+
     private readonly ILogger<PluginLoader> _logger;
 
     public PluginLoader(ILogger<PluginLoader>? logger = null)
         => _logger = logger ?? NullLogger<PluginLoader>.Instance;
 
-    /// <summary>
-    /// Instantiates every non-abstract <see cref="IPluginModule"/> found in the given assemblies.
-    /// </summary>
+    /// <inheritdoc />
     public IReadOnlyList<IPluginModule> Discover(IEnumerable<Assembly> assemblies)
     {
         ArgumentNullException.ThrowIfNull(assemblies);
@@ -35,24 +36,76 @@ public sealed class PluginLoader
         {
             foreach (var type in GetLoadableTypes(assembly))
             {
-                if (type is { IsAbstract: false, IsInterface: false } &&
-                    typeof(IPluginModule).IsAssignableFrom(type))
+                if (IsPluginModule(type) && Activator.CreateInstance(type) is IPluginModule module)
                 {
-                    if (Activator.CreateInstance(type) is IPluginModule module)
-                    {
-                        _logger.LogInformation(
-                            "Discovered plugin module {PluginName} v{PluginVersion} from {Assembly}.",
-                            module.Name,
-                            module.Version,
-                            assembly.GetName().Name);
-                        modules.Add(module);
-                    }
+                    _logger.LogInformation(
+                        "Discovered plugin module {PluginName} v{PluginVersion} from {Assembly}.",
+                        module.Name,
+                        module.Version,
+                        assembly.GetName().Name);
+                    modules.Add(module);
                 }
             }
         }
 
         return modules;
     }
+
+    /// <inheritdoc />
+    public Result<LoadedPlugin> Load(DirectoryPluginCandidate candidate)
+    {
+        ArgumentNullException.ThrowIfNull(candidate);
+
+        PluginLoadContext? context = null;
+        try
+        {
+            context = new PluginLoadContext(candidate.EntryAssemblyPath, candidate.Manifest.Id);
+            var assembly = context.LoadFromAssemblyPath(candidate.EntryAssemblyPath);
+
+            var moduleType = ResolveModuleType(assembly, candidate.Manifest);
+            if (moduleType is null)
+            {
+                context.Unload();
+                return Result.Failure<LoadedPlugin>(new Error(
+                    ModuleNotFoundCode,
+                    $"No IPluginModule found in '{candidate.Manifest.EntryAssembly}'."));
+            }
+
+            if (Activator.CreateInstance(moduleType) is not IPluginModule module)
+            {
+                context.Unload();
+                return Result.Failure<LoadedPlugin>(new Error(
+                    ModuleNotFoundCode,
+                    $"Type '{moduleType.FullName}' could not be instantiated as an IPluginModule."));
+            }
+
+            _logger.LogInformation(
+                "Loaded plugin module {PluginName} v{PluginVersion} from directory plugin '{Id}'.",
+                module.Name, module.Version, candidate.Manifest.Id);
+            return Result.Success(new LoadedPlugin(module, context));
+        }
+#pragma warning disable CA1031 // Plugin load is a sanctioned boundary: any plugin failure must be isolated, not fatal.
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            context?.Unload();
+            _logger.LogError(ex, "Failed to load directory plugin '{Id}'.", candidate.Manifest.Id);
+            return Result.Failure<LoadedPlugin>(new Error(LoadFailedCode, ex.Message));
+        }
+    }
+
+    private static Type? ResolveModuleType(Assembly assembly, PluginManifest manifest)
+    {
+        if (!string.IsNullOrWhiteSpace(manifest.EntryType))
+        {
+            return assembly.GetType(manifest.EntryType, throwOnError: false);
+        }
+
+        return GetLoadableTypes(assembly).FirstOrDefault(IsPluginModule);
+    }
+
+    private static bool IsPluginModule(Type type) =>
+        type is { IsAbstract: false, IsInterface: false } && typeof(IPluginModule).IsAssignableFrom(type);
 
     private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
     {

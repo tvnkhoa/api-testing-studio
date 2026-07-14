@@ -92,7 +92,11 @@ public partial class App : System.Windows.Application
         builder.Services.AddInfrastructure(appDataDir);
 
         using var bootstrapLoggerFactory = new SerilogLoggerFactory(Log.Logger);
-        builder.Services.AddPluginHost(PluginCatalog.GetPluginAssemblies(), bootstrapLoggerFactory);
+        var pluginsDirectory = Path.Combine(AppContext.BaseDirectory, "plugins");
+        builder.Services.AddPluginHost(
+            PluginCatalog.GetPluginAssemblies(),
+            pluginsDirectory,
+            bootstrapLoggerFactory);
 
         // UI composition
         builder.Services.AddSingleton<MainViewModel>();
@@ -108,10 +112,14 @@ public partial class App : System.Windows.Application
         // run when a workspace is created or opened, not here.
         var storage = _host!.Services.GetRequiredService<IStorageProvider>();
         var registry = _host.Services.GetRequiredService<IPluginRegistry>();
+        var loaded = registry.Plugins.Where(p => p.State == PluginLifecycleState.Loaded).ToList();
+        var quarantined = registry.Plugins.Where(p => p.State == PluginLifecycleState.Quarantined).ToList();
         Log.Information(
-            "Startup complete. Storage provider '{Provider}' ready (no workspace open); {Count} plugin(s) active: {Plugins}.",
+            "Startup complete. Storage provider '{Provider}' ready (no workspace open); {Count} plugin(s) active: {Plugins}. {QuarantinedCount} quarantined: {Quarantined}.",
             storage.ProviderName,
-            registry.Plugins.Count,
-            string.Join(", ", registry.Plugins.Select(p => p.Name)));
+            loaded.Count,
+            string.Join(", ", loaded.Select(p => $"{p.Name} [{p.Source}]")),
+            quarantined.Count,
+            string.Join(", ", quarantined.Select(p => $"{p.Name} ({p.Error?.Code})")));
     }
 }

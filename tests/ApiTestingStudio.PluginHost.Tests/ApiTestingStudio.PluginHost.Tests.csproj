@@ -32,7 +32,29 @@
     <ProjectReference Include="..\..\plugins\Assertion.Schema\ApiTestingStudio.Assertion.Schema.csproj" />
     <ProjectReference Include="..\..\plugins\Runner.Stress\ApiTestingStudio.Runner.Stress.csproj" />
     <ProjectReference Include="..\..\plugins\Export.ApiStudio\ApiTestingStudio.Export.ApiStudio.csproj" />
+    <!-- The sample plugin loads dynamically in tests, so it is NOT referenced as an assembly.
+         The build dependency + DeploySamplePlugin target place it in the test output's plugins/ dir. -->
+    <ProjectReference Include="..\..\plugins\Sample.HelloWorld\ApiTestingStudio.Sample.HelloWorld.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
   </ItemGroup>
+
+  <Target Name="DeploySamplePlugin" AfterTargets="Build">
+    <MSBuild Projects="..\..\plugins\Sample.HelloWorld\ApiTestingStudio.Sample.HelloWorld.csproj"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="_SamplePluginDll" />
+    </MSBuild>
+    <ItemGroup>
+      <_SamplePluginArtifacts Include="@(_SamplePluginDll)" />
+      <_SamplePluginArtifacts Include="%(_SamplePluginDll.RootDir)%(_SamplePluginDll.Directory)%(_SamplePluginDll.Filename).deps.json"
+                              Condition="Exists('%(_SamplePluginDll.RootDir)%(_SamplePluginDll.Directory)%(_SamplePluginDll.Filename).deps.json')" />
+      <_SamplePluginArtifacts Include="%(_SamplePluginDll.RootDir)%(_SamplePluginDll.Directory)manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SamplePluginArtifacts)"
+          DestinationFolder="$(OutDir)plugins\Sample.HelloWorld\"
+          SkipUnchangedFiles="true" />
+  </Target>
 
   <ItemGroup>
     <Using Include="Xunit" />

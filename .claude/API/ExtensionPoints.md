@@ -26,21 +26,26 @@ subsystem by its discriminator (`Format` / `Kind` / `ProviderName` / `WidgetId` 
 
 1. **One entry point.** Every plugin assembly exposes an `IPluginModule`
    (`Name`, `Version`, `ConfigureServices(IServiceCollection)`) — the *only* type the host looks for.
-2. **Catalog (Host).** `PluginCatalog` (`ApiTestingStudio.Host/Composition`) supplies the set of
-   plugin **assemblies**. In Phase 1 the host references the plugin projects directly and names one
-   representative module type per assembly. When directory-based dynamic loading arrives, **only this
-   catalog changes** — nothing downstream.
-3. **Discovery (Core).** `PluginLoader` (`ApiTestingStudio.Core/Plugins`) reflects over the supplied
-   assemblies and instantiates every non-abstract `IPluginModule` via its parameterless constructor.
-   It tolerates partially-loadable assemblies (a bad plugin doesn't take down the others). This is
-   the *only* place assemblies become plugin instances.
-4. **Registration (Core).** `AddPluginHost(assemblies)`
-   (`PluginHostServiceCollectionExtensions`) runs the loader, calls `ConfigureServices` on each
-   discovered module so it registers its own services, records a `PluginDescriptor` per module, and
-   registers an `IPluginRegistry` describing what was loaded.
+   A module may also implement the optional `IPluginLifecycle`.
+2. **Two sources.**
+   - *Compile-time:* `PluginCatalog` (`ApiTestingStudio.Host/Composition`) supplies referenced
+     plugin **assemblies**; `PluginLoader.Discover` reflects over them.
+   - *Directory:* `PluginDirectoryScanner` scans the `plugins/` folder next to the executable. Each
+     subfolder has a `manifest.json`; `PluginCompatibilityChecker` gates it against
+     `PluginApiVersion.Current` and `PluginLoader.Load` loads the entry assembly into an isolated
+     collectible `PluginLoadContext`.
+3. **Discovery (Core).** `PluginLoader` (`ApiTestingStudio.Core/Plugins`) is the *only* place
+   assemblies become plugin instances. It tolerates partially-loadable assemblies and never throws
+   for a bad directory plugin (failures come back as a `Result` so the plugin is quarantined).
+4. **Registration (Core).** `AddPluginHost(assemblies, pluginsDirectory?)`
+   (`PluginHostServiceCollectionExtensions`) runs both sources, calls `ConfigureServices` on each
+   module (rolling back and quarantining on failure), infers each plugin's `PluginCapability` set by
+   diffing the service collection, records a `PluginDescriptor` per plugin (loaded or quarantined),
+   and registers an `IPluginRegistry` (queryable by capability) plus a `PluginLifecycleManager`
+   hosted service.
 5. **Composition root (Host).** `App.xaml.cs` builds the DI container, calls
-   `AddPluginHost(PluginCatalog.GetPluginAssemblies())`, and resolves the shell. `MainViewModel`
-   reads `IPluginRegistry` (e.g. the loaded plugin count in the status bar).
+   `AddPluginHost(PluginCatalog.GetPluginAssemblies(), pluginsDirectory)`, and resolves the shell.
+   `MainViewModel` reads `IPluginRegistry` (e.g. the loaded plugin count in the status bar).
 
 ## Design guarantees
 
@@ -49,5 +54,6 @@ subsystem by its discriminator (`Format` / `Kind` / `ProviderName` / `WidgetId` 
   the owning subsystem — never a reference to a concrete plugin.
 - **Uniformity.** Built-in capabilities (SQLite storage, Explorer/Logs tool windows, Dashboard
   widgets) implement the same contracts as third-party plugins.
-- **Forward-compatible loading.** The assembly-list seam in `PluginLoader` lets a future
-  `AssemblyLoadContext` / folder-scanning mode drop in without touching discovery or business code.
+- **Dynamic loading.** Directory plugins load via `AssemblyLoadContext` (Sprint 03 / ADR-0007)
+  alongside the compile-time source, with manifest-driven compatibility gating, quarantine on
+  failure, and collectible unload — no change to contracts or business code.
