@@ -1,0 +1,96 @@
+# ARCHITECTURE.md
+
+## Clean Architecture
+
+Dependencies point **inward only**. Inner layers know nothing about outer layers. The domain is
+the center; frameworks (WPF, EF Core, Serilog) live at the edges and are reached through
+abstractions.
+
+```
+            ┌─────────────────────────────────────────────┐
+            │                    Host                      │  composition root (WPF WinExe)
+            │        (wires Infrastructure + UI + plugins) │
+            └───────────────┬───────────────┬─────────────┘
+                            │               │
+                    ┌───────▼─────┐   ┌─────▼───────┐
+                    │     UI      │   │Infrastructure│  EF Core, SQLite, crypto, time
+                    │ (WPF/MVVM)  │   └─────┬───────┘
+                    └──────┬──────┘         │
+                           │        ┌───────▼───────┐
+                           └────────►     Core      │  plugin host/loader, orchestration
+                                    └───────┬───────┘
+                                    ┌───────▼───────┐
+                                    │  Application  │  use cases, ports (interfaces)
+                                    └───────┬───────┘
+                        ┌───────────────────┼───────────────────┐
+                ┌───────▼────────┐  ┌───────▼───────┐   ┌────────▼────────┐
+                │ Plugin.Abstr.  │  │    Domain     │   │     Shared      │
+                │  (contracts)   │  │ (entities)    │   │  (primitives)   │
+                └────────────────┘  └───────────────┘   └─────────────────┘
+```
+
+## Projects & responsibilities
+
+| Project | TFM | Responsibility | May reference |
+|---|---|---|---|
+| **Domain** | net10.0 | Immutable entity records, enums. No framework deps. | — |
+| **Shared** | net10.0 | Cross-cutting primitives (`Result`, `Error`). | — |
+| **Plugin.Abstractions** | net10.0 | All plugin contracts (ports the plugins implement). | Domain, Shared |
+| **Application** | net10.0 | Use cases + ports (`IClock`, `ISecretProtector`, `IWorkspaceService`). | Domain, Shared, Plugin.Abstractions |
+| **Core** | net10.0 | Plugin host: `PluginLoader`, `IPluginRegistry`, `AddPluginHost`. | Application, Domain, Shared, Plugin.Abstractions |
+| **Infrastructure** | net10.0 | EF Core `WorkspaceDbContext`, `SqliteStorageProvider`, `SystemClock`, secret protector. | Application, Core, Domain, Shared, Plugin.Abstractions |
+| **UI** | net10.0-windows | WPF Views + ViewModels (MVVM). | Application, Core, Domain, Shared, Plugin.Abstractions |
+| **Host** | net10.0-windows (WinExe) | Composition root; the only project that knows concrete infrastructure + plugins. | everything + all plugins |
+
+### The dependency rule that matters most
+
+- **Core never references a concrete plugin.** It only knows `Plugin.Abstractions`.
+- **UI never references Infrastructure.** ViewModels depend on Application/Core ports; the Host
+  binds the Infrastructure implementations.
+- **Only Host** composes Infrastructure + plugins into the container.
+
+These rules are what keep every capability swappable. Do not add a reference that violates the
+table above.
+
+## Plugin architecture
+
+Every capability is a plugin behind an abstraction. Contracts live in `Plugin.Abstractions`:
+
+- `IPluginModule` — the entry point each plugin assembly exposes (`Name`, `Version`,
+  `ConfigureServices(IServiceCollection)`).
+- `IImporter`, `IExporter`, `IWorkspaceSerializer`, `IAssertion`, `IWorkflowNode`,
+  `IStressRunner`, `IStorageProvider`, `IDashboardWidget`, `IToolWindow`.
+
+**Discovery flow** (`Core`):
+
+1. `Host` provides the plugin assemblies (`Composition/PluginCatalog.cs`).
+2. `PluginLoader` reflects over them and instantiates every `IPluginModule`.
+3. `AddPluginHost` calls `module.ConfigureServices(services)` for each and registers an
+   `IPluginRegistry` describing what loaded.
+
+Phase 1 hands the loader assemblies referenced at compile time. The loader is written to accept
+**any** assembly source, so a future `/plugins` directory scan via `AssemblyLoadContext` changes
+only `PluginCatalog` — never the loader or business code. See `PLUGIN_DEVELOPMENT.md`.
+
+## Storage (provider pattern)
+
+```
+Workspace  →  IStorageProvider  →  SQLite (SqliteStorageProvider)
+```
+
+Business logic depends on `IStorageProvider`, never on EF Core directly. Adding SQL Server /
+PostgreSQL / a cloud store later means adding a new provider and one DI line in the Host — no
+business-logic change. `DATABASE_GUIDELINES.md` covers the schema and migration strategy.
+
+## Composition root
+
+`src/ApiTestingStudio.Host/App.xaml.cs` builds a `Microsoft.Extensions.Hosting` container:
+configures Serilog → `AddApplication()` → `AddInfrastructure(connectionString)` →
+`AddPluginHost(PluginCatalog.GetPluginAssemblies())` → registers `MainViewModel` + `MainWindow`
+→ initializes storage (applies EF migrations) → shows the window.
+
+## Solution file
+
+`ApiTestingStudio.slnx` (the .NET 10 XML solution format). Central build settings live in
+`Directory.Build.props`; package versions in `Directory.Packages.props` (Central Package
+Management); restore is pinned to nuget.org via `NuGet.config`.

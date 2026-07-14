@@ -1,0 +1,53 @@
+# Workflow Designer
+
+## Overview
+
+The **Workflow Designer** is the visual canvas for composing a workflow as a graph of nodes and
+edges — the product's core differentiator (see `FEATURES/Workflow.md`). It is built on **Nodify**
+and hosted in an AvalonDock **document** pane (one document per open workflow). A user assembles a
+scenario — log in, capture a token, create an order, assert the result — entirely by placing nodes
+and wiring data between them, with **no scripting**.
+
+## Scope / Capabilities
+
+- **Nodes** — one visual node per `WorkflowNodeKind` (`Api`, `Condition`, `Loop`, `Delay`,
+  `Parallel`, `Switch`, `Variable`, `Assertion`). Each node exposes typed input/output ports.
+- **Edges** — connections drag from an output port to an input port, creating a `NodeConnection`.
+- **Drag & drop** — a node palette (toolbox) supplies draggable node types onto the canvas;
+  Endpoints can be dropped from the Explorer to create pre-configured `Api` nodes (future).
+- **Visual data mapping** — an output field of one node (e.g. `Login.token`) is wired to a later
+  node's input without code; mappings resolve through the variable substitution engine.
+- **Zoom / pan** and a **minimap** for large graphs (both Nodify features).
+- **Undo / redo** over all canvas edits (add/move/delete node, connect/disconnect).
+- **Live run status** — during execution each node reflects Pending / Running / Passed / Failed.
+
+## Domain & Contracts
+
+Domain records (`ApiTestingStudio.Domain`):
+
+- `Workflow` — id, name, workspace id, `Nodes`, `Connections`.
+- `WorkflowNode` — id, `WorkflowNodeKind`, canvas position, node-specific config payload.
+- `NodeConnection` — source node/port → target node/port, plus the data-mapping expression.
+
+Plugin contract: `IWorkflowNode` (`Kind: WorkflowNodeKind`, `ExecuteAsync(NodeExecutionContext)`).
+The designer edits the graph; the **Sprint 08 engine** in Core executes it by dispatching each
+node to its registered `IWorkflowNode`. New node kinds arrive as plugins without designer changes.
+
+## UI
+
+- MVVM (CommunityToolkit.Mvvm). The Nodify `NodifyEditor` binds to a `WorkflowEditorViewModel`
+  exposing `Nodes`, `Connections`, `SelectedNodes`, and command surface (add/delete/connect,
+  undo/redo). A property panel edits the selected node's config. No business logic in code-behind.
+- Material Design iconography per node kind; verb/status colour coding consistent with the Explorer.
+
+## Sprint
+
+- **Sprint 09** — Nodify canvas, nodes/edges, drag & drop, zoom, minimap, undo/redo, visual mapping.
+- Depends on Sprint 08 (workflow engine, graph model, execution, run tree).
+
+## Open Questions / Future
+
+- Drag Endpoints from the Explorer directly onto the canvas as `Api` nodes.
+- Sub-workflows / reusable node groups; auto-layout of imported graphs.
+- Visual diff of two workflow runs.
+- Optional sandboxed scripting node (deliberately deferred).

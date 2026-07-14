@@ -1,0 +1,46 @@
+<Solution>
+  <Folder Name="/plugins/" />
+  <Folder Name="/plugins/Assertion.Json/">
+    <Project Path="plugins/Assertion.Json/ApiTestingStudio.Assertion.Json.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Assertion.Regex/">
+    <Project Path="plugins/Assertion.Regex/ApiTestingStudio.Assertion.Regex.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Assertion.Schema/">
+    <Project Path="plugins/Assertion.Schema/ApiTestingStudio.Assertion.Schema.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Export.ApiStudio/">
+    <Project Path="plugins/Export.ApiStudio/ApiTestingStudio.Export.ApiStudio.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Import.Curl/">
+    <Project Path="plugins/Import.Curl/ApiTestingStudio.Import.Curl.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Import.OpenApi/">
+    <Project Path="plugins/Import.OpenApi/ApiTestingStudio.Import.OpenApi.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Import.Postman/">
+    <Project Path="plugins/Import.Postman/ApiTestingStudio.Import.Postman.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Import.Scalar/">
+    <Project Path="plugins/Import.Scalar/ApiTestingStudio.Import.Scalar.csproj" />
+  </Folder>
+  <Folder Name="/plugins/Runner.Stress/">
+    <Project Path="plugins/Runner.Stress/ApiTestingStudio.Runner.Stress.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ApiTestingStudio.Application/ApiTestingStudio.Application.csproj" />
+    <Project Path="src/ApiTestingStudio.Core/ApiTestingStudio.Core.csproj" />
+    <Project Path="src/ApiTestingStudio.Domain/ApiTestingStudio.Domain.csproj" />
+    <Project Path="src/ApiTestingStudio.Host/ApiTestingStudio.Host.csproj" />
+    <Project Path="src/ApiTestingStudio.Infrastructure/ApiTestingStudio.Infrastructure.csproj" />
+    <Project Path="src/ApiTestingStudio.Plugin.Abstractions/ApiTestingStudio.Plugin.Abstractions.csproj" />
+    <Project Path="src/ApiTestingStudio.Shared/ApiTestingStudio.Shared.csproj" />
+    <Project Path="src/ApiTestingStudio.UI/ApiTestingStudio.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ApiTestingStudio.Application.Tests/ApiTestingStudio.Application.Tests.csproj" />
+    <Project Path="tests/ApiTestingStudio.Domain.Tests/ApiTestingStudio.Domain.Tests.csproj" />
+    <Project Path="tests/ApiTestingStudio.Infrastructure.Tests/ApiTestingStudio.Infrastructure.Tests.csproj" />
+    <Project Path="tests/ApiTestingStudio.PluginHost.Tests/ApiTestingStudio.PluginHost.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+  </ItemGroup>
+
+  <!--
+    Integration test project for the plugin host: references the plugin loader
+    (Core) plus ALL concrete plugins so it can assert every plugin module is
+    discovered and registered. This is the ONLY test project allowed to
+    reference concrete plugins.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ApiTestingStudio.Core\ApiTestingStudio.Core.csproj" />
+    <ProjectReference Include="..\..\plugins\Import.Curl\ApiTestingStudio.Import.Curl.csproj" />
+    <ProjectReference Include="..\..\plugins\Import.OpenApi\ApiTestingStudio.Import.OpenApi.csproj" />
+    <ProjectReference Include="..\..\plugins\Import.Scalar\ApiTestingStudio.Import.Scalar.csproj" />
+    <ProjectReference Include="..\..\plugins\Import.Postman\ApiTestingStudio.Import.Postman.csproj" />
+    <ProjectReference Include="..\..\plugins\Assertion.Json\ApiTestingStudio.Assertion.Json.csproj" />
+    <ProjectReference Include="..\..\plugins\Assertion.Regex\ApiTestingStudio.Assertion.Regex.csproj" />
+    <ProjectReference Include="..\..\plugins\Assertion.Schema\ApiTestingStudio.Assertion.Schema.csproj" />
+    <ProjectReference Include="..\..\plugins\Runner.Stress\ApiTestingStudio.Runner.Stress.csproj" />
+    <ProjectReference Include="..\..\plugins\Export.ApiStudio\ApiTestingStudio.Export.ApiStudio.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,62 @@
+<Project>
+
+  <!--
+    Central Package Management (CPM).
+    All NuGet versions are pinned here; individual .csproj files reference
+    packages WITHOUT a Version attribute. See .claude/CODING_STANDARDS.md.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Dependency Injection / Hosting / Configuration">
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup Label="MVVM">
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Persistence (EF Core + SQLite)">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
+    <!--
+      Transitively pin the SQLite native stack to the patched 3.x line. EF Core 10.0.9 pulls
+      SQLitePCLRaw 2.1.11, whose native e_sqlite3 has a high-severity advisory
+      (GHSA-2m69-gcr7-jv3q / NU1903). 3.x carries an updated, non-vulnerable SQLite build.
+    -->
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.core" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Logging (Serilog)">
+    <PackageVersion Include="Serilog" Version="4.4.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="UI (WPF only — referenced by UI/Host, never by core layers)">
+    <PackageVersion Include="Dirkster.AvalonDock" Version="4.74.1" />
+    <PackageVersion Include="Nodify" Version="7.3.0" />
+    <PackageVersion Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.5" />
+    <PackageVersion Include="Microsoft.Web.WebView2" Version="1.0.4078.44" />
+    <PackageVersion Include="MaterialDesignThemes" Version="5.3.2" />
+  </ItemGroup>
+
+  <ItemGroup Label="Testing">
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="FluentAssertions" Version="6.12.2" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+  </ItemGroup>
+
+</Project>

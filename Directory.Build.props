@@ -1,0 +1,24 @@
+<Project>
+
+  <!--
+    Solution-wide MSBuild defaults for API Testing Studio.
+    Every project inherits these unless it explicitly overrides them.
+    See .claude/CODING_STANDARDS.md for the rationale.
+  -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <Company>Silicon Stack</Company>
+    <Product>API Testing Studio</Product>
+    <Copyright>Copyright © Silicon Stack</Copyright>
+  </PropertyGroup>
+
+</Project>
