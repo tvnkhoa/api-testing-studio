@@ -1,4 +1,5 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.ApiRunner;
 using ApiTestingStudio.Application.ServiceCatalog;
 using ApiTestingStudio.Application.Workspaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,11 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IServiceExplorerService, ServiceExplorerService>();
         services.AddSingleton<IEndpointCrudService, EndpointCrudService>();
         services.AddSingleton<IServiceExplorerStateService, ServiceExplorerStateService>();
+
+        // API Runner (Sprint 06): request execution + history. The IRequestExecutor and
+        // IRequestHistoryRepository ports these depend on are bound by AddInfrastructure.
+        services.AddSingleton<IRequestExecutionService, RequestExecutionService>();
+        services.AddSingleton<IRequestHistoryService, RequestHistoryService>();
 
         return services;
     }

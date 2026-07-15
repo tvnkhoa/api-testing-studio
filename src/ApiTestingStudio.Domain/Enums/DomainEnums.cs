@@ -12,6 +12,19 @@ public enum HttpVerb
     Options,
 }
 
+/// <summary>How a request body is authored and sent by the runner.</summary>
+public enum BodyKind
+{
+    /// <summary>Free-form text sent verbatim.</summary>
+    Raw,
+
+    /// <summary>JSON body (Content-Type <c>application/json</c>).</summary>
+    Json,
+
+    /// <summary>URL-encoded form fields (Content-Type <c>application/x-www-form-urlencoded</c>).</summary>
+    Form,
+}
+
 /// <summary>Resolution scope for a <c>{{variable}}</c>, ordered from broadest to narrowest.</summary>
 public enum VariableScope
 {

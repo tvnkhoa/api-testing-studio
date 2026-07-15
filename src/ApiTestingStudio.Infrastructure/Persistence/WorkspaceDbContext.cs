@@ -45,6 +45,8 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<PackageMetadata> Packages => Set<PackageMetadata>();
 
+    public DbSet<RequestHistoryEntry> RequestHistory => Set<RequestHistoryEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -86,6 +88,12 @@ public sealed class WorkspaceDbContext : DbContext
             entity.HasKey(x => x.Id);
             // One dependency record per plugin within a workspace; upserts key off PluginId.
             entity.HasIndex(x => x.PluginId).IsUnique();
+        });
+
+        modelBuilder.Entity<RequestHistoryEntry>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.EndpointId);
         });
     }
 }

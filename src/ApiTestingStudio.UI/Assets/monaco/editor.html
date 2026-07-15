@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self';" />
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    #host { position: absolute; inset: 0; }
+    /* Fallback textarea used when the Monaco vs/ bundle is not present. */
+    #host > textarea {
+      width: 100%; height: 100%; box-sizing: border-box; border: 0; outline: none;
+      resize: none; padding: 8px;
+      font-family: Consolas, "Cascadia Mono", "Courier New", monospace; font-size: 13px;
+      color: #1e1e1e; background: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      #host > textarea { color: #d4d4d4; background: #1e1e1e; }
+    }
+  </style>
+</head>
+<body>
+  <div id="host"></div>
+  <script>
+    (function () {
+      var pending = { text: "", language: "json", readOnly: false };
+      var mode = null;      // 'monaco' | 'textarea'
+      var editor = null;
+      var suppress = false; // guards echoing host-pushed values back as edits
+
+      function post(value) {
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(value);
+        }
+      }
+
+      window.editorApi = {
+        apply: function (text, language, readOnly) {
+          pending = { text: text, language: language, readOnly: readOnly };
+          if (mode === 'monaco' && editor) {
+            suppress = true;
+            if (editor.getValue() !== text) { editor.setValue(text); }
+            monaco.editor.setModelLanguage(editor.getModel(), language);
+            editor.updateOptions({ readOnly: readOnly });
+            suppress = false;
+          } else if (mode === 'textarea' && editor) {
+            editor.value = text;
+            editor.readOnly = readOnly;
+          }
+        },
+        getValue: function () {
+          if (!editor) { return ""; }
+          return mode === 'monaco' ? editor.getValue() : editor.value;
+        }
+      };
+
+      function startTextarea() {
+        mode = 'textarea';
+        var ta = document.createElement('textarea');
+        ta.spellcheck = false;
+        document.getElementById('host').appendChild(ta);
+        editor = ta;
+        ta.addEventListener('input', function () { post(ta.value); });
+        window.editorApi.apply(pending.text, pending.language, pending.readOnly);
+      }
+
+      function startMonaco() {
+        require.config({ paths: { vs: 'vs' } });
+        require(['vs/editor/editor.main'], function () {
+          mode = 'monaco';
+          var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          editor = monaco.editor.create(document.getElementById('host'), {
+            value: pending.text,
+            language: pending.language,
+            readOnly: pending.readOnly,
+            theme: dark ? 'vs-dark' : 'vs',
+            automaticLayout: true,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false
+          });
+          editor.onDidChangeModelContent(function () {
+            if (!suppress) { post(editor.getValue()); }
+          });
+        });
+      }
+
+      // Probe for the Monaco AMD loader; fall back to a plain editor when the bundle is absent.
+      var probe = document.createElement('script');
+      probe.src = 'vs/loader.js';
+      probe.onload = startMonaco;
+      probe.onerror = startTextarea;
+      document.head.appendChild(probe);
+    })();
+  </script>
+</body>
+</html>

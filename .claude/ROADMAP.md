@@ -16,9 +16,9 @@ plugin-extensible .NET 10 + WPF desktop product.
 | 02 | Workspace Storage | SQLite/EF Core workspace lifecycle, metadata, recent workspaces, package metadata |
 | 03 | Plugin Infrastructure | Hardened loader/registry, version compatibility, lifecycle, dynamic loading |
 | 04 | Shell UI ✅ | AvalonDock shell, toolbar, status bar, theme, layout persistence (global per-user layout + manual light/dark) |
-| **05** | **Service Explorer (next)** | **Service tree, endpoint CRUD, search, context menu** |
-| 06 | API Runner | Request builder, response viewer, headers, cookies, timing, history |
-| 07 | Import System | cURL / OpenAPI / Swagger / Scalar / Postman import + auto-detection + wizard |
+| 05 | Service Explorer ✅ | Service tree, endpoint CRUD, search, context menu |
+| 06 | API Runner ✅ | Request builder, response viewer, headers, timing, history + replay; first Monaco/WebView2 host |
+| **07** | **Import System (next)** | **cURL / OpenAPI / Swagger / Scalar / Postman import + auto-detection + wizard** |
 | 08 | Workflow Engine | Execution engine: nodes, edges, context, loop, parallel, delay, condition |
 | 09 | Workflow Designer | Nodify canvas, drag & drop, zoom, minimap, undo/redo, visual mapping |
 | 10 | Profiles & Environments | Identity profiles, AES/DPAPI secret storage, variables, environments |

@@ -3,11 +3,14 @@ using System.IO;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Shared.Results;
+using ApiTestingStudio.UI.Messaging;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Panels;
+using ApiTestingStudio.UI.ViewModels.Runner;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 
 namespace ApiTestingStudio.UI.ViewModels;
@@ -30,6 +33,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly ILogger<ShellViewModel> _logger;
 
     private readonly ServiceExplorerViewModel _explorer;
+    private readonly ApiRunnerViewModel _runner;
     private readonly LogsPlaceholderViewModel _logs = new();
 
     public ShellViewModel(
@@ -42,6 +46,8 @@ public sealed partial class ShellViewModel : ObservableObject
         StatusBarViewModel statusBarViewModel,
         RecentWorkspacesMenuViewModel recentWorkspaces,
         ServiceExplorerViewModel explorer,
+        ApiRunnerViewModel runner,
+        IMessenger messenger,
         ILogger<ShellViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(workspaceService);
@@ -53,6 +59,8 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(statusBarViewModel);
         ArgumentNullException.ThrowIfNull(recentWorkspaces);
         ArgumentNullException.ThrowIfNull(explorer);
+        ArgumentNullException.ThrowIfNull(runner);
+        ArgumentNullException.ThrowIfNull(messenger);
         ArgumentNullException.ThrowIfNull(logger);
 
         _workspaceService = workspaceService;
@@ -62,6 +70,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _statusBar = statusBar;
         _fileDialog = fileDialog;
         _explorer = explorer;
+        _runner = runner;
         _logger = logger;
 
         StatusBar = statusBarViewModel;
@@ -71,6 +80,10 @@ public sealed partial class ShellViewModel : ObservableObject
         Documents.Add(new WelcomeDocumentViewModel());
         Tools.Add(_explorer);
         Tools.Add(_logs);
+
+        // Selecting an endpoint in the Explorer opens (or focuses) the Runner document pane; the
+        // runner view model itself loads the endpoint's details from the same message.
+        messenger.Register<EndpointSelectedMessage>(this, (_, _) => OpenOrFocusRunner());
 
         Menu = new MainMenuViewModel(this, RecentWorkspaces);
         Toolbar = new ToolbarViewModel(this);
@@ -229,6 +242,17 @@ public sealed partial class ShellViewModel : ObservableObject
         IsWorkspaceOpen = _session.IsOpen;
         StatusBar.RefreshWorkspace();
         OnPropertyChanged(nameof(Title));
+    }
+
+    private void OpenOrFocusRunner()
+    {
+        if (!Documents.Contains(_runner))
+        {
+            Documents.Add(_runner);
+        }
+
+        _runner.IsSelected = true;
+        _runner.IsActive = true;
     }
 
     private void TogglePanel(ToolPanelViewModel panel)
