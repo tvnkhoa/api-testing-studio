@@ -34,6 +34,8 @@ public sealed class MainMenuViewModel
 
     public IAsyncRelayCommand CloseWorkspaceCommand => _shell.CloseWorkspaceCommand;
 
+    public IAsyncRelayCommand ImportCommand => _shell.ImportCommand;
+
     public IRelayCommand ExitCommand => _shell.ExitCommand;
 
     // View

@@ -12,4 +12,7 @@ public interface IFileDialogService
 
     /// <summary>Prompts for a location to create a new workspace file. Returns its path, or null if cancelled.</summary>
     string? PromptCreateWorkspace();
+
+    /// <summary>Prompts for an existing file to open (e.g. an import source). Returns its path, or null if cancelled.</summary>
+    string? PromptOpenFile(string title, string filter);
 }

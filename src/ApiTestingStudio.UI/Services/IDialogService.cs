@@ -19,4 +19,7 @@ public interface IDialogService
 
     /// <summary>Shows a yes/no confirmation; returns true when the user confirms.</summary>
     bool Confirm(string title, string message);
+
+    /// <summary>Shows the modal import wizard; returns true when an import was committed.</summary>
+    bool ShowImportWizard();
 }

@@ -22,6 +22,16 @@
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
+  <ItemGroup Label="Import parsers (OpenAPI / Swagger — referenced only by Import.OpenApi/Import.Scalar)">
+    <!--
+      Official Microsoft OpenAPI reader: parses OpenAPI 3.x and Swagger 2.0 from JSON or YAML,
+      fully offline. SharpYaml (YAML support) and Microsoft.OpenApi arrive transitively and are
+      pinned via CentralPackageTransitivePinningEnabled.
+    -->
+    <PackageVersion Include="Microsoft.OpenApi" Version="1.6.24" />
+    <PackageVersion Include="Microsoft.OpenApi.Readers" Version="1.6.24" />
+  </ItemGroup>
+
   <ItemGroup Label="Persistence (EF Core + SQLite)">
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />

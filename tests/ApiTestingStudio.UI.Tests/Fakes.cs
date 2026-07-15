@@ -177,7 +177,11 @@ internal sealed class FakeFileDialogService : IFileDialogService
 
     public string? CreateResult { get; set; }
 
+    public string? OpenFileResult { get; set; }
+
     public string? PromptOpenWorkspace() => OpenResult;
 
     public string? PromptCreateWorkspace() => CreateResult;
+
+    public string? PromptOpenFile(string title, string filter) => OpenFileResult;
 }

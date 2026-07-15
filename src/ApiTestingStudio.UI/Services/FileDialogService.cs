@@ -24,6 +24,18 @@ public sealed class FileDialogService : IFileDialogService
         return dialog.ShowDialog() == true ? dialog.FileName : null;
     }
 
+    public string? PromptOpenFile(string title, string filter)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = title,
+            Filter = filter,
+            CheckFileExists = true,
+        };
+
+        return dialog.ShowDialog() == true ? dialog.FileName : null;
+    }
+
     public string? PromptCreateWorkspace()
     {
         var dialog = new SaveFileDialog

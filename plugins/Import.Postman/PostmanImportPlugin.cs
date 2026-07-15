@@ -16,14 +16,37 @@ public sealed class PostmanImportPluginModule : IPluginModule
 }
 
 /// <summary>
-/// Placeholder Postman importer. Parsing is implemented in the Import System sprint (Sprint 07).
+/// Imports a Postman Collection (v2.x). The collection becomes one <see cref="Service"/>; each request
+/// (including those nested in folders) becomes an <see cref="Endpoint"/>.
 /// </summary>
 public sealed class PostmanImporter : IImporter
 {
     public string Format => "postman";
 
-    public bool CanImport(ImportSource source) => false;
+    public bool CanImport(ImportSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (string.Equals(source.Format, Format, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Postman collections declare their schema URL under info.schema.
+        return source.Content is { } content
+            && content.Contains("schema.getpostman.com", StringComparison.OrdinalIgnoreCase);
+    }
 
     public Task<ImportResult> ImportAsync(ImportSource source, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException("Postman import is delivered in Sprint 07 (Import System).");
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (string.IsNullOrWhiteSpace(source.Content))
+        {
+            throw new InvalidOperationException("No Postman collection was provided to import.");
+        }
+
+        return Task.FromResult(PostmanCollectionParser.Parse(source.Content));
+    }
 }

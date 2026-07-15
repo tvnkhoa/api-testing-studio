@@ -70,6 +70,7 @@ public sealed partial class ServiceExplorerViewModel : ToolPanelViewModel, IExpl
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddServiceCommand))]
     [NotifyCanExecuteChangedFor(nameof(RefreshCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
     private bool _isWorkspaceOpen;
 
     [ObservableProperty]
@@ -158,6 +159,16 @@ public sealed partial class ServiceExplorerViewModel : ToolPanelViewModel, IExpl
 
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private Task RefreshAsync(CancellationToken cancellationToken) => LoadAsync(cancellationToken);
+
+    [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
+    private async Task ImportAsync(CancellationToken cancellationToken)
+    {
+        if (_dialog.ShowImportWizard())
+        {
+            _statusBar.SetMessage("Import complete.");
+            await LoadAsync(cancellationToken).ConfigureAwait(true);
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private async Task AddServiceAsync(CancellationToken cancellationToken)

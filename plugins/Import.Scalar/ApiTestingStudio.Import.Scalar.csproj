@@ -4,6 +4,8 @@
     <ProjectReference Include="..\..\src\ApiTestingStudio.Plugin.Abstractions\ApiTestingStudio.Plugin.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\ApiTestingStudio.Domain\ApiTestingStudio.Domain.csproj" />
     <ProjectReference Include="..\..\src\ApiTestingStudio.Shared\ApiTestingStudio.Shared.csproj" />
+    <!-- Scalar reference endpoints expose an underlying OpenAPI document; reuse the OpenAPI mapper. -->
+    <ProjectReference Include="..\Import.OpenApi\ApiTestingStudio.Import.OpenApi.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,5 +1,6 @@
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.ServiceCatalog;
 using ApiTestingStudio.Application.Workspaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,12 @@ public static class ApplicationServiceCollectionExtensions
         // IRequestHistoryRepository ports these depend on are bound by AddInfrastructure.
         services.AddSingleton<IRequestExecutionService, RequestExecutionService>();
         services.AddSingleton<IRequestHistoryService, RequestHistoryService>();
+
+        // Import (Sprint 07): pure orchestration + format detection. The IEnumerable<IImporter> is
+        // contributed by the Import.* plugins via AddPluginHost; the IDefinitionFetcher (URL fetch)
+        // and ICatalogMerger (transactional merge) ports are bound by AddInfrastructure.
+        services.AddSingleton<ISourceFormatDetector, SourceFormatDetector>();
+        services.AddSingleton<IImportOrchestrator, ImportOrchestrator>();
 
         return services;
     }

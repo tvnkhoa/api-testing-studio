@@ -34,6 +34,8 @@
                 <MenuItem Header="_Save Workspace" Command="{Binding SaveWorkspaceCommand}" InputGestureText="Ctrl+S" />
                 <MenuItem Header="_Close Workspace" Command="{Binding CloseWorkspaceCommand}" />
                 <Separator />
+                <MenuItem Header="_Import…" Command="{Binding ImportCommand}" />
+                <Separator />
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
             </MenuItem>
             <MenuItem Header="_View">
