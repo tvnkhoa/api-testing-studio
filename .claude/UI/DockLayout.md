@@ -26,6 +26,15 @@ the app-data directory. **Reset Layout** restores the XAML default snapshot capt
 Per-workspace layouts remain a future item. See
 `DECISIONS/ADR-0008-Shell-UI-Layout-Theme-Persistence.md`.
 
+## Runner (Sprint 06 — implemented)
+
+The **API Runner** is the first real document pane (`ApiRunnerViewModel : DocumentPanelViewModel`,
+`ContentId = "document.runner"`, rendered via a `DataTemplate` in `PanelTemplates.xaml`). Selecting
+an endpoint in the Explorer publishes `EndpointSelected`; `ShellViewModel` opens-or-focuses the
+single shared Runner pane and the runner loads that endpoint. Its body/response editors are hosted
+by Monaco in a WebView2 (see `UI/Runner.md` and `DECISIONS/ADR-0009-*`). A per-endpoint history
+list supports replay. One reused pane (not one tab per endpoint) — see `UI/Runner.md`.
+
 ## Scope / Capabilities
 
 - **Document panes** (`LayoutDocumentPane`) — tabbed editing surfaces: Runner, Workflow Designer
@@ -55,6 +64,8 @@ contract, keeping built-in and plugin panes uniform.
 ## Sprint
 
 - **Sprint 04** — WPF shell, AvalonDock, toolbar, status bar, theme, layout persistence.
+- **Sprint 06** — first document pane: the API Runner (`document.runner`), opened/focused from the
+  Explorer's endpoint selection.
 
 ## Open Questions / Future
 

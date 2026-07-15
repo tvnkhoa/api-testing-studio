@@ -1,5 +1,6 @@
 using System.IO;
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Infrastructure.Http;
 using ApiTestingStudio.Infrastructure.Persistence;
 using ApiTestingStudio.Infrastructure.Security;
 using ApiTestingStudio.Infrastructure.Settings;
@@ -46,6 +47,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IEndpointFolderRepository, EndpointFolderRepository>();
         services.AddSingleton<IEndpointRepository, EndpointRepository>();
         services.AddSingleton<IWorkspaceSettingRepository, WorkspaceSettingRepository>();
+
+        // API Runner (Sprint 06): HTTP execution engine (single long-lived handler) + history store.
+        services.AddSingleton<IRequestExecutor, HttpRequestExecutor>();
+        services.AddSingleton<IRequestHistoryRepository, RequestHistoryRepository>();
 
         var recentStorePath = Path.Combine(appDataDirectory, RecentWorkspacesFileName);
         services.AddSingleton<IRecentWorkspacesService>(sp =>

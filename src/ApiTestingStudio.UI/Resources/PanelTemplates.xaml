@@ -2,7 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:panels="clr-namespace:ApiTestingStudio.UI.ViewModels.Panels"
                     xmlns:explorer="clr-namespace:ApiTestingStudio.UI.ViewModels.Explorer"
-                    xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels">
+                    xmlns:runner="clr-namespace:ApiTestingStudio.UI.ViewModels.Runner"
+                    xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels"
+                    xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner">
 
     <!--
         Implicit data templates mapping each panel view model to its view. AvalonDock renders the
@@ -21,6 +23,15 @@
 
     <DataTemplate DataType="{x:Type panels:LogsPlaceholderViewModel}">
         <views:LogsPlaceholderView />
+    </DataTemplate>
+
+    <!-- API Runner (Sprint 06) -->
+    <DataTemplate DataType="{x:Type runner:ApiRunnerViewModel}">
+        <runnerViews:ApiRunnerView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type runner:MonacoEditorViewModel}">
+        <runnerViews:MonacoEditorView />
     </DataTemplate>
 
 </ResourceDictionary>

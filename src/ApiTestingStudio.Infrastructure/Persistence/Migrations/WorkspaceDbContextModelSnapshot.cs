@@ -51,6 +51,12 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("DefaultBody")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DefaultHeaders")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
@@ -238,6 +244,55 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Profiles");
+                });
+
+            modelBuilder.Entity("ApiTestingStudio.Domain.Entities.RequestHistoryEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ConnectMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DnsMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("EndpointId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("RequestSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponseSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("TimeToFirstByteMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("TimestampUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("TotalMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndpointId");
+
+                    b.ToTable("RequestHistory");
                 });
 
             modelBuilder.Entity("ApiTestingStudio.Domain.Entities.Run", b =>

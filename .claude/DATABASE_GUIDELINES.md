@@ -44,7 +44,7 @@ this keeps EF mapping and migrations simple and predictable.
 Mapped entities & tables (`WorkspaceDbContext`):
 `Workspace`, `Service`, `EndpointFolder`, `Endpoint`, `ProfileDefinition`, `EnvironmentDefinition`,
 `Variable`, `WorkflowDefinition`, `TestCaseDefinition`, `Run`, `RunStep`, `Attachment`,
-`WorkspaceSetting`, `LogEntry`, `PackageMetadata`.
+`WorkspaceSetting`, `LogEntry`, `PackageMetadata`, `RequestHistoryEntry`.
 
 The Service Explorer catalog (Sprint 05) is `Service` → `EndpointFolder` (nestable via
 `ParentFolderId`) → `Endpoint`. Endpoints reference their owner by `ServiceId` plus an optional
@@ -58,6 +58,14 @@ Explorer's tree expansion/selection state).
 `PackageMetadata` (`Packages` table) records which plugins a workspace depends on
 (`PluginId`, `PluginName`, `Version`, `InstalledUtc`), with a **unique index on `PluginId`** so
 upserts key off the plugin id. It is read/written via `IPackageMetadataRepository`.
+
+`RequestHistoryEntry` (`RequestHistory` table, Sprint 06) records one API Runner send against an
+endpoint: `EndpointId` (indexed FK), denormalized `Method`/`Url`/`StatusCode` and timing
+(`TotalMs`, nullable `DnsMs`/`ConnectMs`/`TimeToFirstByteMs`) for cheap list rendering, plus full
+`RequestSnapshot`/`ResponseSnapshot` JSON text (via `System.Text.Json`) used for replay, and a
+`TimestampUtc`. Ordering by timestamp is done client-side (SQLite cannot `ORDER BY` a
+`DateTimeOffset`). Read/written via `IRequestHistoryRepository`. Sprint 06 also extends `Endpoint`
+with nullable `DefaultHeaders` (JSON array) and `DefaultBody` columns the runner pre-fills.
 
 Conventions:
 - Primary key: `Id` (`Guid`). Configured explicitly in `OnModelCreating`.
@@ -75,7 +83,7 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 ## Migrations
 
 - Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
-  `AddPackageMetadata`, `AddServiceCatalogHierarchy`.
+  `AddPackageMetadata`, `AddServiceCatalogHierarchy`, `AddRequestHistory`.
   - `AddServiceCatalogHierarchy` (Sprint 05) adds the `EndpointFolders` table and the
     `Endpoints.FolderId`, `Endpoints.SortOrder`, `Services.SortOrder` columns + indexes. It is
     additive/back-compatible (the `Services`/`Endpoints` base tables already existed from
@@ -83,6 +91,10 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
     `AddServiceCatalog` name predates that fact). Paired with a `Workspace.CurrentSchemaVersion` bump
     to **2**; existing v1 workspaces self-provision the new schema via `MigrateAsync` on open and stay
     compatible.
+  - `AddRequestHistory` (Sprint 06) creates the `RequestHistory` table (indexed on `EndpointId`) and
+    adds the nullable `Endpoints.DefaultHeaders` / `Endpoints.DefaultBody` columns. Additive/
+    back-compatible. Paired with a `Workspace.CurrentSchemaVersion` bump to **3**; v2 workspaces
+    self-provision on open via `MigrateAsync`.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
 - At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**

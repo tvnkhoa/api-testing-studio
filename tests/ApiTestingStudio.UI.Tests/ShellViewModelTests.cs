@@ -1,6 +1,7 @@
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
+using ApiTestingStudio.UI.ViewModels.Runner;
 using CommunityToolkit.Mvvm.Messaging;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,9 +31,18 @@ public sealed class ShellViewModelTests
             session,
             status,
             NullLogger<ServiceExplorerViewModel>.Instance);
+        var messenger = new WeakReferenceMessenger();
+        var runner = new ApiRunnerViewModel(
+            new FakeRequestExecutionService(),
+            new FakeRequestHistoryService(),
+            new FakeEndpointRepository(),
+            new FakeServiceRepository(),
+            messenger,
+            status,
+            NullLogger<ApiRunnerViewModel>.Instance);
         var vm = new ShellViewModel(
             workspaceService, session, theme, dock, status, dialog, statusVm, recentVm, explorer,
-            NullLogger<ShellViewModel>.Instance);
+            runner, messenger, NullLogger<ShellViewModel>.Instance);
 
         return new ShellHarness(vm, workspaceService, session, recent, theme, dock, status, dialog);
     }

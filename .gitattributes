@@ -21,3 +21,7 @@
 *.zip       binary
 *.dll       binary
 *.exe       binary
+
+# Vendored Monaco editor bundle (monaco-editor min/vs) — treat as opaque vendored
+# assets: no line-ending conversion and no text diffing (see Assets/monaco/README.md).
+src/ApiTestingStudio.UI/Assets/monaco/vs/** -text -diff

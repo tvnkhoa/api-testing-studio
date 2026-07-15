@@ -1,6 +1,7 @@
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
+using ApiTestingStudio.UI.ViewModels.Runner;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,6 +33,11 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<StatusBarViewModel>();
         services.AddSingleton<RecentWorkspacesMenuViewModel>();
         services.AddSingleton<ServiceExplorerViewModel>();
+
+        // API Runner document (Sprint 06). Child view models (builder/response/editor) are composed
+        // internally; it subscribes to the injected IMessenger for endpoint selection.
+        services.AddSingleton<ApiRunnerViewModel>();
+
         services.AddSingleton<ShellViewModel>();
 
         return services;

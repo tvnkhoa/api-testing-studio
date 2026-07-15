@@ -59,4 +59,13 @@ public sealed record Endpoint
 
     /// <summary>Ordering among siblings sharing the same parent (ascending).</summary>
     public int SortOrder { get; init; }
+
+    /// <summary>
+    /// Default request headers pre-filled by the runner when this endpoint is opened, stored as a
+    /// JSON array of <see cref="HttpHeader"/>. Null when none are configured.
+    /// </summary>
+    public string? DefaultHeaders { get; init; }
+
+    /// <summary>Default request body text pre-filled by the runner. Null when none is configured.</summary>
+    public string? DefaultBody { get; init; }
 }

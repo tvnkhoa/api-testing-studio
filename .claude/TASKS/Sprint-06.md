@@ -74,8 +74,44 @@ Deliver the API Runner: build and send HTTP requests, view responses with timing
 - Request code-gen (curl, C#).
 
 ## Checklist
-- [ ] HTTP executor + execution service + tests.
-- [ ] Request builder UI (params/headers/body).
-- [ ] Response viewer + Monaco integration.
-- [ ] Timing capture + display.
-- [ ] History persistence + replay.
+- [x] HTTP executor + execution service + tests.
+- [x] Request builder UI (params/headers/body).
+- [x] Response viewer + Monaco integration.
+- [x] Timing capture + display.
+- [x] History persistence + replay.
+
+## Outcome (2026-07-15)
+
+Delivered the API Runner end-to-end across Domain, Application, Infrastructure and UI, build clean
+(0 warnings, warnings-as-errors) with all tests green (Domain 3, Application 51, UI 29,
+Infrastructure 36, PluginHost 9). See `DECISIONS/ADR-0009-*`, `FEATURES/Runner.md`, `UI/Runner.md`.
+
+**What shipped**
+- Domain: `HttpRequestModel`, `HttpResponseModel`, `RequestTiming`, `HttpExecutionResult`,
+  `RequestHistoryEntry`, `HttpHeader`, `QueryParam` (`Entities/ApiRunner.cs`); `BodyKind` enum;
+  `Endpoint` extended with `DefaultHeaders`/`DefaultBody`.
+- Application: ports `IRequestExecutor`, `IRequestHistoryRepository`; services
+  `RequestExecutionService`, `RequestHistoryService`; `RequestExecutionErrors`.
+- Infrastructure: `HttpRequestExecutor` (single long-lived `SocketsHttpHandler`, DNS/connect timing
+  via `ConnectCallback`), `RequestHistoryRepository`, `WorkspaceDbContext` mapping, migration
+  `AddRequestHistory`, `SchemaVersion` → 3.
+- UI: `ApiRunnerViewModel` (+ builder/response/Monaco child VMs), `ApiRunnerView` /
+  `MonacoEditorView`, `IMonacoBridge`/`MonacoBridge`, offline `Assets/monaco/editor.html`, shell
+  open/focus on `EndpointSelected`.
+
+**Deviations from the plan**
+- **Cookie jar dropped** — cookies are managed as plain `Cookie` request headers; a per-workspace
+  cookie jar is deferred (revisit for Workflow S08). `CookieJar` class not created.
+- **Single reused Runner pane** (`document.runner`) instead of a pane-per-endpoint, so AvalonDock
+  layout persistence works with the existing `ContentId` scheme. Per-endpoint tabs deferred.
+- **HTTP engine owns its `SocketsHttpHandler`** rather than using `IHttpClientFactory`, to keep the
+  DNS/connect timing instrumentation; `Microsoft.Extensions.Http` was therefore not added.
+- **Monaco bundle vendored** — `monaco-editor@0.55.1` (`min/vs`, ~16 MB) is committed under
+  `Assets/monaco/vs/` so the app ships full Monaco offline. `editor.html` still self-degrades to a
+  plain editor if the bundle is ever absent; JSON formatting works either way. Re-pin steps in the
+  folder README.
+
+**Verification note**
+Backend verified by unit + real-SQLite integration tests. GUI end-to-end (live HTTP send, Monaco
+rendering, cancel) is to be exercised by running the app on a Windows desktop session; syntax
+highlighting appears once the Monaco `vs/` bundle is added.

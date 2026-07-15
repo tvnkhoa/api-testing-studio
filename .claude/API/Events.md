@@ -21,7 +21,7 @@ intended contracts, not yet wired.
 | **RunStepCompleted** | `RunId`, `StepId`, `RunStatus`, `DurationMs` | Workflow engine / runner | Workflow Designer (live node state), Logs, Dashboard |
 | **RunCompleted** | `RunId`, `RunStatus`, `TotalMs`, counts | Workflow engine / runner | Dashboard (aggregate refresh), Logs, status bar |
 | **PluginRegistered** | `Name`, `Version`, `Assembly` | Plugin host (`AddPluginHost`, Core) | `IPluginRegistry` consumers, shell (tool windows/widgets), diagnostics |
-| **EndpointSelected** *(wired, Sprint 05)* | `EndpointId`, `ServiceId`, `Name`, `Method`, `Path` | Service Explorer (`ServiceExplorerViewModel`, UI) via `IMessenger` | API Runner (Sprint 06); today the status bar |
+| **EndpointSelected** *(wired, Sprint 05–06)* | `EndpointId`, `ServiceId`, `Name`, `Method`, `Path` | Service Explorer (`ServiceExplorerViewModel`, UI) via `IMessenger` | **API Runner (`ApiRunnerViewModel`, Sprint 06)** loads the endpoint; `ShellViewModel` opens/focuses the Runner pane; status bar |
 
 ## Notes
 

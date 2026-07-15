@@ -24,6 +24,14 @@
 
   </ItemGroup>
 
+  <!-- Monaco editor assets are loaded offline by the Runner's WebView2 host; copy the whole
+       Assets tree (editor.html + the optional vs/ bundle) next to the app. -->
+  <ItemGroup>
+    <Content Include="Assets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
