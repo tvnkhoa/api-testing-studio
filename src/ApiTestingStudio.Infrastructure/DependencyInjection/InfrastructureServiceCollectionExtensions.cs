@@ -1,5 +1,6 @@
 using System.IO;
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Infrastructure.Http;
 using ApiTestingStudio.Infrastructure.Persistence;
 using ApiTestingStudio.Infrastructure.Security;
@@ -51,6 +52,10 @@ public static class InfrastructureServiceCollectionExtensions
         // API Runner (Sprint 06): HTTP execution engine (single long-lived handler) + history store.
         services.AddSingleton<IRequestExecutor, HttpRequestExecutor>();
         services.AddSingleton<IRequestHistoryRepository, RequestHistoryRepository>();
+
+        // Import (Sprint 07): user-triggered URL fetch (offline-first) + transactional catalog merge.
+        services.AddSingleton<IDefinitionFetcher, DefinitionFetcher>();
+        services.AddSingleton<ICatalogMerger, CatalogMerger>();
 
         var recentStorePath = Path.Combine(appDataDirectory, RecentWorkspacesFileName);
         services.AddSingleton<IRecentWorkspacesService>(sp =>

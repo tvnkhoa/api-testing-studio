@@ -20,6 +20,8 @@
             <Separator />
             <MenuItem Header="Move Up" Command="{Binding MoveUpCommand}" />
             <MenuItem Header="Move Down" Command="{Binding MoveDownCommand}" />
+            <Separator />
+            <MenuItem Header="Import…" Command="{Binding ImportCommand}" />
         </ContextMenu>
     </UserControl.Resources>
 
@@ -38,6 +40,7 @@
                 <Button Content="↑" Command="{Binding MoveUpCommand}" ToolTip="Move up" />
                 <Button Content="↓" Command="{Binding MoveDownCommand}" ToolTip="Move down" />
                 <Separator />
+                <Button Content="Import…" Command="{Binding ImportCommand}" ToolTip="Import endpoints from cURL, OpenAPI, Postman or Scalar" />
                 <Button Content="Refresh" Command="{Binding RefreshCommand}" ToolTip="Reload the tree" />
             </ToolBar>
         </ToolBarTray>

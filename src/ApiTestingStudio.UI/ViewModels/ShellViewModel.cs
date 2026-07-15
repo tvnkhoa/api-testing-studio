@@ -112,6 +112,7 @@ public sealed partial class ShellViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CloseWorkspaceCommand))]
     [NotifyCanExecuteChangedFor(nameof(SaveWorkspaceCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
     private bool _isWorkspaceOpen;
 
     /// <summary>Whether the dark theme is active (drives the View menu check state).</summary>
@@ -170,6 +171,9 @@ public sealed partial class ShellViewModel : ObservableObject
             _statusBar.SetMessage(result.Error.Message);
         }
     }
+
+    [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
+    private Task ImportAsync() => _explorer.ImportCommand.ExecuteAsync(null);
 
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private void SaveWorkspace()

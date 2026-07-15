@@ -43,7 +43,10 @@ Implement the import pipeline and the `Import.*` plugins so users can bring endp
 
 ## Plugin Changes
 - Implement all four Import.* plugins against `IImporter`.
-- Each ships a manifest declaring the `IImporterPlugin` capability.
+- Each plugin is compile-time (referenced by the Host, listed in `PluginCatalog.cs`) and registers
+  its importer in `IPluginModule.ConfigureServices`; the host infers the `Importer`
+  `PluginCapability` by diffing the service collection. No `manifest.json` and no `IImporterPlugin`
+  marker interface are involved (manifests are only for directory/drop-in plugins).
 
 ## UI Changes
 - Import wizard dialog (source selection, paste/file/URL, preview grid, mapping, confirm).
@@ -73,8 +76,12 @@ Implement the import pipeline and the `Import.*` plugins so users can bring endp
 - Import from HAR / browser recordings.
 
 ## Checklist
-- [ ] Define `IImporter` + intermediate model.
-- [ ] Implement curl / OpenAPI / Scalar / Postman importers.
-- [ ] Source auto-detection.
-- [ ] Import wizard UI + preview.
-- [ ] Catalog merge + transactional commit + tests.
+- [x] Define `IImporter` + intermediate model. (`IImporter` pre-existed; added Application-layer
+  `ParsedEndpoint`/`ImportPreview`/`ImportOptions`/`ImportSummary`.)
+- [x] Implement curl / OpenAPI / Scalar / Postman importers. (OpenAPI/Scalar via
+  `Microsoft.OpenApi.Readers`; Scalar reuses the shared `OpenApiEndpointMapper`.)
+- [x] Source auto-detection. (`ISourceFormatDetector`/`SourceFormatDetector`.)
+- [x] Import wizard UI + preview. (Modal `ImportWizardDialog` + `ImportWizardViewModel`; entry points
+  in Service Explorer toolbar/context menu and File menu.)
+- [x] Catalog merge + transactional commit + tests. (`ICatalogMerger` → Infrastructure `CatalogMerger`
+  single-transaction; `IDefinitionFetcher` for user-triggered URL fetch + auto-probe.)

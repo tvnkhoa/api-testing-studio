@@ -108,6 +108,10 @@ internal sealed class FakeDialogService : IDialogService
 
     public bool ConfirmResult { get; set; }
 
+    public bool ImportWizardResult { get; set; }
+
+    public int ShowImportWizardCount { get; private set; }
+
     public ServiceDraft? PromptService(string title, ServiceDraft? existing = null) => ServiceResult;
 
     public EndpointDraft? PromptEndpoint(string title, EndpointDraft? existing = null) => EndpointResult;
@@ -115,4 +119,10 @@ internal sealed class FakeDialogService : IDialogService
     public string? PromptName(string title, string label, string? existing = null) => NameResult;
 
     public bool Confirm(string title, string message) => ConfirmResult;
+
+    public bool ShowImportWizard()
+    {
+        ShowImportWizardCount++;
+        return ImportWizardResult;
+    }
 }

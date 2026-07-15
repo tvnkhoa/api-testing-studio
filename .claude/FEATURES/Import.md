@@ -38,10 +38,18 @@ imports.
 
 Plugin contract (`ApiTestingStudio.Plugin.Abstractions`):
 
-- `IImporter` — `bool CanHandle(ImportSource source)` and
+- `IImporter` — `string Format`, `bool CanImport(ImportSource source)` and
   `Task<ImportResult> ImportAsync(ImportSource source, CancellationToken cancellationToken)`.
-- `ImportSource` describes raw text, a file path, or a URL; `ImportResult` returns the
-  Endpoints/Variables to merge into the Workspace.
+- `ImportSource(Format, Content?, Uri?)` describes raw text, a file path, or a URL; `ImportResult`
+  returns the `Service`/`Endpoint` records to merge into the Workspace. (Postman Environment →
+  `Variable`/`Environment` mapping is a later-sprint extension; the Sprint 07 contract carries
+  Services and Endpoints.)
+
+The orchestration around the importers lives in the Application layer: `ISourceFormatDetector`
+(auto-detect), `IImportOrchestrator` (fetch → detect → parse → preview → merge), `IDefinitionFetcher`
+(user-triggered, offline-first URL fetch + auto-probe), and `ICatalogMerger` (transactional commit
+into the catalog). OpenAPI/Swagger parsing uses the `Microsoft.OpenApi.Readers` package (JSON + YAML,
+2.0 + 3.x), referenced only by the `Import.OpenApi` / `Import.Scalar` plugins.
 
 Implementations ship as `Import.*` plugins (e.g. `Import.Curl`, `Import.OpenApi`, `Import.Postman`,
 `Import.Scalar`). The auto-detection probe selects the appropriate `IImporter` by trying candidate
