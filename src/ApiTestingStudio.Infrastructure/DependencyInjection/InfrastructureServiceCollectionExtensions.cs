@@ -53,6 +53,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IRequestExecutor, HttpRequestExecutor>();
         services.AddSingleton<IRequestHistoryRepository, RequestHistoryRepository>();
 
+        // Workflow graph persistence (Sprint 08). The engine itself is bound by AddApplication.
+        services.AddSingleton<IWorkflowRepository, WorkflowRepository>();
+
         // Import (Sprint 07): user-triggered URL fetch (offline-first) + transactional catalog merge.
         services.AddSingleton<IDefinitionFetcher, DefinitionFetcher>();
         services.AddSingleton<ICatalogMerger, CatalogMerger>();

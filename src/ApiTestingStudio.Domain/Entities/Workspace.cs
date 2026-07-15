@@ -12,7 +12,7 @@ public sealed record Workspace
     /// Opening a workspace whose <see cref="SchemaVersion"/> is greater than this must fail
     /// safely — the file was written by a newer app. See <c>.claude/DATABASE_GUIDELINES.md</c>.
     /// </summary>
-    public const int CurrentSchemaVersion = 3;
+    public const int CurrentSchemaVersion = 4;
 
     public Guid Id { get; init; } = Guid.NewGuid();
 

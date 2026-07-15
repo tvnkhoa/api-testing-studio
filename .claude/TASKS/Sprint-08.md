@@ -72,8 +72,29 @@ Build the headless workflow execution engine: a node/edge graph executed with a 
 - Pluggable custom node types.
 
 ## Checklist
-- [ ] Graph domain model + persistence + migration.
-- [ ] Engine traversal + context + variable resolver.
-- [ ] Request/Condition/Loop/Parallel/Delay handlers.
-- [ ] Cancellation + timeout + failure policies.
-- [ ] Run result model + comprehensive unit tests.
+- [x] Graph domain model + persistence + migration. (`WorkflowNode`/`WorkflowEdge` entities + runtime
+  `Workflow` aggregate; `WorkflowRepository`; `AddWorkflows` migration, schema **v4**. Kept the
+  existing `WorkflowDefinition`/`Workflows` root; child tables are additive.)
+- [x] Engine traversal + context + variable resolver. (`WorkflowEngine` walks entry→edges; thread-safe
+  `WorkflowContext`; `VariableResolver` does `{{vars.x}}`/`{{Node.key}}` interpolation with JSON-path.)
+- [x] Request/Condition/Loop/Parallel/Delay handlers. (Built-in `INodeHandler`s dispatched via
+  `NodeHandlerRegistry` keyed by `WorkflowNodeKind`; `RequestNodeHandler` reuses the S06
+  `IRequestExecutor`. Container nodes drive their `body` branch through a `BranchExecutor`, so the
+  engine stays closed to new kinds.)
+- [x] Cancellation + timeout + failure policies. (Linked `CancellationTokenSource` + `CancelAfter`
+  per leaf node; `NodeFailurePolicy` Stop/Continue; loop iteration cap; caller-cancel distinguished
+  from timeout via the `when (ct.IsCancellationRequested)` filter.)
+- [x] Run result model + comprehensive unit tests. (`NodeRunResult` (+`Children`)/`WorkflowRunResult`;
+  in-memory `IWorkflowRunStore` — durable tables deferred to S13. 25 new tests: resolver, registry,
+  and engine acceptance criteria. Full suite green: 188 tests, build clean at 0 warnings.)
+
+## Deviations from the original plan
+- The engine dispatches through an Application-layer `INodeHandler` (built-in), not the plugin-facing
+  `IWorkflowNode`; the latter is retained for future plugin-contributed node kinds.
+- Node handlers receive a `NodeHandlerContext` (node + workflow + context + resolver + options +
+  `RunBranch`) rather than a bare `(node, context)` pair, so Loop/Parallel can execute sub-branches
+  without the engine knowing specific kinds.
+- Condition branching uses a small fixed operator set on the node config (`ConditionOperator`),
+  keeping comparison logic out of the (interpolation-only) `VariableResolver`.
+- Run-result persistence tables (`WorkflowRuns`/`WorkflowRunNodes`) deferred to Sprint 13 per the
+  doc's own "uncertain" note; only an in-memory run store ships now.

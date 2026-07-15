@@ -29,23 +29,43 @@ scope for the first release (see Open Questions).
 
 ## Domain & Contracts
 
-Domain records (`ApiTestingStudio.Domain`):
+Domain records (`ApiTestingStudio.Domain.Entities`):
 
-- `Workflow` — id, name, workspace id, `IReadOnlyList<WorkflowNode> Nodes`,
-  `IReadOnlyList<NodeConnection> Connections`.
-- `WorkflowNode` — id, `NodeKind` (enum: `Api`, `Condition`, `Loop`, `Delay`, `Parallel`,
-  `Switch`, `Variable`, `Assertion`), position, and a node-specific config payload.
-- `NodeConnection` — source node/port → target node/port; carries the data mapping expression.
+- `WorkflowDefinition` — the persisted root row (`Workflows` table): id, name, workspace id,
+  description. The graph lives in the sibling `WorkflowNode` / `WorkflowEdge` tables keyed by
+  `WorkflowId`.
+- `WorkflowNode` — id, `WorkflowId`, `WorkflowNodeKind Kind` (`Api`, `Condition`, `Loop`, `Delay`,
+  `Parallel`, `Switch`, `Variable`, `Assertion`), name, canvas position, and a node-specific JSON
+  `Config` payload.
+- `WorkflowEdge` — id, `WorkflowId`, source/target node ids, optional source/target port (branch
+  outputs like a Condition's `true`/`false` or a container's `body`), and an optional data-mapping
+  expression.
+- `Workflow` — the **runtime aggregate** the engine executes: a `WorkflowDefinition` hydrated with
+  `IReadOnlyList<WorkflowNode> Nodes` + `IReadOnlyList<WorkflowEdge> Edges`. Assembled by
+  `IWorkflowRepository`; not a table of its own.
+- Run results: `NodeRunResult` (per-node status/outputs/error/duration, plus `Children` for
+  Loop/Parallel branches) and `WorkflowRunResult` (overall status + ordered node results).
 
-Plugin contract (`ApiTestingStudio.Plugin.Abstractions`):
+Engine contracts (`ApiTestingStudio.Application.Workflows`):
 
-- `IWorkflowNode` — one implementation per node kind: `NodeKind Kind`, plus
-  `Task<NodeResult> ExecuteAsync(NodeContext context, CancellationToken cancellationToken)`.
-- The **workflow engine** in Core walks the graph, resolves connections/variables, dispatches to
-  the registered `IWorkflowNode` for each node, and records steps.
+- `IWorkflowEngine` / `WorkflowEngine` — headless, UI-independent. Walks the graph from the entry
+  node, resolves per-node timeouts (linked `CancellationTokenSource` + `CancelAfter`), dispatches
+  each node to its handler, applies the `NodeFailurePolicy`, and returns a `WorkflowRunResult`.
+- `INodeHandler` / `INodeHandlerRegistry` — one built-in handler per kind, resolved by
+  `WorkflowNodeKind`. Container handlers (Loop/Parallel) drive their body branch through a
+  `BranchExecutor` the engine supplies, so the engine stays closed to new node kinds.
+  Built-in handlers this sprint: `RequestNodeHandler` (reuses the S06 `IRequestExecutor`),
+  `ConditionNodeHandler`, `LoopNodeHandler`, `ParallelNodeHandler`, `DelayNodeHandler`.
+- `IWorkflowContext` / `WorkflowContext` — mutable, thread-safe variables + per-node outputs
+  (parallel branches write under distinct node names, so no collisions).
+- `IVariableResolver` / `VariableResolver` — `{{vars.name}}` / `{{Node.key}}` interpolation with
+  JSON-path access into node outputs (e.g. `{{Login.body.data.token}}`).
+- `IWorkflowRepository` (persistence port) and `IWorkflowRunStore` (in-memory run history this
+  sprint; durable tables deferred to Sprint 13).
 
-Node kinds are discovered through the plugin registry, so new node types are added as plugins
-without touching the engine.
+A plugin-facing `IWorkflowNode` contract also exists in `Plugin.Abstractions` for **future**
+plugin-contributed node kinds; the Sprint 08 engine dispatches through the built-in `INodeHandler`
+strategy and does not yet load node plugins.
 
 ## UI
 
@@ -59,7 +79,10 @@ without touching the engine.
 
 ## Sprint
 
-- **Sprint 08** — workflow **engine** (graph model, execution, node dispatch, run tree).
+- **Sprint 08** — workflow **engine** (graph model + persistence, execution, node dispatch, run
+  tree). Delivered: Domain graph records, `AddWorkflows` migration (schema v4), the headless
+  `WorkflowEngine` with Request/Condition/Loop/Parallel/Delay handlers, variable resolver,
+  cancellation + per-node timeout + failure policies, and comprehensive unit tests.
 - **Sprint 09** — visual **node editor** UI via Nodify, drag-and-drop mapping.
 
 ## Open Questions / Future
