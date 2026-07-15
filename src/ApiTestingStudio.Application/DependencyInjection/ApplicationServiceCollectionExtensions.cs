@@ -2,6 +2,8 @@ using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Workflows;
+using ApiTestingStudio.Application.Workflows.Handlers;
 using ApiTestingStudio.Application.Workspaces;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -36,6 +38,20 @@ public static class ApplicationServiceCollectionExtensions
         // and ICatalogMerger (transactional merge) ports are bound by AddInfrastructure.
         services.AddSingleton<ISourceFormatDetector, SourceFormatDetector>();
         services.AddSingleton<IImportOrchestrator, ImportOrchestrator>();
+
+        // Workflow engine (Sprint 08): headless graph execution. The RequestNodeHandler reuses the
+        // IRequestExecutor from AddInfrastructure; IWorkflowRepository is also bound there. Run
+        // history is in-memory this sprint (durable tables land in Sprint 13).
+        services.AddSingleton<IVariableResolver, VariableResolver>();
+        services.AddSingleton<IDelayScheduler, TaskDelayScheduler>();
+        services.AddSingleton<INodeHandler, RequestNodeHandler>();
+        services.AddSingleton<INodeHandler, ConditionNodeHandler>();
+        services.AddSingleton<INodeHandler, LoopNodeHandler>();
+        services.AddSingleton<INodeHandler, ParallelNodeHandler>();
+        services.AddSingleton<INodeHandler, DelayNodeHandler>();
+        services.AddSingleton<INodeHandlerRegistry, NodeHandlerRegistry>();
+        services.AddSingleton<IWorkflowEngine, WorkflowEngine>();
+        services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
 
         return services;
     }

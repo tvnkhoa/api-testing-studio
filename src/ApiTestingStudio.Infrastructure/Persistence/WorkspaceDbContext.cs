@@ -31,6 +31,10 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<WorkflowDefinition> Workflows => Set<WorkflowDefinition>();
 
+    public DbSet<WorkflowNode> WorkflowNodes => Set<WorkflowNode>();
+
+    public DbSet<WorkflowEdge> WorkflowEdges => Set<WorkflowEdge>();
+
     public DbSet<TestCaseDefinition> TestCases => Set<TestCaseDefinition>();
 
     public DbSet<Run> Runs => Set<Run>();
@@ -76,6 +80,23 @@ public sealed class WorkspaceDbContext : DbContext
         modelBuilder.Entity<EnvironmentDefinition>().HasKey(x => x.Id);
         modelBuilder.Entity<Variable>().HasKey(x => x.Id);
         modelBuilder.Entity<WorkflowDefinition>().HasKey(x => x.Id);
+
+        // Workflow graph (Sprint 08): nodes/edges reference their owner by WorkflowId; the config/
+        // mapping payloads are JSON TEXT columns. Enums (Kind) are stored as integers by convention.
+        modelBuilder.Entity<WorkflowNode>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkflowId);
+        });
+
+        modelBuilder.Entity<WorkflowEdge>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkflowId);
+            entity.HasIndex(x => x.SourceNodeId);
+            entity.HasIndex(x => x.TargetNodeId);
+        });
+
         modelBuilder.Entity<TestCaseDefinition>().HasKey(x => x.Id);
         modelBuilder.Entity<Run>().HasKey(x => x.Id);
         modelBuilder.Entity<RunStep>().HasKey(x => x.Id);

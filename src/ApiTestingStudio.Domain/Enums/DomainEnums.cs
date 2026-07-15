@@ -85,3 +85,13 @@ public enum AssertionOutcome
     Failed,
     Skipped,
 }
+
+/// <summary>
+/// How the workflow engine reacts when a node fails. <see cref="StopOnError"/> aborts the run;
+/// <see cref="ContinueOnError"/> records the failure and proceeds to the next node.
+/// </summary>
+public enum NodeFailurePolicy
+{
+    StopOnError,
+    ContinueOnError,
+}
