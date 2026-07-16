@@ -118,6 +118,17 @@ internal sealed class FakeDialogService : IDialogService
 
     public string? PromptName(string title, string label, string? existing = null) => NameResult;
 
+    public ApiTestingStudio.Application.Profiles.ProfileDraft? PromptProfile(
+        string title, ApiTestingStudio.Domain.Entities.ProfileDefinition? existing = null) => null;
+
+    public (string Name, ApiTestingStudio.Domain.Enums.EnvironmentKind Kind)? PromptEnvironment(
+        string title, ApiTestingStudio.Domain.Entities.EnvironmentDefinition? existing = null) => null;
+
+    public ApiTestingStudio.Application.Variables.VariableDraft? PromptVariable(
+        string title,
+        ApiTestingStudio.Domain.Entities.Variable? existing,
+        IReadOnlyList<ApiTestingStudio.Domain.Entities.EnvironmentDefinition> environments) => null;
+
     public bool Confirm(string title, string message) => ConfirmResult;
 
     public bool ShowImportWizard()

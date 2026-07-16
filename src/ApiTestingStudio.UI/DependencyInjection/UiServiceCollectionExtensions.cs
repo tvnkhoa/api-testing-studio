@@ -2,6 +2,7 @@ using ApiTestingStudio.Application.Common;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
+using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Runner;
 using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.Messaging;
@@ -49,6 +50,11 @@ public static class UiServiceCollectionExtensions
         services.AddTransient<IUndoRedoService, UndoRedoService>();
         services.AddSingleton<IWorkflowEditorViewModelFactory, WorkflowEditorViewModelFactory>();
         services.AddSingleton<WorkflowsPanelViewModel>();
+
+        // Profiles & Environments (Sprint 10): the manager tool panel + the toolbar environment
+        // switcher. Both are singletons added to / referenced by the shell.
+        services.AddSingleton<ProfilesPanelViewModel>();
+        services.AddSingleton<EnvironmentSwitcherViewModel>();
 
         services.AddSingleton<ShellViewModel>();
 

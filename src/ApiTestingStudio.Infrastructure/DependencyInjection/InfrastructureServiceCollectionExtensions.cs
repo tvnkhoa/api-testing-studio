@@ -38,7 +38,12 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IWorkspaceSession>(sp => sp.GetRequiredService<WorkspaceSession>());
 
         services.AddSingleton<IClock, SystemClock>();
-        services.AddSingleton<ISecretProtector, PlaceholderSecretProtector>();
+
+        // Secret protection (Sprint 10): AES-256-GCM keyed by a DPAPI-wrapped master key stored
+        // under app-data (user-bound, offline). See ADR-0010.
+        services.AddSingleton<IKeyStore>(_ => new DpapiKeyStore(appDataDirectory));
+        services.AddSingleton<ISecretProtector, AesSecretProtector>();
+
         services.AddSingleton<IStorageProvider, SqliteStorageProvider>();
         services.AddSingleton<IPackageMetadataRepository, PackageMetadataRepository>();
 
@@ -48,6 +53,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IEndpointFolderRepository, EndpointFolderRepository>();
         services.AddSingleton<IEndpointRepository, EndpointRepository>();
         services.AddSingleton<IWorkspaceSettingRepository, WorkspaceSettingRepository>();
+
+        // Identity / config repositories (Sprint 10).
+        services.AddSingleton<IProfileRepository, ProfileRepository>();
+        services.AddSingleton<IEnvironmentRepository, EnvironmentRepository>();
+        services.AddSingleton<IVariableRepository, VariableRepository>();
 
         // API Runner (Sprint 06): HTTP execution engine (single long-lived handler) + history store.
         services.AddSingleton<IRequestExecutor, HttpRequestExecutor>();

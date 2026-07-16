@@ -1,4 +1,8 @@
+using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Variables;
+using ApiTestingStudio.Domain.Entities;
+using ApiTestingStudio.Domain.Enums;
 
 namespace ApiTestingStudio.UI.Services;
 
@@ -16,6 +20,15 @@ public interface IDialogService
 
     /// <summary>Prompts for a single name (create/rename folder, rename service); null if cancelled.</summary>
     string? PromptName(string title, string label, string? existing = null);
+
+    /// <summary>Prompts for profile fields (secrets masked); returns the draft, or null if cancelled.</summary>
+    ProfileDraft? PromptProfile(string title, ProfileDefinition? existing = null);
+
+    /// <summary>Prompts for environment name + kind; returns the values, or null if cancelled.</summary>
+    (string Name, EnvironmentKind Kind)? PromptEnvironment(string title, EnvironmentDefinition? existing = null);
+
+    /// <summary>Prompts for variable fields; returns the draft, or null if cancelled.</summary>
+    VariableDraft? PromptVariable(string title, Variable? existing, IReadOnlyList<EnvironmentDefinition> environments);
 
     /// <summary>Shows a yes/no confirmation; returns true when the user confirms.</summary>
     bool Confirm(string title, string message);

@@ -21,6 +21,9 @@ public sealed record RequestNodeConfig
     public BodyKind BodyKind { get; init; } = BodyKind.Json;
 
     public string? Body { get; init; }
+
+    /// <summary>Optional "Run As" profile whose authorization is applied to this node's request.</summary>
+    public Guid? ProfileId { get; init; }
 }
 
 /// <summary>Comparison a <see cref="WorkflowNodeKind.Condition"/> node applies to its resolved operands.</summary>

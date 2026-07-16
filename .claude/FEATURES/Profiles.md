@@ -35,9 +35,19 @@ Application port (`ApiTestingStudio.Application`):
 - `ISecretProtector` — `string Protect(string plaintext)` / `string Unprotect(string cipher)`.
   All sensitive values pass through it before persistence and only decrypt in-memory at call time.
 
-Infrastructure implements `ISecretProtector` using **AES / DPAPI** (Windows Data Protection),
-registered in the Host. The mapping "role → applied authorization" is resolved by the workflow
-engine when a node runs under a Profile.
+Infrastructure implements `ISecretProtector` as `AesSecretProtector` (AES-256-GCM) keyed by a
+DPAPI-wrapped master key from `DpapiKeyStore` (`IKeyStore`), registered in the Host. See ADR-0010.
+
+**Auth scheme.** A profile's `ProfileKind` is a *role* archetype (Admin/Staff/Guest/…); how its
+credentials become an outgoing authorization is a separate `AuthScheme` (`None`, `Bearer`, `Basic`,
+`ApiKey`, `Custom`). `IAuthApplicator` (Application) maps the scheme to a header, decrypting the
+needed `Protected*` field at call time: `Bearer {AccessToken}` / `Basic base64(user:pass)` /
+`{ApiKeyHeaderName}: {ApiKey}`. It is applied by `RequestExecutionService` (API Runner, via an
+optional `profileId`) and `RequestNodeHandler` (a workflow node's `ProfileId`) before the request
+reaches the transport layer, which stays auth-agnostic.
+
+Application services: `IProfileService` (CRUD; encrypts draft secrets on save — a null secret field
+on update keeps the stored ciphertext, an empty string clears it).
 
 ## UI
 

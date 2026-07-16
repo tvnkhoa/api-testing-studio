@@ -1,7 +1,10 @@
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Environments;
 using ApiTestingStudio.Application.Import;
+using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Application.Workflows.Handlers;
 using ApiTestingStudio.Application.Workspaces;
@@ -58,6 +61,14 @@ public static class ApplicationServiceCollectionExtensions
         // (one per designer pane) and is therefore registered as transient in AddUi.
         services.AddSingleton<IConnectorValidator, ConnectorValidator>();
         services.AddSingleton<IWorkflowCatalogService, WorkflowCatalogService>();
+
+        // Profiles & Environments (Sprint 10): identity/config CRUD, scope resolution, auth
+        // application. Repositories + ISecretProtector are bound by AddInfrastructure.
+        services.AddSingleton<IProfileService, ProfileService>();
+        services.AddSingleton<IEnvironmentService, EnvironmentService>();
+        services.AddSingleton<IVariableService, VariableService>();
+        services.AddSingleton<IVariableScopeSeeder, VariableScopeSeeder>();
+        services.AddSingleton<IAuthApplicator, AuthApplicator>();
 
         return services;
     }

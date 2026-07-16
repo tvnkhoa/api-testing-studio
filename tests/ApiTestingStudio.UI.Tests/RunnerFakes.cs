@@ -16,7 +16,7 @@ internal sealed class FakeRequestExecutionService : IRequestExecutionService
 
     public List<HttpRequestModel> Sent { get; } = [];
 
-    public Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, CancellationToken cancellationToken = default)
+    public Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, Guid? profileId = null, CancellationToken cancellationToken = default)
     {
         Sent.Add(request);
         return Task.FromResult(Result.Success(ExecutionResult));

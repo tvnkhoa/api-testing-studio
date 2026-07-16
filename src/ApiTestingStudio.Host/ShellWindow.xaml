@@ -41,6 +41,7 @@
             <MenuItem Header="_View">
                 <MenuItem Header="_Explorer" Command="{Binding ToggleExplorerCommand}" />
                 <MenuItem Header="_Workflows" Command="{Binding ToggleWorkflowsCommand}" />
+                <MenuItem Header="_Profiles &amp; Environments" Command="{Binding ToggleProfilesCommand}" />
                 <MenuItem Header="_Logs" Command="{Binding ToggleLogsCommand}" />
                 <Separator />
                 <MenuItem Header="_Dark Theme"
@@ -63,6 +64,14 @@
                 <Button Content="Save" Command="{Binding SaveWorkspaceCommand}" ToolTip="Save Workspace (Ctrl+S)" />
                 <Separator />
                 <Button Content="Theme" Command="{Binding ToggleThemeCommand}" ToolTip="Toggle light/dark theme" />
+                <Separator />
+                <TextBlock Text="Env:" VerticalAlignment="Center" Margin="4,0" />
+                <ComboBox MinWidth="140"
+                          ItemsSource="{Binding Shell.Environments.Environments}"
+                          SelectedItem="{Binding Shell.Environments.SelectedEnvironment}"
+                          DisplayMemberPath="Name"
+                          IsEnabled="{Binding Shell.Environments.IsWorkspaceOpen}"
+                          ToolTip="Active environment (variable resolution scope)" />
             </ToolBar>
         </ToolBarTray>
 

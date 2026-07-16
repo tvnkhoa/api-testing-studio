@@ -17,6 +17,15 @@ public sealed record ProfileDefinition
 
     public ProfileKind Kind { get; init; } = ProfileKind.Custom;
 
+    /// <summary>How this profile's credentials become an outgoing authorization.</summary>
+    public AuthScheme Auth { get; init; } = AuthScheme.None;
+
+    /// <summary>
+    /// Header name used when <see cref="Auth"/> is <see cref="AuthScheme.ApiKey"/> (e.g.
+    /// <c>X-Api-Key</c>). Ignored for other schemes.
+    /// </summary>
+    public string? ApiKeyHeaderName { get; init; }
+
     public string? Username { get; init; }
 
     public string? Email { get; init; }
@@ -57,6 +66,12 @@ public sealed record Variable
     public Guid WorkspaceId { get; init; }
 
     public VariableScope Scope { get; init; } = VariableScope.Workspace;
+
+    /// <summary>
+    /// The environment this variable belongs to when <see cref="Scope"/> is
+    /// <see cref="VariableScope.Environment"/>; null for every other scope.
+    /// </summary>
+    public Guid? EnvironmentId { get; init; }
 
     public required string Key { get; init; }
 

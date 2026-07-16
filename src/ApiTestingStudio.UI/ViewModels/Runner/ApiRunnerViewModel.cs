@@ -81,7 +81,7 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
     {
         var request = Builder.Build();
         var result = await _execution
-            .SendAsync(_endpointId ?? Guid.Empty, request, cancellationToken)
+            .SendAsync(_endpointId ?? Guid.Empty, request, cancellationToken: cancellationToken)
             .ConfigureAwait(true);
 
         if (result.IsFailure)

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Application.Workflows.Handlers;
 using ApiTestingStudio.Domain.Entities;
@@ -95,11 +96,13 @@ internal static class WorkflowTestHarness
     public static WorkflowEngine CreateEngine(
         IRequestExecutor? executor = null,
         IDelayScheduler? scheduler = null,
+        IProfileRepository? profiles = null,
         params INodeHandler[] extraHandlers)
     {
+        var authApplicator = new AuthApplicator(new FakeSecretProtector());
         var handlers = new List<INodeHandler>
         {
-            new RequestNodeHandler(executor ?? new FakeRequestExecutor()),
+            new RequestNodeHandler(executor ?? new FakeRequestExecutor(), profiles ?? new InMemoryProfileRepository(), authApplicator),
             new ConditionNodeHandler(),
             new LoopNodeHandler(),
             new ParallelNodeHandler(),

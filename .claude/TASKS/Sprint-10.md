@@ -74,8 +74,31 @@ Add identity profiles, environments, and variables with real secret storage — 
 - Secret sharing/vault integration.
 
 ## Checklist
-- [ ] Profile/Environment/Variable/Secret models + migration.
-- [ ] AES + DPAPI secret protector replacing placeholder.
-- [ ] Profile/environment services + variable resolution.
-- [ ] Auth application in request execution.
-- [ ] Manager UI + environment switcher + masked fields.
+- [x] Profile/Environment/Variable models + migration. (Domain records already existed from
+  `InitialCreate`; migration `AddProfileAuthAndEnvironmentBinding` adds `Profiles.AuthScheme`/
+  `ApiKeyHeaderName`, `Variables.EnvironmentId` + indexes, schema **v6**. No separate `Secrets` table —
+  secrets stay inline as ciphertext.)
+- [x] AES + DPAPI secret protector replacing placeholder. (`AesSecretProtector` AES-256-GCM +
+  `DpapiKeyStore`/`IKeyStore`; `PlaceholderSecretProtector` deleted; ADR-0010.)
+- [x] Profile/environment services + variable resolution. (`ProfileService`/`EnvironmentService`/
+  `VariableService`; `VariableScopeSeeder` seeds Global→Workspace→Environment(active) into the context
+  the existing `VariableResolver` consumes.)
+- [x] Auth application in request execution. (`AuthApplicator` Bearer/Basic/ApiKey; applied in
+  `RequestExecutionService` (optional `profileId`) and `RequestNodeHandler` (node `ProfileId`).)
+- [x] Manager UI + environment switcher + masked fields. (`ProfilesPanelViewModel` tabbed panel +
+  Profile/Environment/Variable editor dialogs with masked-secret reveal (`PasswordBoxBehavior`) +
+  toolbar `EnvironmentSwitcherViewModel`.)
+
+## Deviations from the original plan
+- **No separate `Secret` entity/table.** Secrets persist inline as ciphertext (`Protected*` on
+  `ProfileDefinition`, `Value` on secret `Variable`s), matching the `InitialCreate` schema and
+  `FEATURES/Profiles.md`. A dedicated `Secrets` table would duplicate the model.
+- **Naming follows existing code:** `ProfileDefinition`/`ProfileKind` (not the doc's `IdentityProfile`/
+  `ProfileRole`). Auth *scheme* is a new `AuthScheme` enum, distinct from the `ProfileKind` role.
+- **Migration is additive columns, not new tables** (the tables predate this sprint), named
+  `AddProfileAuthAndEnvironmentBinding`; schema bump **5 → 6**.
+- **Active environment persisted via `Settings`** (`active-environment-id`), not an `IsActive` column.
+- **Variable resolution was not rewritten:** the S08 `VariableResolver` is unchanged; Sprint 10 only
+  enriches the variables seeded into its context (`VariableScopeSeeder`). Dynamic tokens
+  (`$guid`/`$now`) and `{{...}}` autocomplete remain future work.
+- Delivered in **two phases** (backend/crypto first, then UI); both build at 0 warnings with tests.

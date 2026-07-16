@@ -6,6 +6,7 @@ using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.Messaging;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels.Explorer;
+using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Runner;
 using ApiTestingStudio.UI.ViewModels.Workflow;
@@ -36,6 +37,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly ServiceExplorerViewModel _explorer;
     private readonly ApiRunnerViewModel _runner;
     private readonly WorkflowsPanelViewModel _workflows;
+    private readonly ProfilesPanelViewModel _profiles;
     private readonly IWorkflowEditorViewModelFactory _workflowEditorFactory;
     private readonly LogsPlaceholderViewModel _logs = new();
 
@@ -51,6 +53,8 @@ public sealed partial class ShellViewModel : ObservableObject
         ServiceExplorerViewModel explorer,
         ApiRunnerViewModel runner,
         WorkflowsPanelViewModel workflows,
+        ProfilesPanelViewModel profiles,
+        EnvironmentSwitcherViewModel environmentSwitcher,
         IWorkflowEditorViewModelFactory workflowEditorFactory,
         IMessenger messenger,
         ILogger<ShellViewModel> logger)
@@ -66,6 +70,8 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(explorer);
         ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(workflows);
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(environmentSwitcher);
         ArgumentNullException.ThrowIfNull(workflowEditorFactory);
         ArgumentNullException.ThrowIfNull(messenger);
         ArgumentNullException.ThrowIfNull(logger);
@@ -79,9 +85,11 @@ public sealed partial class ShellViewModel : ObservableObject
         _explorer = explorer;
         _runner = runner;
         _workflows = workflows;
+        _profiles = profiles;
         _workflowEditorFactory = workflowEditorFactory;
         _logger = logger;
 
+        Environments = environmentSwitcher;
         StatusBar = statusBarViewModel;
         RecentWorkspaces = recentWorkspaces;
         RecentWorkspaces.OpenRequested += OnRecentOpenRequested;
@@ -89,6 +97,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Documents.Add(new WelcomeDocumentViewModel());
         Tools.Add(_explorer);
         Tools.Add(_workflows);
+        Tools.Add(_profiles);
         Tools.Add(_logs);
 
         // Selecting an endpoint in the Explorer opens (or focuses) the Runner document pane; the
@@ -114,6 +123,9 @@ public sealed partial class ShellViewModel : ObservableObject
     public ObservableCollection<PanelViewModel> Tools { get; } = [];
 
     public StatusBarViewModel StatusBar { get; }
+
+    /// <summary>The active-environment switcher shown in the toolbar (Sprint 10).</summary>
+    public EnvironmentSwitcherViewModel Environments { get; }
 
     public RecentWorkspacesMenuViewModel RecentWorkspaces { get; }
 
@@ -216,6 +228,9 @@ public sealed partial class ShellViewModel : ObservableObject
     private void ToggleWorkflows() => TogglePanel(_workflows);
 
     [RelayCommand]
+    private void ToggleProfiles() => TogglePanel(_profiles);
+
+    [RelayCommand]
     private void ToggleLogs() => TogglePanel(_logs);
 
     [RelayCommand]
@@ -251,11 +266,15 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             await _explorer.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _workflows.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await _profiles.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await Environments.LoadAsync(cancellationToken).ConfigureAwait(true);
         }
         else
         {
             _explorer.Clear();
             _workflows.Clear();
+            _profiles.Clear();
+            Environments.Clear();
             CloseWorkflowDocuments();
         }
     }

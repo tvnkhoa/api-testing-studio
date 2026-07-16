@@ -81,7 +81,9 @@ with nullable `DefaultHeaders` (JSON array) and `DefaultBody` columns the runner
 Conventions:
 - Primary key: `Id` (`Guid`). Configured explicitly in `OnModelCreating`.
 - Enums are stored as integers.
-- Secrets on `ProfileDefinition` are `Protected*` string columns holding **ciphertext only**.
+- Secrets on `ProfileDefinition` are `Protected*` string columns holding **ciphertext only**;
+  secret `Variable`s (`IsSecret = true`) store their `Value` as ciphertext. Encryption is AES-256-GCM
+  keyed by a DPAPI-wrapped master key — see ADR-0010.
 - `Attachment` stores metadata + a `RelativePath`; bytes live under the workspace
   `attachments/` folder, never in the database.
 
@@ -95,7 +97,7 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 
 - Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
   `AddPackageMetadata`, `AddServiceCatalogHierarchy`, `AddRequestHistory`, `AddWorkflows`,
-  `AddNodeVisualMetadata`.
+  `AddNodeVisualMetadata`, `AddProfileAuthAndEnvironmentBinding`.
   - `AddServiceCatalogHierarchy` (Sprint 05) adds the `EndpointFolders` table and the
     `Endpoints.FolderId`, `Endpoints.SortOrder`, `Services.SortOrder` columns + indexes. It is
     additive/back-compatible (the `Services`/`Endpoints` base tables already existed from
@@ -115,6 +117,16 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
     `WorkflowNodes.Color` (string) columns for the visual designer. Purely additive — all columns are
     nullable so existing rows are untouched. Paired with a `Workspace.CurrentSchemaVersion` bump to
     **5**; v4 workspaces self-provision the new columns on open via `MigrateAsync` and stay compatible.
+  - `AddProfileAuthAndEnvironmentBinding` (Sprint 10) adds `Profiles.AuthScheme` (int, default 0 =
+    `None`) and nullable `Profiles.ApiKeyHeaderName`, plus nullable `Variables.EnvironmentId` and
+    indexes on `Variables.EnvironmentId`/`WorkspaceId`, `Profiles.WorkspaceId`,
+    `Environments.WorkspaceId`. The `Profiles`/`Environments`/`Variables` **base tables already
+    existed from `InitialCreate`**, so this migration extends them rather than creating them (the
+    Sprint doc's proposed `AddProfilesAndEnvironments` name predates that fact). Purely additive —
+    columns are nullable or defaulted. Paired with a `Workspace.CurrentSchemaVersion` bump to **6**;
+    v5 workspaces self-provision on open via `MigrateAsync` and stay compatible. The active
+    environment is stored as a per-workspace `Settings` row (`active-environment-id`) — no schema
+    change. See ADR-0010 for secret storage.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
 - At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**

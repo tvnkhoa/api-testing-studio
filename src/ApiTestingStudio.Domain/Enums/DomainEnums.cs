@@ -55,6 +55,28 @@ public enum ProfileKind
     Custom,
 }
 
+/// <summary>
+/// How a profile's credentials are turned into an outgoing authorization on a request.
+/// Distinct from <see cref="ProfileKind"/> (which is a role archetype).
+/// </summary>
+public enum AuthScheme
+{
+    /// <summary>No authorization is applied.</summary>
+    None,
+
+    /// <summary><c>Authorization: Bearer {AccessToken}</c>.</summary>
+    Bearer,
+
+    /// <summary><c>Authorization: Basic base64(Username:Password)</c>.</summary>
+    Basic,
+
+    /// <summary>A custom header (<c>ApiKeyHeaderName</c>) carrying the API key.</summary>
+    ApiKey,
+
+    /// <summary>Caller supplies headers manually; the applicator does not inject anything.</summary>
+    Custom,
+}
+
 /// <summary>Lifecycle status of a workflow / test run or one of its steps.</summary>
 public enum RunStatus
 {

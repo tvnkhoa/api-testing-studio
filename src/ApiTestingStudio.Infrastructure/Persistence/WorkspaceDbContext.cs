@@ -76,9 +76,27 @@ public sealed class WorkspaceDbContext : DbContext
             entity.HasIndex(x => x.ServiceId);
             entity.HasIndex(x => x.FolderId);
         });
-        modelBuilder.Entity<ProfileDefinition>().HasKey(x => x.Id);
-        modelBuilder.Entity<EnvironmentDefinition>().HasKey(x => x.Id);
-        modelBuilder.Entity<Variable>().HasKey(x => x.Id);
+        // Identity / config (Sprint 10). Flat model keyed to the workspace; secrets are ciphertext
+        // (Protected* on the profile, Value on secret variables). Enums stored as integers.
+        modelBuilder.Entity<ProfileDefinition>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
+        modelBuilder.Entity<EnvironmentDefinition>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
+        modelBuilder.Entity<Variable>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+            entity.HasIndex(x => x.EnvironmentId);
+        });
+
         modelBuilder.Entity<WorkflowDefinition>().HasKey(x => x.Id);
 
         // Workflow graph (Sprint 08): nodes/edges reference their owner by WorkflowId; the config/

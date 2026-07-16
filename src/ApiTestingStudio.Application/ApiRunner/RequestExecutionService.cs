@@ -1,4 +1,7 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Profiles;
+using ApiTestingStudio.Application.Variables;
+using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Shared.Results;
 
@@ -15,20 +18,32 @@ public sealed class RequestExecutionService : IRequestExecutionService
     private readonly IRequestHistoryRepository _history;
     private readonly IWorkspaceSession _session;
     private readonly IClock _clock;
+    private readonly IVariableScopeSeeder _scopeSeeder;
+    private readonly IVariableResolver _resolver;
+    private readonly IProfileRepository _profiles;
+    private readonly IAuthApplicator _authApplicator;
 
     public RequestExecutionService(
         IRequestExecutor executor,
         IRequestHistoryRepository history,
         IWorkspaceSession session,
-        IClock clock)
+        IClock clock,
+        IVariableScopeSeeder scopeSeeder,
+        IVariableResolver resolver,
+        IProfileRepository profiles,
+        IAuthApplicator authApplicator)
     {
         _executor = executor;
         _history = history;
         _session = session;
         _clock = clock;
+        _scopeSeeder = scopeSeeder;
+        _resolver = resolver;
+        _profiles = profiles;
+        _authApplicator = authApplicator;
     }
 
-    public async Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, CancellationToken cancellationToken = default)
+    public async Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, Guid? profileId = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -36,6 +51,8 @@ public sealed class RequestExecutionService : IRequestExecutionService
         {
             return Result.Failure<HttpExecutionResult>(RequestExecutionErrors.NoWorkspaceOpen);
         }
+
+        request = await ResolveAndAuthorizeAsync(request, profileId, cancellationToken).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(request.Url))
         {
@@ -56,6 +73,35 @@ public sealed class RequestExecutionService : IRequestExecutionService
 
         await RecordHistoryAsync(endpointId, request, result.Value, cancellationToken).ConfigureAwait(false);
         return result;
+    }
+
+    /// <summary>
+    /// Resolves <c>{{variables}}</c> in the request against the workspace + active-environment scopes
+    /// and, when a profile is selected, applies its authorization header.
+    /// </summary>
+    private async Task<HttpRequestModel> ResolveAndAuthorizeAsync(HttpRequestModel request, Guid? profileId, CancellationToken cancellationToken)
+    {
+        var context = await _scopeSeeder.BuildContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var resolved = request with
+        {
+            Url = _resolver.Resolve(request.Url, context),
+            QueryParams = request.QueryParams
+                .Select(p => p with { Value = _resolver.Resolve(p.Value, context) })
+                .ToList(),
+            Headers = request.Headers
+                .Select(h => h with { Value = _resolver.Resolve(h.Value, context) })
+                .ToList(),
+            Body = string.IsNullOrEmpty(request.Body) ? request.Body : _resolver.Resolve(request.Body, context),
+        };
+
+        if (profileId is { } id)
+        {
+            var profile = await _profiles.GetAsync(id, cancellationToken).ConfigureAwait(false);
+            resolved = _authApplicator.Apply(resolved, profile);
+        }
+
+        return resolved;
     }
 
     private async Task RecordHistoryAsync(
