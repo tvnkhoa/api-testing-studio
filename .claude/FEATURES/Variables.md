@@ -38,14 +38,25 @@ Domain records (`ApiTestingStudio.Domain`):
 - `Environment` — id, name (`EnvironmentKind`: `Development`, `QA`, `Staging`, `Production`),
   associated variables.
 
-Application service (`ApiTestingStudio.Application`):
+Application services (`ApiTestingStudio.Application`):
 
-- A variable-resolution service builds a merged, precedence-ordered lookup (Global → Workspace →
-  Environment → Workflow → Local → WorkflowOutput) and substitutes `{{...}}` tokens. Dynamic tokens
-  (`$guid`, `$random`, `$now`) are evaluated per substitution; `$now` uses the `IClock` port so it
-  is testable and deterministic under test.
+- `IVariableService` — CRUD for variables per scope; environment-scoped variables carry an
+  `EnvironmentId`; secret variables (`IsSecret`) have their value encrypted via `ISecretProtector`.
+- `IEnvironmentService` — environment CRUD plus the active-environment selection (persisted as the
+  per-workspace `Settings` row `active-environment-id`).
+- `IVariableScopeSeeder` (Sprint 10) loads the persisted Global/Workspace/Environment(active) scopes,
+  **decrypting secret values**, and seeds them into an `IWorkflowContext` in precedence order
+  (broadest first, so the narrower scope overwrites). The narrower runtime scopes (Workflow, Local,
+  WorkflowOutput) are set later on the same context and therefore win.
+- The existing `VariableResolver` (Sprint 08) substitutes `{{...}}` tokens against that context —
+  `{{name}}`, `{{vars.x}}`, `{{Node.field}}` with JSON traversal. It was **not** rewritten; Sprint 10
+  only enriches the variables that feed it.
 
-Resolution is invoked by the request runner and the workflow engine before a request is sent.
+Resolution is invoked by the request runner (`RequestExecutionService` builds a seeded context and
+resolves URL/headers/query/body) and by the workflow engine (the caller seeds the context it passes
+to `RunAsync`) before a request is sent.
+
+> Dynamic tokens (`$guid`, `$random`, `$now`) and inline `{{...}}` autocomplete remain future work.
 
 ## UI
 

@@ -1,7 +1,12 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using ApiTestingStudio.Application.Import;
+using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Variables;
+using ApiTestingStudio.Domain.Entities;
+using ApiTestingStudio.Domain.Enums;
 using ApiTestingStudio.UI.ViewModels.Dialogs;
 using ApiTestingStudio.UI.Views.Dialogs;
 
@@ -38,6 +43,27 @@ public sealed class DialogService : IDialogService
         var viewModel = new NamePromptViewModel(title, label, existing);
         var dialog = new NamePromptDialog { DataContext = viewModel, Owner = ActiveWindow() };
         return dialog.ShowDialog() == true ? viewModel.Result : null;
+    }
+
+    public ProfileDraft? PromptProfile(string title, ProfileDefinition? existing = null)
+    {
+        var viewModel = new ProfileEditorViewModel(title, existing);
+        var dialog = new ProfileEditorDialog { DataContext = viewModel, Owner = ActiveWindow() };
+        return dialog.ShowDialog() == true ? viewModel.ToDraft() : null;
+    }
+
+    public (string Name, EnvironmentKind Kind)? PromptEnvironment(string title, EnvironmentDefinition? existing = null)
+    {
+        var viewModel = new EnvironmentEditorViewModel(title, existing);
+        var dialog = new EnvironmentEditorDialog { DataContext = viewModel, Owner = ActiveWindow() };
+        return dialog.ShowDialog() == true ? (viewModel.Name.Trim(), viewModel.Kind) : null;
+    }
+
+    public VariableDraft? PromptVariable(string title, Variable? existing, IReadOnlyList<EnvironmentDefinition> environments)
+    {
+        var viewModel = new VariableEditorViewModel(title, existing, environments);
+        var dialog = new VariableEditorDialog { DataContext = viewModel, Owner = ActiveWindow() };
+        return dialog.ShowDialog() == true ? viewModel.ToDraft() : null;
     }
 
     public bool Confirm(string title, string message) =>

@@ -1,22 +1,31 @@
 using System.Globalization;
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
 
 namespace ApiTestingStudio.Application.Workflows.Handlers;
 
 /// <summary>
-/// Executes an <see cref="WorkflowNodeKind.Api"/> node: resolves the request template, sends it via
-/// the shared <see cref="IRequestExecutor"/> (reused from Sprint 06), and publishes
-/// <c>status</c>/<c>reason</c>/<c>body</c> outputs into the context for downstream nodes.
+/// Executes an <see cref="WorkflowNodeKind.Api"/> node: resolves the request template, applies the
+/// node's optional "Run As" profile, sends it via the shared <see cref="IRequestExecutor"/> (reused
+/// from Sprint 06), and publishes <c>status</c>/<c>reason</c>/<c>body</c> outputs into the context
+/// for downstream nodes.
 /// </summary>
 public sealed class RequestNodeHandler : INodeHandler
 {
     private readonly IRequestExecutor _executor;
+    private readonly IProfileRepository _profiles;
+    private readonly IAuthApplicator _authApplicator;
 
-    public RequestNodeHandler(IRequestExecutor executor)
+    public RequestNodeHandler(
+        IRequestExecutor executor,
+        IProfileRepository profiles,
+        IAuthApplicator authApplicator)
     {
         _executor = executor ?? throw new ArgumentNullException(nameof(executor));
+        _profiles = profiles ?? throw new ArgumentNullException(nameof(profiles));
+        _authApplicator = authApplicator ?? throw new ArgumentNullException(nameof(authApplicator));
     }
 
     public WorkflowNodeKind Kind => WorkflowNodeKind.Api;
@@ -42,6 +51,8 @@ public sealed class RequestNodeHandler : INodeHandler
             Body = string.IsNullOrEmpty(config.Body) ? null : context.Resolver.Resolve(config.Body, context.Context),
         };
 
+        request = await ApplyProfileAsync(request, config.ProfileId, cancellationToken).ConfigureAwait(false);
+
         var result = await _executor.ExecuteAsync(request, cancellationToken).ConfigureAwait(false);
         if (result.IsFailure)
         {
@@ -65,6 +76,17 @@ public sealed class RequestNodeHandler : INodeHandler
             Status = RunStatus.Passed,
             Outputs = outputs,
         };
+    }
+
+    private async Task<HttpRequestModel> ApplyProfileAsync(HttpRequestModel request, Guid? profileId, CancellationToken cancellationToken)
+    {
+        if (profileId is not { } id)
+        {
+            return request;
+        }
+
+        var profile = await _profiles.GetAsync(id, cancellationToken).ConfigureAwait(false);
+        return _authApplicator.Apply(request, profile);
     }
 
     private static List<QueryParam> Resolve(IReadOnlyList<QueryParam> parameters, NodeHandlerContext context) =>

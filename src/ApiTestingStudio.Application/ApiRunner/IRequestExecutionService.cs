@@ -12,8 +12,10 @@ public interface IRequestExecutionService
 {
     /// <summary>
     /// Sends <paramref name="request"/> for the given endpoint and, on a completed HTTP response,
-    /// appends a history entry. Transport failures (invalid URL, timeout, cancellation, network)
-    /// are returned as typed failures and are not recorded.
+    /// appends a history entry. Before sending, <c>{{variables}}</c> in the request are resolved
+    /// against the workspace + active-environment scopes, and when <paramref name="profileId"/> is
+    /// supplied that profile's authorization is applied. Transport failures (invalid URL, timeout,
+    /// cancellation, network) are returned as typed failures and are not recorded.
     /// </summary>
-    Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, CancellationToken cancellationToken = default);
+    Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, Guid? profileId = null, CancellationToken cancellationToken = default);
 }

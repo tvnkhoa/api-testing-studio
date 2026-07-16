@@ -4,6 +4,7 @@
                     xmlns:explorer="clr-namespace:ApiTestingStudio.UI.ViewModels.Explorer"
                     xmlns:runner="clr-namespace:ApiTestingStudio.UI.ViewModels.Runner"
                     xmlns:workflow="clr-namespace:ApiTestingStudio.UI.ViewModels.Workflow"
+                    xmlns:identity="clr-namespace:ApiTestingStudio.UI.ViewModels.Identity"
                     xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels"
                     xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner"
                     xmlns:workflowViews="clr-namespace:ApiTestingStudio.UI.Views.Workflow">
@@ -43,6 +44,11 @@
 
     <DataTemplate DataType="{x:Type workflow:WorkflowEditorViewModel}">
         <workflowViews:WorkflowEditorView />
+    </DataTemplate>
+
+    <!-- Profiles & Environments (Sprint 10) -->
+    <DataTemplate DataType="{x:Type identity:ProfilesPanelViewModel}">
+        <views:ProfilesPanelView />
     </DataTemplate>
 
 </ResourceDictionary>

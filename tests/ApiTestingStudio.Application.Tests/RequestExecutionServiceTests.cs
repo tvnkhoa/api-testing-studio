@@ -1,4 +1,6 @@
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Profiles;
+using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
 using ApiTestingStudio.Shared.Results;
@@ -17,7 +19,15 @@ public sealed class RequestExecutionServiceTests
 
     public RequestExecutionServiceTests()
     {
-        _sut = new RequestExecutionService(_executor, _history, _session, new FixedClock(Now));
+        _sut = new RequestExecutionService(
+            _executor,
+            _history,
+            _session,
+            new FixedClock(Now),
+            new FakeVariableScopeSeeder(),
+            new VariableResolver(),
+            new InMemoryProfileRepository(),
+            new AuthApplicator(new FakeSecretProtector()));
     }
 
     [Fact]

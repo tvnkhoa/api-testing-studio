@@ -135,6 +135,8 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("WorkspaceId");
+
                     b.ToTable("Environments");
                 });
 
@@ -204,6 +206,12 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ApiKeyHeaderName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Auth")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Email")
                         .HasColumnType("TEXT");
 
@@ -242,6 +250,8 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Profiles");
                 });
@@ -404,6 +414,9 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("EnvironmentId")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsSecret")
                         .HasColumnType("INTEGER");
 
@@ -421,6 +434,10 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EnvironmentId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Variables");
                 });

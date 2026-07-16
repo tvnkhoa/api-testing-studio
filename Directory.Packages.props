@@ -46,6 +46,15 @@
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
   </ItemGroup>
 
+  <ItemGroup Label="Security (secret protection — Infrastructure only)">
+    <!--
+      DPAPI (ProtectedData) wraps the AES master key at rest, bound to the current Windows user.
+      Windows-only at runtime; the app is a Windows desktop app so this is acceptable. AES-GCM
+      itself is in-box (System.Security.Cryptography). See ADR-0010.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Logging (Serilog)">
     <PackageVersion Include="Serilog" Version="4.4.0" />
     <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />

@@ -1,4 +1,6 @@
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Profiles;
+using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
 using FluentAssertions;
@@ -17,7 +19,15 @@ public sealed class RequestHistoryServiceTests
 
     public RequestHistoryServiceTests()
     {
-        _execution = new RequestExecutionService(_executor, _history, _session, new FixedClock(Now));
+        _execution = new RequestExecutionService(
+            _executor,
+            _history,
+            _session,
+            new FixedClock(Now),
+            new FakeVariableScopeSeeder(),
+            new VariableResolver(),
+            new InMemoryProfileRepository(),
+            new AuthApplicator(new FakeSecretProtector()));
         _sut = new RequestHistoryService(_history, _session);
     }
 
