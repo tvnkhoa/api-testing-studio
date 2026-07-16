@@ -21,7 +21,8 @@ public sealed record WorkflowDefinition
 /// <summary>
 /// One node in a workflow graph. <see cref="Config"/> is a node-kind-specific JSON payload
 /// (<c>System.Text.Json</c>); the engine's handler for <see cref="Kind"/> interprets it.
-/// <see cref="PositionX"/>/<see cref="PositionY"/> are canvas coordinates for the Sprint 09 designer.
+/// <see cref="PositionX"/>/<see cref="PositionY"/> are canvas coordinates for the Sprint 09 designer;
+/// <see cref="Width"/>/<see cref="Height"/>/<see cref="Color"/> are optional visual metadata for it.
 /// </summary>
 public sealed record WorkflowNode
 {
@@ -36,6 +37,15 @@ public sealed record WorkflowNode
     public double PositionX { get; init; }
 
     public double PositionY { get; init; }
+
+    /// <summary>Designer node width in canvas units; null lets the view choose a default (Sprint 09).</summary>
+    public double? Width { get; init; }
+
+    /// <summary>Designer node height in canvas units; null lets the view choose a default (Sprint 09).</summary>
+    public double? Height { get; init; }
+
+    /// <summary>Optional designer accent colour (e.g. a hex string); null uses the kind's default (Sprint 09).</summary>
+    public string? Color { get; init; }
 
     /// <summary>Node-kind-specific configuration as JSON, or null when the node needs none.</summary>
     public string? Config { get; init; }

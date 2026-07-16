@@ -70,12 +70,15 @@ strategy and does not yet load node plugins.
 ## UI
 
 - Visual node editor built with **Nodify** (canvas, pannable/zoomable, connectable ports).
-- A node palette (toolbox) supplies draggable node types; the property panel edits the selected
-  node's config; a connection drag creates a `NodeConnection`.
-- Hosted in an **AvalonDock** document pane; runs stream live status onto each node (pending /
-  running / passed / failed).
+- A node palette (toolbox) supplies draggable node types; a typed property panel edits the selected
+  node's config; a connection drag creates a `WorkflowEdge` (validated by `ConnectorValidator`).
+- Reached via a dockable **Workflows tool panel** (list + New/Rename/Delete); selecting a workflow
+  opens its designer in an **AvalonDock** document pane (one pane per workflow). Runs stream live
+  status onto each node (pending / running / passed / failed) via the engine's optional
+  `IProgress<NodeRunResult>` — Sprint 09 wires this "basic" live status; richer telemetry is Sprint 13.
 - MVVM throughout (CommunityToolkit.Mvvm); the canvas binds to a `WorkflowEditorViewModel`, no
-  business logic in code-behind.
+  business logic in code-behind. Undo/redo covers every edit via a reusable Application
+  `IUndoRedoService`.
 
 ## Sprint
 

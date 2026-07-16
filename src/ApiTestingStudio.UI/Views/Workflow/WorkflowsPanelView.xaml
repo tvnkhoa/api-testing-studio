@@ -1,0 +1,20 @@
+<UserControl x:Class="ApiTestingStudio.UI.Views.Workflow.WorkflowsPanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel LastChildFill="True">
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Content="New" Command="{Binding NewCommand}" ToolTip="Create a new workflow" />
+                <Button Content="Rename" Command="{Binding RenameCommand}" ToolTip="Rename the selected workflow" />
+                <Button Content="Delete" Command="{Binding DeleteCommand}" ToolTip="Delete the selected workflow" />
+                <Separator />
+                <Button Content="Open" Command="{Binding OpenCommand}" ToolTip="Open the selected workflow in the designer" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <ListBox ItemsSource="{Binding Workflows}"
+                 SelectedItem="{Binding SelectedWorkflow}"
+                 DisplayMemberPath="Name"
+                 Margin="4" />
+    </DockPanel>
+</UserControl>

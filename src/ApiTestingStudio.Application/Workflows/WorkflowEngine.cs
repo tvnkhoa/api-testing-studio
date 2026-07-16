@@ -10,11 +10,6 @@ public sealed class WorkflowEngine : IWorkflowEngine
     /// <summary>Safety cap on nodes visited in a single linear walk, guarding against graph cycles.</summary>
     private const int MaxNodesPerWalk = 100_000;
 
-    private const string ConditionResultKey = "result";
-    private const string TruePort = "true";
-    private const string FalsePort = "false";
-    private const string NextPort = "next";
-
     private readonly INodeHandlerRegistry _registry;
     private readonly IVariableResolver _resolver;
     private readonly IClock _clock;
@@ -30,6 +25,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
         Workflow workflow,
         WorkflowRunOptions? options = null,
         IWorkflowContext? context = null,
+        IProgress<NodeRunResult>? progress = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(workflow);
@@ -51,7 +47,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
 
         try
         {
-            var results = await WalkAsync(workflow, startNodeId: null, context, options, cancellationToken)
+            var results = await WalkAsync(workflow, startNodeId: null, context, options, progress, cancellationToken)
                 .ConfigureAwait(false);
 
             var failed = results.Any(r => r.Status == RunStatus.Failed);
@@ -81,6 +77,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
         Guid? startNodeId,
         IWorkflowContext context,
         WorkflowRunOptions options,
+        IProgress<NodeRunResult>? progress,
         CancellationToken cancellationToken)
     {
         var results = new List<NodeRunResult>();
@@ -95,7 +92,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 break;
             }
 
-            var result = await ExecuteNodeAsync(workflow, current, context, options, cancellationToken)
+            var result = await ExecuteNodeAsync(workflow, current, context, options, progress, cancellationToken)
                 .ConfigureAwait(false);
             results.Add(result);
 
@@ -115,19 +112,28 @@ public sealed class WorkflowEngine : IWorkflowEngine
         WorkflowNode node,
         IWorkflowContext context,
         WorkflowRunOptions options,
+        IProgress<NodeRunResult>? progress,
         CancellationToken cancellationToken)
     {
+        progress?.Report(new NodeRunResult
+        {
+            NodeId = node.Id,
+            NodeName = node.Name,
+            Kind = node.Kind,
+            Status = RunStatus.Running,
+        });
+
         var handlerResult = _registry.Resolve(node.Kind);
         if (handlerResult.IsFailure)
         {
-            return new NodeRunResult
+            return Report(progress, new NodeRunResult
             {
                 NodeId = node.Id,
                 NodeName = node.Name,
                 Kind = node.Kind,
                 Status = RunStatus.Failed,
                 Error = handlerResult.Error.Message,
-            };
+            });
         }
 
         var handlerContext = new NodeHandlerContext
@@ -138,7 +144,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
             Resolver = _resolver,
             Options = options,
             RunBranch = (start, branchContext, branchToken) =>
-                WalkAsync(workflow, start, branchContext, options, branchToken),
+                WalkAsync(workflow, start, branchContext, options, progress, branchToken),
         };
 
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -151,7 +157,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
         try
         {
             var result = await handlerResult.Value.ExecuteAsync(handlerContext, timeoutSource.Token).ConfigureAwait(false);
-            return result with { Duration = _clock.UtcNow - start };
+            return Report(progress, result with { Duration = _clock.UtcNow - start });
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -159,7 +165,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
         }
         catch (OperationCanceledException)
         {
-            return new NodeRunResult
+            return Report(progress, new NodeRunResult
             {
                 NodeId = node.Id,
                 NodeName = node.Name,
@@ -167,11 +173,11 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 Status = RunStatus.Failed,
                 Error = WorkflowErrors.NodeTimeout(node.Name).Message,
                 Duration = _clock.UtcNow - start,
-            };
+            });
         }
         catch (Exception ex)
         {
-            return new NodeRunResult
+            return Report(progress, new NodeRunResult
             {
                 NodeId = node.Id,
                 NodeName = node.Name,
@@ -179,8 +185,15 @@ public sealed class WorkflowEngine : IWorkflowEngine
                 Status = RunStatus.Failed,
                 Error = WorkflowErrors.NodeFailed(node.Name, ex.Message).Message,
                 Duration = _clock.UtcNow - start,
-            };
+            });
         }
+    }
+
+    /// <summary>Reports a node's final result to the optional progress sink and returns it unchanged.</summary>
+    private static NodeRunResult Report(IProgress<NodeRunResult>? progress, NodeRunResult result)
+    {
+        progress?.Report(result);
+        return result;
     }
 
     /// <summary>Container nodes may legitimately run long; their inner nodes still get the timeout.</summary>
@@ -197,10 +210,10 @@ public sealed class WorkflowEngine : IWorkflowEngine
 
         if (node.Kind == WorkflowNodeKind.Condition)
         {
-            var branch = result.Outputs.TryGetValue(ConditionResultKey, out var value)
-                && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase)
-                ? TruePort
-                : FalsePort;
+            var branch = result.Outputs.TryGetValue(WorkflowPorts.ConditionResultKey, out var value)
+                && string.Equals(value, WorkflowPorts.True, StringComparison.OrdinalIgnoreCase)
+                ? WorkflowPorts.True
+                : WorkflowPorts.False;
 
             var edge = outgoing.FirstOrDefault(e => string.Equals(e.SourcePort, branch, StringComparison.OrdinalIgnoreCase))
                 ?? outgoing.FirstOrDefault(e => IsContinuationPort(e.SourcePort));
@@ -214,7 +227,7 @@ public sealed class WorkflowEngine : IWorkflowEngine
     /// <summary>A "body" edge belongs to a container node's handler and is not followed by the walk.</summary>
     private static bool IsContinuationPort(string? port) =>
         string.IsNullOrEmpty(port)
-        || string.Equals(port, NextPort, StringComparison.OrdinalIgnoreCase);
+        || string.Equals(port, WorkflowPorts.Next, StringComparison.OrdinalIgnoreCase);
 
     private static WorkflowNode? FindNode(Workflow workflow, Guid id) =>
         workflow.Nodes.FirstOrDefault(n => n.Id == id);

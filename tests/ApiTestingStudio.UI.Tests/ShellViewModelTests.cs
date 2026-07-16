@@ -2,6 +2,7 @@ using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.Messaging;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -40,9 +41,17 @@ public sealed class ShellViewModelTests
             messenger,
             status,
             NullLogger<ApiRunnerViewModel>.Instance);
+        var workflows = new WorkflowsPanelViewModel(
+            new FakeWorkflowCatalogService(),
+            messenger,
+            new FakeDialogService(),
+            session,
+            status,
+            NullLogger<WorkflowsPanelViewModel>.Instance);
         var vm = new ShellViewModel(
             workspaceService, session, theme, dock, status, dialog, statusVm, recentVm, explorer,
-            runner, messenger, NullLogger<ShellViewModel>.Instance);
+            runner, workflows, new FakeWorkflowEditorViewModelFactory(), messenger,
+            NullLogger<ShellViewModel>.Instance);
 
         return new ShellHarness(vm, workspaceService, session, recent, theme, dock, status, dialog);
     }
@@ -149,7 +158,7 @@ public sealed class ShellViewModelTests
     public void Toggle_explorer_removes_then_restores_the_tool_pane()
     {
         var h = CreateShell();
-        h.ViewModel.Tools.Should().HaveCount(2);
+        h.ViewModel.Tools.Should().HaveCount(3);
 
         h.ViewModel.ToggleExplorerCommand.Execute(null);
         h.ViewModel.Tools.Should().NotContain(p => p.ContentId == "tool.explorer");

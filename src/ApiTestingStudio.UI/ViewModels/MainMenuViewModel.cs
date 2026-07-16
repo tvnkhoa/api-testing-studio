@@ -43,6 +43,8 @@ public sealed class MainMenuViewModel
 
     public IRelayCommand ToggleExplorerCommand => _shell.ToggleExplorerCommand;
 
+    public IRelayCommand ToggleWorkflowsCommand => _shell.ToggleWorkflowsCommand;
+
     public IRelayCommand ToggleLogsCommand => _shell.ToggleLogsCommand;
 
     public IAsyncRelayCommand ResetLayoutCommand => _shell.ResetLayoutCommand;

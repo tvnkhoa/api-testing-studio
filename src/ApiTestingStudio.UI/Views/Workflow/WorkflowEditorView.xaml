@@ -1,0 +1,246 @@
+<UserControl x:Class="ApiTestingStudio.UI.Views.Workflow.WorkflowEditorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:nodify="clr-namespace:Nodify;assembly=Nodify"
+             xmlns:converters="clr-namespace:ApiTestingStudio.UI.Converters"
+             xmlns:wf="clr-namespace:ApiTestingStudio.UI.ViewModels.Workflow">
+    <UserControl.Resources>
+        <converters:RunStatusToBrushConverter x:Key="StatusToBrush" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Toolbar -->
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <Button Content="Run" Command="{Binding RunCommand}" ToolTip="Run the workflow" />
+                <Button Content="Save" Command="{Binding SaveCommand}" ToolTip="Save the workflow" />
+                <Separator />
+                <Button Content="Undo" Command="{Binding UndoCommand}" ToolTip="Undo" />
+                <Button Content="Redo" Command="{Binding RedoCommand}" ToolTip="Redo" />
+                <Separator />
+                <Button Content="Delete" Command="{Binding DeleteSelectionCommand}" ToolTip="Delete the selected node" />
+                <Button Content="Zoom to Fit"
+                        Command="{x:Static nodify:EditorCommands.FitToScreen}"
+                        CommandTarget="{Binding ElementName=Editor}"
+                        ToolTip="Fit the graph to the view" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- Palette (left): drag a kind onto the canvas, or click to add -->
+        <Border DockPanel.Dock="Left" Width="140" BorderThickness="0,0,1,0" BorderBrush="#22000000">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Nodes" FontWeight="Bold" Margin="8,6" />
+                <ItemsControl x:Name="Palette" ItemsSource="{Binding Palette.Items}"
+                              PreviewMouseLeftButtonDown="Palette_PreviewMouseLeftButtonDown"
+                              PreviewMouseMove="Palette_PreviewMouseMove">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Label}" Margin="6,2" Padding="8,4"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding DataContext.AddNodeCommand,
+                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding Kind}"
+                                    ToolTip="Click to add, or drag onto the canvas" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <!-- Property inspector (right) -->
+        <Border DockPanel.Dock="Right" Width="260" BorderThickness="1,0,0,0" BorderBrush="#22000000">
+            <ContentControl Content="{Binding Properties}" Margin="8">
+                <ContentControl.ContentTemplate>
+                    <DataTemplate DataType="{x:Type wf:NodePropertiesViewModel}">
+                        <StackPanel>
+                            <TextBlock Text="Properties" FontWeight="Bold" Margin="0,0,0,8" />
+                            <StackPanel Visibility="{Binding HasNode, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="Name" Margin="0,4,0,0" />
+                                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" />
+
+                                <!-- Request -->
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Api">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Method" Margin="0,8,0,0" />
+                                    <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding RequestMethod}" />
+                                    <TextBlock Text="URL" Margin="0,4,0,0" />
+                                    <TextBox Text="{Binding RequestUrl, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Body" Margin="0,4,0,0" />
+                                    <TextBox Text="{Binding RequestBody, UpdateSourceTrigger=LostFocus}"
+                                             AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <!-- Condition -->
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Condition">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Left" Margin="0,8,0,0" />
+                                    <TextBox Text="{Binding ConditionLeft, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Operator" Margin="0,4,0,0" />
+                                    <ComboBox ItemsSource="{Binding Operators}" SelectedItem="{Binding ConditionOperator}" />
+                                    <TextBlock Text="Right" Margin="0,4,0,0" />
+                                    <TextBox Text="{Binding ConditionRight, UpdateSourceTrigger=LostFocus}" />
+                                </StackPanel>
+
+                                <!-- Loop -->
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Loop">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Collection expression" Margin="0,8,0,0" />
+                                    <TextBox Text="{Binding LoopCollectionExpression, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Count" Margin="0,4,0,0" />
+                                    <TextBox Text="{Binding LoopCount, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Item variable" Margin="0,4,0,0" />
+                                    <TextBox Text="{Binding LoopItemVariable, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Index variable" Margin="0,4,0,0" />
+                                    <TextBox Text="{Binding LoopIndexVariable, UpdateSourceTrigger=LostFocus}" />
+                                </StackPanel>
+
+                                <!-- Parallel -->
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Parallel">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Max degree of parallelism" Margin="0,8,0,0" />
+                                    <TextBox Text="{Binding ParallelDegree, UpdateSourceTrigger=LostFocus}" />
+                                </StackPanel>
+
+                                <!-- Delay -->
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Delay">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Delay (ms)" Margin="0,8,0,0" />
+                                    <TextBox Text="{Binding DelayMs, UpdateSourceTrigger=LostFocus}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ContentControl.ContentTemplate>
+            </ContentControl>
+        </Border>
+
+        <!-- Canvas -->
+        <Grid>
+            <nodify:NodifyEditor x:Name="Editor"
+                                 ItemsSource="{Binding Nodes}"
+                                 Connections="{Binding Connections}"
+                                 ConnectionCompletedCommand="{Binding ConnectCommand}"
+                                 DisconnectConnectorCommand="{Binding DisconnectConnectorCommand}"
+                                 ItemsDragStartedCommand="{Binding ItemsDragStartedCommand}"
+                                 ItemsDragCompletedCommand="{Binding ItemsDragCompletedCommand}"
+                                 AllowDrop="True"
+                                 Drop="Editor_Drop">
+                <nodify:NodifyEditor.ItemContainerStyle>
+                    <Style TargetType="nodify:ItemContainer">
+                        <Setter Property="Location" Value="{Binding Location, Mode=TwoWay}" />
+                        <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                    </Style>
+                </nodify:NodifyEditor.ItemContainerStyle>
+
+                <nodify:NodifyEditor.ItemTemplate>
+                    <DataTemplate DataType="{x:Type wf:NodeViewModel}">
+                        <nodify:Node Header="{Binding Title}"
+                                     HeaderBrush="{Binding Status, Converter={StaticResource StatusToBrush}}">
+                            <nodify:Node.Input>
+                                <ItemsControl ItemsSource="{Binding Input}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type wf:PortViewModel}">
+                                            <nodify:NodeInput Header="{Binding Title}"
+                                                              IsConnected="{Binding IsConnected}"
+                                                              Anchor="{Binding Anchor, Mode=OneWayToSource}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </nodify:Node.Input>
+                            <nodify:Node.Output>
+                                <ItemsControl ItemsSource="{Binding Output}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type wf:PortViewModel}">
+                                            <nodify:NodeOutput Header="{Binding Title}"
+                                                               IsConnected="{Binding IsConnected}"
+                                                               Anchor="{Binding Anchor, Mode=OneWayToSource}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </nodify:Node.Output>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="10" Height="10" CornerRadius="5" Margin="0,0,6,0"
+                                        Background="{Binding Status, Converter={StaticResource StatusToBrush}}" />
+                                <TextBlock Text="{Binding Status}" />
+                            </StackPanel>
+                        </nodify:Node>
+                    </DataTemplate>
+                </nodify:NodifyEditor.ItemTemplate>
+
+                <nodify:NodifyEditor.ConnectionTemplate>
+                    <DataTemplate DataType="{x:Type wf:ConnectionViewModel}">
+                        <nodify:LineConnection Source="{Binding Source.Anchor}"
+                                               Target="{Binding Target.Anchor}" />
+                    </DataTemplate>
+                </nodify:NodifyEditor.ConnectionTemplate>
+
+                <nodify:NodifyEditor.PendingConnectionTemplate>
+                    <DataTemplate>
+                        <nodify:PendingConnection AllowOnlyConnectors="True" />
+                    </DataTemplate>
+                </nodify:NodifyEditor.PendingConnectionTemplate>
+            </nodify:NodifyEditor>
+
+            <!-- Minimap overlay -->
+            <nodify:Minimap HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                            Width="200" Height="140" Margin="8"
+                            ItemsSource="{Binding Nodes}"
+                            ItemsExtent="{Binding ItemsExtent, ElementName=Editor}"
+                            ViewportLocation="{Binding ViewportLocation, ElementName=Editor, Mode=TwoWay}"
+                            ViewportSize="{Binding ViewportSize, ElementName=Editor}">
+                <nodify:Minimap.ItemContainerStyle>
+                    <Style TargetType="nodify:MinimapItem">
+                        <Setter Property="Location" Value="{Binding Location}" />
+                    </Style>
+                </nodify:Minimap.ItemContainerStyle>
+            </nodify:Minimap>
+        </Grid>
+    </DockPanel>
+</UserControl>

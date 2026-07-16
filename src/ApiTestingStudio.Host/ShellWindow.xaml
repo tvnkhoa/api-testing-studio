@@ -40,6 +40,7 @@
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="_Explorer" Command="{Binding ToggleExplorerCommand}" />
+                <MenuItem Header="_Workflows" Command="{Binding ToggleWorkflowsCommand}" />
                 <MenuItem Header="_Logs" Command="{Binding ToggleLogsCommand}" />
                 <Separator />
                 <MenuItem Header="_Dark Theme"

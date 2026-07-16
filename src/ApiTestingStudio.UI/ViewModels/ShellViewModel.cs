@@ -8,6 +8,7 @@ using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -34,6 +35,8 @@ public sealed partial class ShellViewModel : ObservableObject
 
     private readonly ServiceExplorerViewModel _explorer;
     private readonly ApiRunnerViewModel _runner;
+    private readonly WorkflowsPanelViewModel _workflows;
+    private readonly IWorkflowEditorViewModelFactory _workflowEditorFactory;
     private readonly LogsPlaceholderViewModel _logs = new();
 
     public ShellViewModel(
@@ -47,6 +50,8 @@ public sealed partial class ShellViewModel : ObservableObject
         RecentWorkspacesMenuViewModel recentWorkspaces,
         ServiceExplorerViewModel explorer,
         ApiRunnerViewModel runner,
+        WorkflowsPanelViewModel workflows,
+        IWorkflowEditorViewModelFactory workflowEditorFactory,
         IMessenger messenger,
         ILogger<ShellViewModel> logger)
     {
@@ -60,6 +65,8 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(recentWorkspaces);
         ArgumentNullException.ThrowIfNull(explorer);
         ArgumentNullException.ThrowIfNull(runner);
+        ArgumentNullException.ThrowIfNull(workflows);
+        ArgumentNullException.ThrowIfNull(workflowEditorFactory);
         ArgumentNullException.ThrowIfNull(messenger);
         ArgumentNullException.ThrowIfNull(logger);
 
@@ -71,6 +78,8 @@ public sealed partial class ShellViewModel : ObservableObject
         _fileDialog = fileDialog;
         _explorer = explorer;
         _runner = runner;
+        _workflows = workflows;
+        _workflowEditorFactory = workflowEditorFactory;
         _logger = logger;
 
         StatusBar = statusBarViewModel;
@@ -79,11 +88,15 @@ public sealed partial class ShellViewModel : ObservableObject
 
         Documents.Add(new WelcomeDocumentViewModel());
         Tools.Add(_explorer);
+        Tools.Add(_workflows);
         Tools.Add(_logs);
 
         // Selecting an endpoint in the Explorer opens (or focuses) the Runner document pane; the
         // runner view model itself loads the endpoint's details from the same message.
         messenger.Register<EndpointSelectedMessage>(this, (_, _) => OpenOrFocusRunner());
+
+        // Selecting a workflow in the Workflows panel opens (or focuses) its designer document pane.
+        messenger.Register<OpenWorkflowMessage>(this, (_, m) => OpenOrFocusWorkflow(m.WorkflowId, m.Name));
 
         Menu = new MainMenuViewModel(this, RecentWorkspaces);
         Toolbar = new ToolbarViewModel(this);
@@ -200,6 +213,9 @@ public sealed partial class ShellViewModel : ObservableObject
     private void ToggleExplorer() => TogglePanel(_explorer);
 
     [RelayCommand]
+    private void ToggleWorkflows() => TogglePanel(_workflows);
+
+    [RelayCommand]
     private void ToggleLogs() => TogglePanel(_logs);
 
     [RelayCommand]
@@ -234,10 +250,13 @@ public sealed partial class ShellViewModel : ObservableObject
         if (_session.IsOpen)
         {
             await _explorer.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await _workflows.LoadAsync(cancellationToken).ConfigureAwait(true);
         }
         else
         {
             _explorer.Clear();
+            _workflows.Clear();
+            CloseWorkflowDocuments();
         }
     }
 
@@ -257,6 +276,43 @@ public sealed partial class ShellViewModel : ObservableObject
 
         _runner.IsSelected = true;
         _runner.IsActive = true;
+    }
+
+    private void OpenOrFocusWorkflow(Guid workflowId, string name)
+    {
+        var contentId = $"document.workflow.{workflowId}";
+        var pane = Documents.FirstOrDefault(d => d.ContentId == contentId);
+        if (pane is null)
+        {
+            var editor = _workflowEditorFactory.Create(workflowId, name);
+            Documents.Add(editor);
+            pane = editor;
+            _ = LoadWorkflowSafeAsync(editor);
+        }
+
+        pane.IsSelected = true;
+        pane.IsActive = true;
+    }
+
+    private async Task LoadWorkflowSafeAsync(WorkflowEditorViewModel editor)
+    {
+        try
+        {
+            await editor.LoadAsync(CancellationToken.None).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load workflow into the designer.");
+            _statusBar.SetMessage("Failed to open the workflow.");
+        }
+    }
+
+    private void CloseWorkflowDocuments()
+    {
+        foreach (var pane in Documents.OfType<WorkflowEditorViewModel>().ToList())
+        {
+            Documents.Remove(pane);
+        }
     }
 
     private void TogglePanel(ToolPanelViewModel panel)

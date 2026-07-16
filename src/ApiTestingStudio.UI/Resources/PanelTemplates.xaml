@@ -3,8 +3,10 @@
                     xmlns:panels="clr-namespace:ApiTestingStudio.UI.ViewModels.Panels"
                     xmlns:explorer="clr-namespace:ApiTestingStudio.UI.ViewModels.Explorer"
                     xmlns:runner="clr-namespace:ApiTestingStudio.UI.ViewModels.Runner"
+                    xmlns:workflow="clr-namespace:ApiTestingStudio.UI.ViewModels.Workflow"
                     xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels"
-                    xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner">
+                    xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner"
+                    xmlns:workflowViews="clr-namespace:ApiTestingStudio.UI.Views.Workflow">
 
     <!--
         Implicit data templates mapping each panel view model to its view. AvalonDock renders the
@@ -32,6 +34,15 @@
 
     <DataTemplate DataType="{x:Type runner:MonacoEditorViewModel}">
         <runnerViews:MonacoEditorView />
+    </DataTemplate>
+
+    <!-- Workflow Designer (Sprint 09) -->
+    <DataTemplate DataType="{x:Type workflow:WorkflowsPanelViewModel}">
+        <workflowViews:WorkflowsPanelView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type workflow:WorkflowEditorViewModel}">
+        <workflowViews:WorkflowEditorView />
     </DataTemplate>
 
 </ResourceDictionary>

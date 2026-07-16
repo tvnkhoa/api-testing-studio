@@ -53,6 +53,12 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IWorkflowEngine, WorkflowEngine>();
         services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
 
+        // Workflow Designer support (Sprint 09): pure services the UI designer consumes. The connector
+        // validator and catalog CRUD are stateless singletons; the undo/redo service is editor state
+        // (one per designer pane) and is therefore registered as transient in AddUi.
+        services.AddSingleton<IConnectorValidator, ConnectorValidator>();
+        services.AddSingleton<IWorkflowCatalogService, WorkflowCatalogService>();
+
         return services;
     }
 }

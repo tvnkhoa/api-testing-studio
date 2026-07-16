@@ -36,13 +36,28 @@ node to its registered `IWorkflowNode`. New node kinds arrive as plugins without
 ## UI
 
 - MVVM (CommunityToolkit.Mvvm). The Nodify `NodifyEditor` binds to a `WorkflowEditorViewModel`
-  exposing `Nodes`, `Connections`, `SelectedNodes`, and command surface (add/delete/connect,
-  undo/redo). A property panel edits the selected node's config. No business logic in code-behind.
-- Material Design iconography per node kind; verb/status colour coding consistent with the Explorer.
+  (a `DocumentPanelViewModel`, one pane per workflow, deterministic `ContentId =
+  "document.workflow.{id}"` so AvalonDock restores it) exposing `Nodes`, `Connections`,
+  `SelectedNode`, `PendingConnection`, and a command surface (AddNode/DeleteSelection/Connect/
+  Disconnect/Undo/Redo/Save/Run/ZoomToFit). `NodePropertiesViewModel` provides typed per-kind editors
+  for the selected node's config (bound to the public `*NodeConfig` records via `NodeConfigSerializer`);
+  edits route through the undo stack. No business logic in code-behind.
+- **Entry point:** a dockable **Workflows tool panel** (`WorkflowsPanelViewModel`) lists workflows
+  (New/Rename/Delete via `IWorkflowCatalogService`); selecting one publishes `OpenWorkflowMessage`,
+  which the shell handles by opening/focusing the designer pane (created via
+  `IWorkflowEditorViewModelFactory`).
+- Graph ↔ domain mapping is done by the UI-side `GraphMapper` (+ `INodeViewModelFactory`), using the
+  Application `NodePortCatalog` for port names so the designer can only produce engine-traversable
+  edges. `ConnectorValidator` (Application) rejects self/duplicate/unknown-port/wrong-direction edges.
+- Material Design iconography per node kind; verb colour coding via `HttpVerbToBrushConverter` and
+  live per-node status via `RunStatusToBrushConverter` (`Semantic.*` tokens); status always shows a
+  label, never colour alone.
 
 ## Sprint
 
-- **Sprint 09** — Nodify canvas, nodes/edges, drag & drop, zoom, minimap, undo/redo, visual mapping.
+- **Sprint 09** — Nodify canvas, nodes/edges, drag & drop, zoom, minimap, undo/redo, visual mapping,
+  typed property inspector, Workflows panel entry point, and run-from-designer with live per-node
+  status streamed via `IWorkflowEngine.RunAsync`'s optional `IProgress<NodeRunResult>`.
 - Depends on Sprint 08 (workflow engine, graph model, execution, run tree).
 
 ## Open Questions / Future

@@ -12,8 +12,6 @@ namespace ApiTestingStudio.Application.Workflows.Handlers;
 /// </summary>
 public sealed class ParallelNodeHandler : INodeHandler
 {
-    private const string BodyPort = "body";
-
     public WorkflowNodeKind Kind => WorkflowNodeKind.Parallel;
 
     public async Task<NodeRunResult> ExecuteAsync(NodeHandlerContext context, CancellationToken cancellationToken = default)
@@ -29,7 +27,7 @@ public sealed class ParallelNodeHandler : INodeHandler
         }
 
         var branchStarts = context.Workflow.Edges
-            .Where(e => e.SourceNodeId == node.Id && string.Equals(e.SourcePort, BodyPort, StringComparison.OrdinalIgnoreCase))
+            .Where(e => e.SourceNodeId == node.Id && string.Equals(e.SourcePort, WorkflowPorts.Body, StringComparison.OrdinalIgnoreCase))
             .Select(e => e.TargetNodeId)
             .ToList();
 
