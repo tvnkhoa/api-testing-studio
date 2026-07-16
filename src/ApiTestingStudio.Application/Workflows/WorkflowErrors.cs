@@ -33,4 +33,16 @@ public static class WorkflowErrors
 
     public static Error InvalidConfig(string nodeName, string message) =>
         new("workflow.invalid_config", $"Node '{nodeName}' has invalid configuration: {message}");
+
+    public static Error ConnectSelf { get; } =
+        new("workflow.connect_self", "A node cannot be connected to itself.");
+
+    public static Error ConnectDuplicate { get; } =
+        new("workflow.connect_duplicate", "That connection already exists.");
+
+    public static Error ConnectUnknownPort(string port) =>
+        new("workflow.connect_unknown_port", $"Port '{port}' is not valid for this node.");
+
+    public static Error NameRequired { get; } =
+        new("workflow.name_required", "A workflow name is required.");
 }

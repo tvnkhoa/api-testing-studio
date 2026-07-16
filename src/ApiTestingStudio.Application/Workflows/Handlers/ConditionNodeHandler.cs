@@ -24,7 +24,7 @@ public sealed class ConditionNodeHandler : INodeHandler
         var outcome = Evaluate(config.Operator, left, right);
         var outputs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["result"] = outcome ? "true" : "false",
+            [WorkflowPorts.ConditionResultKey] = outcome ? WorkflowPorts.True : WorkflowPorts.False,
         };
         context.Context.SetNodeOutputs(node.Name, outputs);
 

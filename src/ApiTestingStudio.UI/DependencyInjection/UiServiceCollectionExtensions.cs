@@ -1,7 +1,9 @@
+using ApiTestingStudio.Application.Common;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -37,6 +39,16 @@ public static class UiServiceCollectionExtensions
         // API Runner document (Sprint 06). Child view models (builder/response/editor) are composed
         // internally; it subscribes to the injected IMessenger for endpoint selection.
         services.AddSingleton<ApiRunnerViewModel>();
+
+        // Workflow Designer (Sprint 09). The mapper + node factory are shared singletons; the undo
+        // service is per-designer (transient) and flows into each WorkflowEditorViewModel; the editor
+        // is multi-instance (one pane per workflow) created via IWorkflowEditorViewModelFactory, so it
+        // is NOT registered directly. The Workflows tool panel is a singleton added to the shell.
+        services.AddSingleton<INodeViewModelFactory, NodeViewModelFactory>();
+        services.AddSingleton<GraphMapper>();
+        services.AddTransient<IUndoRedoService, UndoRedoService>();
+        services.AddSingleton<IWorkflowEditorViewModelFactory, WorkflowEditorViewModelFactory>();
+        services.AddSingleton<WorkflowsPanelViewModel>();
 
         services.AddSingleton<ShellViewModel>();
 
