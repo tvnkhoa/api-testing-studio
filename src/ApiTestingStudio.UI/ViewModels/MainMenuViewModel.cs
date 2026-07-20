@@ -36,6 +36,14 @@ public sealed class MainMenuViewModel
 
     public IAsyncRelayCommand ImportCommand => _shell.ImportCommand;
 
+    public IAsyncRelayCommand ExportPackageCommand => _shell.ExportPackageCommand;
+
+    public IAsyncRelayCommand ImportPackageCommand => _shell.ImportPackageCommand;
+
+    public IAsyncRelayCommand BackupNowCommand => _shell.BackupNowCommand;
+
+    public IAsyncRelayCommand BackupSettingsCommand => _shell.BackupSettingsCommand;
+
     public IRelayCommand ExitCommand => _shell.ExitCommand;
 
     // View

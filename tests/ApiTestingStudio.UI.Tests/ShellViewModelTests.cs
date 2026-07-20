@@ -2,6 +2,7 @@ using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Core.Plugins;
 using ApiTestingStudio.Plugin.Abstractions.Assertions;
+using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Dashboard;
 using ApiTestingStudio.UI.ViewModels.Explorer;
@@ -28,6 +29,11 @@ public sealed class ShellViewModelTests
         var dock = new FakeDockManager();
         var status = new FakeStatusBarService();
         var dialog = new FakeFileDialogService();
+        var dialogService = new FakeDialogService();
+        var packageService = new FakeWorkspacePackageService();
+        var backupService = new FakeBackupService();
+        var recoveryService = new FakeRecoveryService();
+        var appSettings = new FakeAppSettingsService();
 
         var statusVm = new StatusBarViewModel(session, status);
         var recentVm = new RecentWorkspacesMenuViewModel(recent);
@@ -103,12 +109,14 @@ public sealed class ShellViewModelTests
             status,
             new ApiTestingStudio.Application.Runs.MetricsFeed());
         var vm = new ShellViewModel(
-            workspaceService, session, theme, dock, status, dialog, statusVm, recentVm, explorer,
+            workspaceService, session, theme, dock, status, dialog, dialogService, packageService,
+            backupService, recoveryService, appSettings, statusVm, recentVm, explorer,
             runner, workflows, profiles, testCases, testResults, stress, dashboard, timeline, logs, environmentSwitcher,
             new FakeWorkflowEditorViewModelFactory(), messenger,
             NullLogger<ShellViewModel>.Instance);
 
-        return new ShellHarness(vm, workspaceService, session, recent, theme, dock, status, dialog);
+        return new ShellHarness(vm, workspaceService, session, recent, theme, dock, status, dialog,
+            dialogService, packageService, backupService, appSettings);
     }
 
     [Fact]
@@ -222,6 +230,99 @@ public sealed class ShellViewModelTests
         h.ViewModel.Tools.Should().Contain(p => p.ContentId == "tool.explorer");
     }
 
+    [Fact]
+    public async Task Export_package_is_disabled_until_a_workspace_is_open()
+    {
+        var h = CreateShell();
+        h.ViewModel.ExportPackageCommand.CanExecute(null).Should().BeFalse();
+
+        h.Dialog.CreateResult = @"C:\temp\W.atsdb";
+        await h.ViewModel.NewWorkspaceCommand.ExecuteAsync(null);
+
+        h.ViewModel.ExportPackageCommand.CanExecute(null).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Export_package_cancelled_dialog_does_nothing()
+    {
+        var h = CreateShell();
+        h.Dialog.CreateResult = @"C:\temp\W.atsdb";
+        await h.ViewModel.NewWorkspaceCommand.ExecuteAsync(null);
+        h.Dialog.ExportPackageResult = null;
+
+        await h.ViewModel.ExportPackageCommand.ExecuteAsync(null);
+
+        h.Package.LastExportTarget.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Export_package_writes_to_the_chosen_path()
+    {
+        var h = CreateShell();
+        h.Dialog.CreateResult = @"C:\temp\W.atsdb";
+        await h.ViewModel.NewWorkspaceCommand.ExecuteAsync(null);
+        h.Dialog.ExportPackageResult = @"C:\temp\out.apistudio";
+
+        await h.ViewModel.ExportPackageCommand.ExecuteAsync(null);
+
+        h.Package.LastExportTarget.Should().Be(@"C:\temp\out.apistudio");
+        h.Status.Message.Should().Contain("Exported");
+    }
+
+    [Fact]
+    public async Task Import_package_imports_from_source_to_target_and_reports_reprompt()
+    {
+        var h = CreateShell();
+        h.Dialog.ImportPackageResult = @"C:\temp\in.apistudio";
+        h.Dialog.CreateResult = @"C:\temp\imported.atsdb";
+        h.Package.ImportResult = Result.Success(
+            new Application.Packaging.PackageImportResult(Guid.NewGuid(), @"C:\temp\imported.atsdb", true, ["Import.Curl"]));
+
+        await h.ViewModel.ImportPackageCommand.ExecuteAsync(null);
+
+        h.Package.LastImportSource.Should().Be(@"C:\temp\in.apistudio");
+        h.Package.LastImportTarget.Should().Be(@"C:\temp\imported.atsdb");
+        h.DialogService.LastMessage.Should().Contain("re-entered");
+    }
+
+    [Fact]
+    public async Task Backup_now_creates_a_backup_when_a_workspace_is_open()
+    {
+        var h = CreateShell();
+        h.Dialog.CreateResult = @"C:\temp\W.atsdb";
+        await h.ViewModel.NewWorkspaceCommand.ExecuteAsync(null);
+
+        await h.ViewModel.BackupNowCommand.ExecuteAsync(null);
+
+        h.Backup.CreateCallCount.Should().Be(1);
+        h.Status.Message.Should().Contain("Backup created");
+    }
+
+    [Fact]
+    public async Task Closing_a_workspace_auto_backs_up_when_the_setting_is_enabled()
+    {
+        var h = CreateShell();
+        h.AppSettings.Settings = new ApiTestingStudio.Application.Settings.AppSettings { AutoBackupOnClose = true };
+        h.Dialog.CreateResult = @"C:\temp\W.atsdb";
+        await h.ViewModel.NewWorkspaceCommand.ExecuteAsync(null);
+
+        await h.ViewModel.CloseWorkspaceCommand.ExecuteAsync(null);
+
+        h.Backup.CreateCallCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Closing_a_workspace_does_not_back_up_when_the_setting_is_disabled()
+    {
+        var h = CreateShell();
+        h.Dialog.CreateResult = @"C:\temp\W.atsdb";
+        await h.ViewModel.NewWorkspaceCommand.ExecuteAsync(null);
+
+        await h.ViewModel.CloseWorkspaceCommand.ExecuteAsync(null);
+
+        h.Backup.CreateCallCount.Should().Be(0);
+    }
+
     private sealed record ShellHarness(
         ShellViewModel ViewModel,
         FakeWorkspaceService WorkspaceService,
@@ -230,5 +331,9 @@ public sealed class ShellViewModelTests
         FakeThemeManager Theme,
         FakeDockManager Dock,
         FakeStatusBarService Status,
-        FakeFileDialogService Dialog);
+        FakeFileDialogService Dialog,
+        FakeDialogService DialogService,
+        FakeWorkspacePackageService Package,
+        FakeBackupService Backup,
+        FakeAppSettingsService AppSettings);
 }

@@ -84,12 +84,22 @@ public sealed class DialogService : IDialogService
     public bool Confirm(string title, string message) =>
         MessageBox.Show(message, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
 
+    public void ShowMessage(string title, string message) =>
+        MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+
     public bool ShowImportWizard()
     {
         var viewModel = new ImportWizardViewModel(_importOrchestrator, _fileDialog);
         var dialog = new ImportWizardDialog { DataContext = viewModel, Owner = ActiveWindow() };
         dialog.ShowDialog();
         return viewModel.Committed;
+    }
+
+    public void ShowBackupSettings(BackupSettingsViewModel viewModel)
+    {
+        System.ArgumentNullException.ThrowIfNull(viewModel);
+        var dialog = new BackupSettingsDialog { DataContext = viewModel, Owner = ActiveWindow() };
+        dialog.ShowDialog();
     }
 
     private static Window? ActiveWindow() =>

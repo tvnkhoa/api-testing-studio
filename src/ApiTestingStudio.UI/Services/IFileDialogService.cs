@@ -15,4 +15,10 @@ public interface IFileDialogService
 
     /// <summary>Prompts for an existing file to open (e.g. an import source). Returns its path, or null if cancelled.</summary>
     string? PromptOpenFile(string title, string filter);
+
+    /// <summary>Prompts for a location to write an <c>.apistudio</c> package. Returns its path, or null if cancelled.</summary>
+    string? PromptExportPackage(string? suggestedFileName = null);
+
+    /// <summary>Prompts for an existing <c>.apistudio</c> package to import. Returns its path, or null if cancelled.</summary>
+    string? PromptImportPackage();
 }

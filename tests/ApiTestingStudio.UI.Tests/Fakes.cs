@@ -1,4 +1,6 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Backup;
+using ApiTestingStudio.Application.Packaging;
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Application.Workspaces;
 using ApiTestingStudio.Domain.Entities;
@@ -6,6 +8,78 @@ using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.Services;
 
 namespace ApiTestingStudio.UI.Tests;
+
+/// <summary>Scripted <see cref="IWorkspacePackageService"/> for shell packaging commands.</summary>
+internal sealed class FakeWorkspacePackageService : IWorkspacePackageService
+{
+    public string? LastExportTarget { get; private set; }
+
+    public string? LastImportSource { get; private set; }
+
+    public string? LastImportTarget { get; private set; }
+
+    public Result<PackageExportResult>? ExportResult { get; set; }
+
+    public Result<PackageImportResult>? ImportResult { get; set; }
+
+    public Task<Result<PackageExportResult>> ExportAsync(string targetPackagePath, CancellationToken cancellationToken = default)
+    {
+        LastExportTarget = targetPackagePath;
+        return Task.FromResult(ExportResult ?? Result.Success(new PackageExportResult(targetPackagePath, 2048)));
+    }
+
+    public Task<Result<PackageImportResult>> ImportAsync(string packagePath, string targetLocation, CancellationToken cancellationToken = default)
+    {
+        LastImportSource = packagePath;
+        LastImportTarget = targetLocation;
+        return Task.FromResult(ImportResult
+            ?? Result.Success(new PackageImportResult(Guid.NewGuid(), targetLocation, false, [])));
+    }
+}
+
+/// <summary>Scripted <see cref="IBackupService"/>.</summary>
+internal sealed class FakeBackupService : IBackupService
+{
+    public int CreateCallCount { get; private set; }
+
+    public Result<BackupEntry>? CreateResult { get; set; }
+
+    public List<BackupEntry> Backups { get; } = [];
+
+    public Task<Result<BackupEntry>> CreateBackupAsync(CancellationToken cancellationToken = default)
+    {
+        CreateCallCount++;
+        return Task.FromResult(CreateResult
+            ?? Result.Success(new BackupEntry("backup.apistudio", Guid.NewGuid(), "W", DateTimeOffset.UnixEpoch, 4096)));
+    }
+
+    public Task<IReadOnlyList<BackupEntry>> ListBackupsAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<BackupEntry>>(Backups);
+}
+
+/// <summary>Scripted <see cref="IRecoveryService"/>.</summary>
+internal sealed class FakeRecoveryService : IRecoveryService
+{
+    public Task<IReadOnlyList<BackupEntry>> ListAllBackupsAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<BackupEntry>>([]);
+
+    public Task<Result<PackageImportResult>> RestoreAsync(BackupEntry backup, string targetLocation, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Success(new PackageImportResult(backup.WorkspaceId, targetLocation, false, [])));
+}
+
+/// <summary>In-memory <see cref="IAppSettingsService"/>.</summary>
+internal sealed class FakeAppSettingsService : IAppSettingsService
+{
+    public AppSettings Settings { get; set; } = new();
+
+    public Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default) => Task.FromResult(Settings);
+
+    public Task SaveAsync(AppSettings settings, CancellationToken cancellationToken = default)
+    {
+        Settings = settings;
+        return Task.CompletedTask;
+    }
+}
 
 /// <summary>Mutable in-memory session the fake workspace service drives.</summary>
 internal sealed class FakeWorkspaceSession : IWorkspaceSession
@@ -179,9 +253,17 @@ internal sealed class FakeFileDialogService : IFileDialogService
 
     public string? OpenFileResult { get; set; }
 
+    public string? ExportPackageResult { get; set; }
+
+    public string? ImportPackageResult { get; set; }
+
     public string? PromptOpenWorkspace() => OpenResult;
 
     public string? PromptCreateWorkspace() => CreateResult;
 
     public string? PromptOpenFile(string title, string filter) => OpenFileResult;
+
+    public string? PromptExportPackage(string? suggestedFileName = null) => ExportPackageResult;
+
+    public string? PromptImportPackage() => ImportPackageResult;
 }

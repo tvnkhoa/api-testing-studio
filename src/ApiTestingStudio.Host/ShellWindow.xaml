@@ -35,6 +35,11 @@
                 <MenuItem Header="_Close Workspace" Command="{Binding CloseWorkspaceCommand}" />
                 <Separator />
                 <MenuItem Header="_Import…" Command="{Binding ImportCommand}" />
+                <MenuItem Header="Import _Package…" Command="{Binding ImportPackageCommand}" />
+                <MenuItem Header="_Export Package…" Command="{Binding ExportPackageCommand}" />
+                <Separator />
+                <MenuItem Header="_Backup Now" Command="{Binding BackupNowCommand}" />
+                <MenuItem Header="Backup _Settings &amp; Restore…" Command="{Binding BackupSettingsCommand}" />
                 <Separator />
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
             </MenuItem>

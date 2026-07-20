@@ -19,7 +19,10 @@
                        Opacity="0.7"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
             <ListBox ItemsSource="{Binding Runs}"
-                     SelectedItem="{Binding SelectedRun}">
+                     SelectedItem="{Binding SelectedRun}"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     ScrollViewer.CanContentScroll="True">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Margin="0,2">
@@ -43,7 +46,10 @@
                 <Button Content="Refresh" Padding="12,2" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
                 <Button Content="Replay" Padding="12,2" Command="{Binding ReplayCommand}" />
             </StackPanel>
-            <TreeView ItemsSource="{Binding Steps}">
+            <TreeView ItemsSource="{Binding Steps}"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      ScrollViewer.CanContentScroll="True">
                 <TreeView.Resources>
                     <HierarchicalDataTemplate DataType="{x:Type panels:RunStepNode}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">

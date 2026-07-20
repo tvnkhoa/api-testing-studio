@@ -76,9 +76,27 @@ Ship the `.apistudio` package format via the `Export.ApiStudio` plugin (`IExport
 - Selective export (subset of services/workflows).
 - Export to interchange formats (OpenAPI/Postman).
 
+## Decisions (ADR-0012)
+- Layering: plugin does **pure ZIP** pack/unpack (`IWorkspaceSerializer`); Application
+  `IWorkspacePackageService` orchestrates; Infrastructure does SQLite maintenance + backup store.
+- `IExporter` repurposed to a **format-capability** declaration (Format/DisplayName/FileExtension).
+- Secret portability: **flag + re-prompt** (manifest carries a non-reversible key fingerprint).
+- Attachments: **sidecar `<name>.attachments/`** folder next to the `.atsdb`.
+- No schema change; `Workspace.CurrentSchemaVersion` stays at 9 (manifest bookkeeping is derived).
+
+## Performance pass (Sprint 14)
+- **Package size/IO:** `VACUUM INTO` yields a compacted, WAL-free snapshot, bounding package size and
+  import time; packaging streams the DB/attachments rather than buffering whole files in memory.
+- **Large-catalog rendering:** the Service Explorer tree already used recycling virtualization; this
+  sprint extended UI virtualization + container recycling to the **Timeline** run list + step tree and
+  the **Log Viewer** DataGrid (row + column virtualization), so those surfaces stay responsive with
+  thousands of rows. Measure by scrolling a large run/log workspace before vs. after.
+
 ## Checklist
-- [ ] `IExporter` + `IWorkspaceSerializer` contracts.
-- [ ] Package pack/unpack (manifest + db + attachments).
-- [ ] Backup + recovery services + tests.
-- [ ] DB checkpoint/vacuum before packaging.
-- [ ] Export/import + backup UI; performance pass.
+- [x] `IExporter` (capability) + `IWorkspaceSerializer` (enriched) + `PackageManifest` contracts.
+- [x] Package pack/unpack (manifest + db + attachments) in `Export.ApiStudio` + round-trip test.
+- [x] `IWorkspaceMaintenance` (checkpoint + `VACUUM INTO`) in Infrastructure.
+- [x] `IWorkspacePackageService` export/import orchestration + secret re-prompt detection.
+- [x] Backup + recovery services (versioned archives, verified restore) + tests.
+- [x] Export/import + backup UI (dialogs, progress, mismatch/re-prompt reporting).
+- [x] Performance pass (large-catalog virtualization; VACUUM-compacted packages).

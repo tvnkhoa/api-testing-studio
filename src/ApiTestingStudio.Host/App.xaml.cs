@@ -128,6 +128,10 @@ public partial class App : System.Windows.Application
             pluginsDirectory,
             bootstrapLoggerFactory);
 
+        // Expose the loaded-plugin set to the Application layer (package import reports missing
+        // plugin dependencies) without Application depending on the plugin host. See ADR-0012.
+        builder.Services.AddSingleton<IInstalledPluginCatalog, PluginRegistryInventory>();
+
         // UI composition
         builder.Services.AddUi();
         builder.Services.AddSingleton<ShellWindow>();

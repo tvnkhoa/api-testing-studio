@@ -1,7 +1,9 @@
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Backup;
 using ApiTestingStudio.Application.Environments;
 using ApiTestingStudio.Application.Import;
+using ApiTestingStudio.Application.Packaging;
 using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.Dashboard;
 using ApiTestingStudio.Application.Runs;
@@ -94,6 +96,15 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IRunRecorder, RunRecorder>();
         services.AddSingleton<IRunReplayService, RunReplayService>();
         services.AddSingleton<IDashboardService, DashboardService>();
+
+        // Packaging, backup & recovery (Sprint 14): export/import orchestration over the plugin
+        // serializer + DB maintenance, and versioned backups over the app-data backup store. The
+        // IWorkspaceSerializer(s), IWorkspaceMaintenance, IBackupStore, and IInstalledPluginCatalog
+        // ports are bound by AddInfrastructure / AddPluginHost. See ADR-0012.
+        services.AddSingleton<IWorkspacePackageService, WorkspacePackageService>();
+        services.AddSingleton<BackupEntryReader>();
+        services.AddSingleton<IBackupService, BackupService>();
+        services.AddSingleton<IRecoveryService, RecoveryService>();
 
         return services;
     }

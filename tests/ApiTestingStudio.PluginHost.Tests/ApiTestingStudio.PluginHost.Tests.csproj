@@ -23,6 +23,9 @@
   -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\ApiTestingStudio.Core\ApiTestingStudio.Core.csproj" />
+    <!-- Infrastructure is referenced for the packaging end-to-end test (real SQLite maintenance
+         combined with the real Export.ApiStudio serializer). -->
+    <ProjectReference Include="..\..\src\ApiTestingStudio.Infrastructure\ApiTestingStudio.Infrastructure.csproj" />
     <ProjectReference Include="..\..\plugins\Import.Curl\ApiTestingStudio.Import.Curl.csproj" />
     <ProjectReference Include="..\..\plugins\Import.OpenApi\ApiTestingStudio.Import.OpenApi.csproj" />
     <ProjectReference Include="..\..\plugins\Import.Scalar\ApiTestingStudio.Import.Scalar.csproj" />

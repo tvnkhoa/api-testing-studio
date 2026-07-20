@@ -1,11 +1,14 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Backup;
+using ApiTestingStudio.Application.Packaging;
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.Messaging;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels.Dashboard;
+using ApiTestingStudio.UI.ViewModels.Dialogs;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Panels;
@@ -35,6 +38,11 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly IDockManager _dockManager;
     private readonly IStatusBarService _statusBar;
     private readonly IFileDialogService _fileDialog;
+    private readonly IDialogService _dialogService;
+    private readonly IWorkspacePackageService _packageService;
+    private readonly IBackupService _backupService;
+    private readonly IRecoveryService _recoveryService;
+    private readonly IAppSettingsService _appSettings;
     private readonly ILogger<ShellViewModel> _logger;
 
     private readonly ServiceExplorerViewModel _explorer;
@@ -56,6 +64,11 @@ public sealed partial class ShellViewModel : ObservableObject
         IDockManager dockManager,
         IStatusBarService statusBar,
         IFileDialogService fileDialog,
+        IDialogService dialogService,
+        IWorkspacePackageService packageService,
+        IBackupService backupService,
+        IRecoveryService recoveryService,
+        IAppSettingsService appSettings,
         StatusBarViewModel statusBarViewModel,
         RecentWorkspacesMenuViewModel recentWorkspaces,
         ServiceExplorerViewModel explorer,
@@ -79,6 +92,11 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(dockManager);
         ArgumentNullException.ThrowIfNull(statusBar);
         ArgumentNullException.ThrowIfNull(fileDialog);
+        ArgumentNullException.ThrowIfNull(dialogService);
+        ArgumentNullException.ThrowIfNull(packageService);
+        ArgumentNullException.ThrowIfNull(backupService);
+        ArgumentNullException.ThrowIfNull(recoveryService);
+        ArgumentNullException.ThrowIfNull(appSettings);
         ArgumentNullException.ThrowIfNull(statusBarViewModel);
         ArgumentNullException.ThrowIfNull(recentWorkspaces);
         ArgumentNullException.ThrowIfNull(explorer);
@@ -102,6 +120,11 @@ public sealed partial class ShellViewModel : ObservableObject
         _dockManager = dockManager;
         _statusBar = statusBar;
         _fileDialog = fileDialog;
+        _dialogService = dialogService;
+        _packageService = packageService;
+        _backupService = backupService;
+        _recoveryService = recoveryService;
+        _appSettings = appSettings;
         _explorer = explorer;
         _runner = runner;
         _workflows = workflows;
@@ -168,6 +191,8 @@ public sealed partial class ShellViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(CloseWorkspaceCommand))]
     [NotifyCanExecuteChangedFor(nameof(SaveWorkspaceCommand))]
     [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ExportPackageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(BackupNowCommand))]
     private bool _isWorkspaceOpen;
 
     /// <summary>Whether the dark theme is active (drives the View menu check state).</summary>
@@ -213,6 +238,8 @@ public sealed partial class ShellViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private async Task CloseWorkspaceAsync(CancellationToken cancellationToken)
     {
+        await AutoBackupBeforeCloseAsync(cancellationToken).ConfigureAwait(true);
+
         var result = await _workspaceService.CloseAsync(cancellationToken).ConfigureAwait(true);
         if (result.IsSuccess)
         {
@@ -229,6 +256,123 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private Task ImportAsync() => _explorer.ImportCommand.ExecuteAsync(null);
+
+    [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
+    private async Task ExportPackageAsync(CancellationToken cancellationToken)
+    {
+        var suggested = $"{_session.Current?.Name ?? "workspace"}.apistudio";
+        var target = _fileDialog.PromptExportPackage(suggested);
+        if (target is null)
+        {
+            return;
+        }
+
+        _statusBar.SetMessage("Exporting package…");
+        var result = await _packageService.ExportAsync(target, cancellationToken).ConfigureAwait(true);
+        if (result.IsSuccess)
+        {
+            _statusBar.SetMessage($"Exported package to '{target}' ({KiloBytes(result.Value.SizeBytes)}).");
+        }
+        else
+        {
+            _statusBar.SetMessage(result.Error.Message);
+            _dialogService.ShowMessage("Export failed", result.Error.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ImportPackageAsync(CancellationToken cancellationToken)
+    {
+        var source = _fileDialog.PromptImportPackage();
+        if (source is null)
+        {
+            return;
+        }
+
+        var target = _fileDialog.PromptCreateWorkspace();
+        if (target is null)
+        {
+            return;
+        }
+
+        _statusBar.SetMessage("Importing package…");
+        var result = await _packageService.ImportAsync(source, target, cancellationToken).ConfigureAwait(true);
+        if (result.IsFailure)
+        {
+            _statusBar.SetMessage(result.Error.Message);
+            _dialogService.ShowMessage("Import failed", result.Error.Message);
+            return;
+        }
+
+        SyncWorkspaceState();
+        await RecentWorkspaces.RefreshAsync(cancellationToken).ConfigureAwait(true);
+        await RefreshExplorerAsync(cancellationToken).ConfigureAwait(true);
+
+        var report = BuildImportReport(result.Value);
+        _statusBar.SetMessage(report.Status);
+        if (report.NeedsAttention)
+        {
+            _dialogService.ShowMessage("Import complete", report.Detail);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
+    private async Task BackupNowAsync(CancellationToken cancellationToken)
+    {
+        _statusBar.SetMessage("Creating backup…");
+        var result = await _backupService.CreateBackupAsync(cancellationToken).ConfigureAwait(true);
+        if (result.IsSuccess)
+        {
+            _statusBar.SetMessage($"Backup created ({KiloBytes(result.Value.SizeBytes)}).");
+        }
+        else
+        {
+            _statusBar.SetMessage(result.Error.Message);
+            _dialogService.ShowMessage("Backup failed", result.Error.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task BackupSettingsAsync(CancellationToken cancellationToken)
+    {
+        var viewModel = new BackupSettingsViewModel(
+            _appSettings, _backupService, _recoveryService, _session, _fileDialog);
+        await viewModel.LoadAsync(cancellationToken).ConfigureAwait(true);
+
+        _dialogService.ShowBackupSettings(viewModel);
+
+        if (viewModel.WorkspaceChanged)
+        {
+            SyncWorkspaceState();
+            await RecentWorkspaces.RefreshAsync(cancellationToken).ConfigureAwait(true);
+            await RefreshExplorerAsync(cancellationToken).ConfigureAwait(true);
+            _statusBar.SetMessage("Workspace restored from backup.");
+        }
+    }
+
+    private static string KiloBytes(long bytes) => $"{bytes / 1024.0:N0} KB";
+
+    private static (string Status, string Detail, bool NeedsAttention) BuildImportReport(PackageImportResult result)
+    {
+        var notes = new List<string>();
+        if (result.MissingPlugins.Count > 0)
+        {
+            notes.Add($"Missing plugins: {string.Join(", ", result.MissingPlugins)}.");
+        }
+
+        if (result.SecretsNeedReprompt)
+        {
+            notes.Add("Some secrets were created on another machine and must be re-entered.");
+        }
+
+        if (notes.Count == 0)
+        {
+            return ("Package imported.", "Package imported.", false);
+        }
+
+        var detail = "Package imported. " + string.Join(" ", notes);
+        return (detail, detail, true);
+    }
 
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private void SaveWorkspace()
@@ -310,6 +454,27 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand]
     private void Exit() => CloseRequested?.Invoke(this, EventArgs.Empty);
+
+    private async Task AutoBackupBeforeCloseAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var settings = await _appSettings.LoadAsync(cancellationToken).ConfigureAwait(true);
+            if (settings.AutoBackupOnClose && _session.IsOpen)
+            {
+                var backup = await _backupService.CreateBackupAsync(cancellationToken).ConfigureAwait(true);
+                if (backup.IsFailure)
+                {
+                    _logger.LogWarning("Automatic backup on close failed: {Error}", backup.Error.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // A failed automatic backup must never block closing the workspace.
+            _logger.LogError(ex, "Automatic backup on close threw.");
+        }
+    }
 
     private async Task OpenWorkspaceCoreAsync(string location, CancellationToken cancellationToken)
     {

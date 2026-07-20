@@ -9,4 +9,10 @@ public sealed record AppSettings
 {
     /// <summary>The active shell theme. Defaults to <see cref="ThemeMode.Light"/>.</summary>
     public ThemeMode Theme { get; init; } = ThemeMode.Light;
+
+    /// <summary>Automatically back up the open workspace when it is closed. Off by default.</summary>
+    public bool AutoBackupOnClose { get; init; }
+
+    /// <summary>How many backup archives to keep per workspace before pruning the oldest. See ADR-0012.</summary>
+    public int BackupRetention { get; init; } = 10;
 }

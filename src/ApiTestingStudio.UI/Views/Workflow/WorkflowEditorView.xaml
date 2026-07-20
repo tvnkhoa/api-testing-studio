@@ -182,29 +182,23 @@
                 <nodify:NodifyEditor.ItemTemplate>
                     <DataTemplate DataType="{x:Type wf:NodeViewModel}">
                         <nodify:Node Header="{Binding Title}"
-                                     HeaderBrush="{Binding Status, Converter={StaticResource StatusToBrush}}">
-                            <nodify:Node.Input>
-                                <ItemsControl ItemsSource="{Binding Input}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type wf:PortViewModel}">
-                                            <nodify:NodeInput Header="{Binding Title}"
-                                                              IsConnected="{Binding IsConnected}"
-                                                              Anchor="{Binding Anchor, Mode=OneWayToSource}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </nodify:Node.Input>
-                            <nodify:Node.Output>
-                                <ItemsControl ItemsSource="{Binding Output}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type wf:PortViewModel}">
-                                            <nodify:NodeOutput Header="{Binding Title}"
-                                                               IsConnected="{Binding IsConnected}"
-                                                               Anchor="{Binding Anchor, Mode=OneWayToSource}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </nodify:Node.Output>
+                                     HeaderBrush="{Binding Status, Converter={StaticResource StatusToBrush}}"
+                                     Input="{Binding Input}"
+                                     Output="{Binding Output}">
+                            <nodify:Node.InputConnectorTemplate>
+                                <DataTemplate DataType="{x:Type wf:PortViewModel}">
+                                    <nodify:NodeInput Header="{Binding Title}"
+                                                      IsConnected="{Binding IsConnected}"
+                                                      Anchor="{Binding Anchor, Mode=OneWayToSource}" />
+                                </DataTemplate>
+                            </nodify:Node.InputConnectorTemplate>
+                            <nodify:Node.OutputConnectorTemplate>
+                                <DataTemplate DataType="{x:Type wf:PortViewModel}">
+                                    <nodify:NodeOutput Header="{Binding Title}"
+                                                       IsConnected="{Binding IsConnected}"
+                                                       Anchor="{Binding Anchor, Mode=OneWayToSource}" />
+                                </DataTemplate>
+                            </nodify:Node.OutputConnectorTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <Border Width="10" Height="10" CornerRadius="5" Margin="0,0,6,0"
                                         Background="{Binding Status, Converter={StaticResource StatusToBrush}}" />

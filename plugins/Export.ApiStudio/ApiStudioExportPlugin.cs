@@ -17,26 +17,51 @@ public sealed class ApiStudioExportPluginModule : IPluginModule
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<ApiStudioPackageSerializer>();
-        services.AddSingleton<IExporter>(sp => sp.GetRequiredService<ApiStudioPackageSerializer>());
-        services.AddSingleton<IWorkspaceSerializer>(sp => sp.GetRequiredService<ApiStudioPackageSerializer>());
+        services.AddSingleton<IExporter, ApiStudioExporter>();
+        services.AddSingleton<IWorkspaceSerializer, ApiStudioPackageSerializer>();
     }
 }
 
-/// <summary>
-/// Placeholder <c>.apistudio</c> reader/writer. ZIP packaging (manifest + sqlite + attachments)
-/// is implemented in the Packaging &amp; Polish sprint (Sprint 14).
-/// </summary>
-public sealed class ApiStudioPackageSerializer : IExporter, IWorkspaceSerializer
+/// <summary>Declares the <c>.apistudio</c> format for the orchestrator and UI to select.</summary>
+public sealed class ApiStudioExporter : IExporter
 {
-    public string Format => "apistudio";
+    public string Format => ApiStudioPackageSerializer.FormatId;
 
-    public Task<ExportResult> ExportAsync(ExportRequest request, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException(".apistudio export is delivered in Sprint 14 (Packaging & Polish).");
+    public string DisplayName => "API Testing Studio Package";
 
-    public Task SaveAsync(Guid workspaceId, string packagePath, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException(".apistudio save is delivered in Sprint 14 (Packaging & Polish).");
+    public string FileExtension => ".apistudio";
+}
 
-    public Task<Guid> LoadAsync(string packagePath, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException(".apistudio load is delivered in Sprint 14 (Packaging & Polish).");
+/// <summary>
+/// Pure, offline reader/writer of the <c>.apistudio</c> package. Delegates byte I/O to
+/// <see cref="WorkspacePackager"/> / <see cref="WorkspaceUnpacker"/>. Orchestration (DB maintenance,
+/// manifest assembly, install/open) lives in the Application layer. See ADR-0012.
+/// </summary>
+public sealed class ApiStudioPackageSerializer : IWorkspaceSerializer
+{
+    internal const string FormatId = "apistudio";
+
+    public string Format => FormatId;
+
+    public Task SaveAsync(WorkspacePackageRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return WorkspacePackager.PackAsync(request, cancellationToken);
+    }
+
+    public Task<WorkspacePackageContents> LoadAsync(
+        string packagePath,
+        string stagingDirectory,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(stagingDirectory);
+        return WorkspaceUnpacker.UnpackAsync(packagePath, stagingDirectory, cancellationToken);
+    }
+
+    public Task<PackageManifest> ReadManifestAsync(string packagePath, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
+        return WorkspaceUnpacker.ReadManifestAsync(packagePath, cancellationToken);
+    }
 }

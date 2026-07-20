@@ -102,6 +102,23 @@ rest of the app observes what is open via the read-only `IWorkspaceService`/`IWo
 ports; exactly one workspace is open at a time. `DATABASE_GUIDELINES.md` and ADR-0006 cover the
 schema, lifecycle, and migration strategy.
 
+## Packaging, backup & recovery (Sprint 14, ADR-0012)
+
+```
+IWorkspacePackageService ──► IWorkspaceMaintenance   (checkpoint + VACUUM INTO, Infrastructure)
+        │                └──► IWorkspaceSerializer    (pure ZIP pack/unpack, Export.ApiStudio plugin)
+        │                └──► IStorageProvider         (open the imported/restored workspace)
+IBackupService / IRecoveryService ──► IWorkspaceSerializer (a backup is a timestamped .apistudio)
+```
+
+The portable **`.apistudio`** package is `ZIP(manifest.json + database.sqlite + attachments/)`. The
+**plugin** does dependency-free byte I/O behind `IWorkspaceSerializer`; the **Application**
+`IWorkspacePackageService` orchestrates (DB maintenance → build `PackageManifest` → serialize; on
+import: validate manifest → install → open); **Infrastructure** implements the SQLite maintenance and
+the app-data backup store. Secrets stay machine-bound (ADR-0010): the manifest records a
+non-reversible master-key fingerprint and import **flags** undecryptable secrets for re-entry rather
+than exporting or blanking them. See `FEATURES/Packaging.md`.
+
 ## Composition root
 
 `src/ApiTestingStudio.Host/App.xaml.cs` builds a `Microsoft.Extensions.Hosting` container:

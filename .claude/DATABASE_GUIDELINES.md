@@ -198,6 +198,19 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
   the file's version to the app's expected version and runs migrations / upgrades as needed.
   Opening a **newer** workspace than the app supports must fail safely with a clear message.
 
+## Packaging maintenance (Sprint 14)
+
+Before a workspace is packaged (export or backup), `IWorkspaceMaintenance.CheckpointAndVacuumAsync`
+produces a clean snapshot **without mutating the live file**:
+
+1. `PRAGMA wal_checkpoint(TRUNCATE)` folds the WAL back into the main DB so no `-wal`/`-shm` sidecar
+   is needed in the package.
+2. `VACUUM INTO '<temp>'` writes a compacted, defragmented copy to a temp path; the package embeds
+   that copy as `database.sqlite`.
+
+The temp copy is deleted after packaging. Because `VACUUM INTO` targets a new file, the open
+workspace's connection and pooling are untouched. See ADR-0012.
+
 ## Native SQLite
 
 The native SQLite stack is pinned to `SQLitePCLRaw 3.x` in `Directory.Packages.props` (via CPM

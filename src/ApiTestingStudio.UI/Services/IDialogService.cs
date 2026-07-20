@@ -4,6 +4,7 @@ using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
+using ApiTestingStudio.UI.ViewModels.Dialogs;
 
 namespace ApiTestingStudio.UI.Services;
 
@@ -40,6 +41,12 @@ public interface IDialogService
     /// <summary>Shows a yes/no confirmation; returns true when the user confirms.</summary>
     bool Confirm(string title, string message);
 
+    /// <summary>Shows an informational message with an OK button.</summary>
+    void ShowMessage(string title, string message);
+
     /// <summary>Shows the modal import wizard; returns true when an import was committed.</summary>
     bool ShowImportWizard();
+
+    /// <summary>Shows the modal backup settings + restore dialog.</summary>
+    void ShowBackupSettings(BackupSettingsViewModel viewModel);
 }

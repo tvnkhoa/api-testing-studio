@@ -1,0 +1,54 @@
+<Window x:Class="ApiTestingStudio.UI.Views.Dialogs.BackupSettingsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Backup &amp; Restore"
+        Width="560"
+        Height="460"
+        ResizeMode="CanResize"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="16">
+
+        <TextBlock DockPanel.Dock="Top" Text="Backup settings" FontWeight="Bold" Margin="0,0,0,8" />
+
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <CheckBox Content="Automatically back up when the workspace is closed"
+                      IsChecked="{Binding AutoBackupOnClose}" />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <TextBlock Text="Keep this many backups per workspace:" VerticalAlignment="Center" />
+                <TextBox Width="60" Margin="8,0,0,0"
+                         Text="{Binding BackupRetention, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Content="Save Settings" MinWidth="100" Margin="16,0,0,0"
+                        Command="{Binding SaveCommand}" />
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Top" Text="Backups of this workspace" FontWeight="Bold" Margin="0,4,0,8" />
+
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding StatusMessage}" Margin="0,8,0,0"
+                   TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Close" IsCancel="True" MinWidth="80" />
+        </StackPanel>
+
+        <ListView ItemsSource="{Binding Backups}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Workspace" Width="160" DisplayMemberBinding="{Binding WorkspaceName}" />
+                    <GridViewColumn Header="Created (UTC)" Width="170" DisplayMemberBinding="{Binding CreatedUtc}" />
+                    <GridViewColumn Header="Size" Width="90" DisplayMemberBinding="{Binding SizeDisplay}" />
+                    <GridViewColumn Header="" Width="90">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Restore…"
+                                        Command="{Binding DataContext.RestoreCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
+</Window>

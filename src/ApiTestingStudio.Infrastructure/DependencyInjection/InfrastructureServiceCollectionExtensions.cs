@@ -1,5 +1,6 @@
 using System.IO;
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Backup;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Infrastructure.Http;
 using ApiTestingStudio.Infrastructure.Persistence;
@@ -46,6 +47,12 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<IStorageProvider, SqliteStorageProvider>();
         services.AddSingleton<IPackageMetadataRepository, PackageMetadataRepository>();
+
+        // Packaging & backup (Sprint 14): SQLite checkpoint/VACUUM maintenance for producing a clean
+        // package snapshot, and the app-data backup archive store. See ADR-0012.
+        services.AddSingleton<IWorkspaceMaintenance, WorkspaceMaintenance>();
+        var backupsRoot = Path.Combine(appDataDirectory, "backups");
+        services.AddSingleton<IBackupStore>(_ => new FileBackupStore(backupsRoot));
 
         // Service Explorer catalog repositories (Sprint 05). Short-lived contexts per op, keyed off
         // the open workspace's connection string held by the session.

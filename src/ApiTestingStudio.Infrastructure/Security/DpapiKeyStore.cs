@@ -46,6 +46,15 @@ public sealed class DpapiKeyStore : IKeyStore
     }
 
     [SupportedOSPlatform("windows")]
+    public string GetKeyFingerprint()
+    {
+        // SHA-256 of the master key, truncated to 16 bytes and hex-encoded. One-way: reveals nothing
+        // about the key, but stably identifies it so imports can detect a different-machine key.
+        var hash = SHA256.HashData(GetOrCreateMasterKey());
+        return Convert.ToHexStringLower(hash.AsSpan(0, 16));
+    }
+
+    [SupportedOSPlatform("windows")]
     private byte[] LoadKey()
     {
         var wrapped = File.ReadAllBytes(_keyFilePath);

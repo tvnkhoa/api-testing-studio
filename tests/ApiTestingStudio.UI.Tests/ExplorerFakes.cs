@@ -141,9 +141,18 @@ internal sealed class FakeDialogService : IDialogService
 
     public bool Confirm(string title, string message) => ConfirmResult;
 
+    public string? LastMessage { get; private set; }
+
+    public void ShowMessage(string title, string message) => LastMessage = message;
+
+    public int ShowBackupSettingsCount { get; private set; }
+
     public bool ShowImportWizard()
     {
         ShowImportWizardCount++;
         return ImportWizardResult;
     }
+
+    public void ShowBackupSettings(ApiTestingStudio.UI.ViewModels.Dialogs.BackupSettingsViewModel viewModel)
+        => ShowBackupSettingsCount++;
 }

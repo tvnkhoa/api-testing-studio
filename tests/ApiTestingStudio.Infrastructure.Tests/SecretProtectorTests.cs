@@ -14,6 +14,8 @@ public sealed class SecretProtectorTests
         private readonly byte[] _key = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
 
         public byte[] GetOrCreateMasterKey() => _key;
+
+        public string GetKeyFingerprint() => "test-fingerprint";
     }
 
     private readonly ISecretProtector _protector = new AesSecretProtector(new FixedKeyStore());
