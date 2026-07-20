@@ -1,4 +1,6 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Dashboard;
+using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.Stress;
 using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Domain.Entities;
@@ -55,6 +57,62 @@ internal sealed class FakeStressOrchestrator : IStressOrchestrator
 {
     public Task<Result<StressRun>> RunAsync(StressRunRequest request, IProgress<StressMetricsSnapshot>? progress = null, CancellationToken cancellationToken = default)
         => Task.FromResult(Result.Failure<StressRun>(new Error("stress.none", "No run.")));
+}
+
+/// <summary>Empty <see cref="IDashboardService"/> for shell tests.</summary>
+internal sealed class FakeDashboardService : IDashboardService
+{
+    public Task<Result<DashboardSnapshot>> GetSnapshotAsync(DashboardQuery query, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Success(DashboardSnapshot.Empty));
+}
+
+/// <summary>No-op <see cref="IRunRecorder"/> for shell/editor tests.</summary>
+internal sealed class FakeRunRecorder : IRunRecorder
+{
+    public Task RecordRequestAsync(Guid endpointId, HttpRequestModel request, HttpExecutionResult execution, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task RecordWorkflowAsync(Workflow workflow, WorkflowRunResult result, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task RecordStressAsync(StressRun stressRun, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+}
+
+/// <summary>Empty <see cref="IRunStore"/> for shell tests.</summary>
+internal sealed class FakeRunStore : IRunStore
+{
+    public Task SaveAsync(Run run, IReadOnlyList<RunStep> steps, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task<IReadOnlyList<Run>> ListAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Run>>([]);
+
+    public Task<Run?> GetAsync(Guid runId, CancellationToken cancellationToken = default)
+        => Task.FromResult<Run?>(null);
+
+    public Task<IReadOnlyList<RunStep>> GetStepsAsync(Guid runId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<RunStep>>([]);
+}
+
+/// <summary>No-op <see cref="IRunReplayService"/> for shell tests.</summary>
+internal sealed class FakeRunReplayService : IRunReplayService
+{
+    public Task<Result<RunReplayResult>> ReplayAsync(Guid runId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Failure<RunReplayResult>(new Error("run.none", "No run.")));
+}
+
+/// <summary>Empty <see cref="ILogEventStore"/> for shell tests.</summary>
+internal sealed class FakeLogEventStore : ILogEventStore
+{
+    public Task AppendAsync(IReadOnlyList<LogEventRecord> events, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public Task<IReadOnlyList<LogEventRecord>> QueryAsync(Guid workspaceId, LogEventQuery query, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<LogEventRecord>>([]);
+
+    public Task<IReadOnlyList<string>> GetSourcesAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<string>>([]);
 }
 
 /// <summary>No-op <see cref="IWorkflowRepository"/> for shell tests.</summary>

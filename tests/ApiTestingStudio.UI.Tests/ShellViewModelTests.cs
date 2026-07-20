@@ -3,8 +3,10 @@ using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Core.Plugins;
 using ApiTestingStudio.Plugin.Abstractions.Assertions;
 using ApiTestingStudio.UI.ViewModels;
+using ApiTestingStudio.UI.ViewModels.Dashboard;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
+using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Runner;
 using ApiTestingStudio.UI.ViewModels.Stress;
 using ApiTestingStudio.UI.ViewModels.Testing;
@@ -88,9 +90,21 @@ public sealed class ShellViewModelTests
             status,
             new PluginRegistry([]),
             NullLogger<StressRunnerViewModel>.Instance);
+        var logs = new LogViewerViewModel(new FakeLogEventStore(), session);
+        var dashboard = new DashboardViewModel(
+            Array.Empty<ApiTestingStudio.Plugin.Abstractions.Ui.IDashboardWidget>(),
+            new FakeDashboardService(),
+            new ApiTestingStudio.Application.Runs.MetricsFeed(),
+            session);
+        var timeline = new TimelineViewModel(
+            new FakeRunStore(),
+            new FakeRunReplayService(),
+            session,
+            status,
+            new ApiTestingStudio.Application.Runs.MetricsFeed());
         var vm = new ShellViewModel(
             workspaceService, session, theme, dock, status, dialog, statusVm, recentVm, explorer,
-            runner, workflows, profiles, testCases, testResults, stress, environmentSwitcher,
+            runner, workflows, profiles, testCases, testResults, stress, dashboard, timeline, logs, environmentSwitcher,
             new FakeWorkflowEditorViewModelFactory(), messenger,
             NullLogger<ShellViewModel>.Instance);
 

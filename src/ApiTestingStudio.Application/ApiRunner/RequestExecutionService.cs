@@ -1,5 +1,6 @@
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Profiles;
+using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
@@ -22,6 +23,7 @@ public sealed class RequestExecutionService : IRequestExecutionService
     private readonly IVariableResolver _resolver;
     private readonly IProfileRepository _profiles;
     private readonly IAuthApplicator _authApplicator;
+    private readonly IRunRecorder _runRecorder;
 
     public RequestExecutionService(
         IRequestExecutor executor,
@@ -31,7 +33,8 @@ public sealed class RequestExecutionService : IRequestExecutionService
         IVariableScopeSeeder scopeSeeder,
         IVariableResolver resolver,
         IProfileRepository profiles,
-        IAuthApplicator authApplicator)
+        IAuthApplicator authApplicator,
+        IRunRecorder runRecorder)
     {
         _executor = executor;
         _history = history;
@@ -41,6 +44,7 @@ public sealed class RequestExecutionService : IRequestExecutionService
         _resolver = resolver;
         _profiles = profiles;
         _authApplicator = authApplicator;
+        _runRecorder = runRecorder;
     }
 
     public async Task<Result<HttpExecutionResult>> SendAsync(Guid endpointId, HttpRequestModel request, Guid? profileId = null, CancellationToken cancellationToken = default)
@@ -72,6 +76,7 @@ public sealed class RequestExecutionService : IRequestExecutionService
         }
 
         await RecordHistoryAsync(endpointId, request, result.Value, cancellationToken).ConfigureAwait(false);
+        await _runRecorder.RecordRequestAsync(endpointId, request, result.Value, cancellationToken).ConfigureAwait(false);
         return result;
     }
 

@@ -16,11 +16,12 @@
     <PackageReference Include="Microsoft.Web.WebView2" />
     <PackageReference Include="Nodify" />
     <!--
-      LiveChartsCore.SkiaSharpView.WPF is deferred to Sprint 13 (Dashboard & Logging): its
-      transitive SkiaSharp.Views.WPF / OpenTK chain only ships .NET Framework assets and trips
-      NU1701 on net10-windows. The version stays pinned in Directory.Packages.props for then.
+      Sprint 13 (Dashboard & Logging): LiveCharts2 for the dashboard widgets. Its transitive
+      SkiaSharp.Views.WPF / OpenTK chain surfaces NU1701 (restored via .NET Framework compatibility)
+      on net10-windows; the assemblies load fine on .NET 10. NU1701 is raised against the project (for
+      the transitive packages), so it is suppressed at project scope below.
     -->
-    <!-- <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" /> -->
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
 
   </ItemGroup>
 
@@ -37,6 +38,9 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- LiveCharts2's transitive SkiaSharp.Views.WPF / OpenTK ship .NET Framework assets (NU1701);
+         they run on .NET 10. Scoped to this project, which is the only charting consumer. -->
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
 </Project>

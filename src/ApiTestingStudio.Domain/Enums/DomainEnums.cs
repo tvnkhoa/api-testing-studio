@@ -87,6 +87,23 @@ public enum RunStatus
     Cancelled,
 }
 
+/// <summary>
+/// What produced a persisted <see cref="Entities.Run"/> tree (Sprint 13). A single request send, a
+/// workflow execution, or a stress run all record into the one unified run/step history that the
+/// Dashboard, Timeline and Replay read.
+/// </summary>
+public enum RunSource
+{
+    /// <summary>A single request send against an endpoint (see <c>RequestHistoryEntry</c>).</summary>
+    Request,
+
+    /// <summary>A workflow execution (see <c>WorkflowRunResult</c>).</summary>
+    Workflow,
+
+    /// <summary>A stress run (see <c>StressRun</c>).</summary>
+    Stress,
+}
+
 /// <summary>The kind of node in a visual workflow graph.</summary>
 public enum WorkflowNodeKind
 {

@@ -51,6 +51,10 @@ public sealed class MainMenuViewModel
 
     public IAsyncRelayCommand OpenStressRunnerCommand => _shell.OpenStressRunnerCommand;
 
+    public IAsyncRelayCommand OpenDashboardCommand => _shell.OpenDashboardCommand;
+
+    public IAsyncRelayCommand OpenTimelineCommand => _shell.OpenTimelineCommand;
+
     public IAsyncRelayCommand ResetLayoutCommand => _shell.ResetLayoutCommand;
 
     // Help

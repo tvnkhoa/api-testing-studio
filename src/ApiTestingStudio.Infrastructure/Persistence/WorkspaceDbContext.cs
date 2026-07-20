@@ -57,6 +57,8 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<LogEntry> Logs => Set<LogEntry>();
 
+    public DbSet<LogEventRecord> LogEvents => Set<LogEventRecord>();
+
     public DbSet<PackageMetadata> Packages => Set<PackageMetadata>();
 
     public DbSet<RequestHistoryEntry> RequestHistory => Set<RequestHistoryEntry>();
@@ -169,8 +171,31 @@ public sealed class WorkspaceDbContext : DbContext
             entity.HasIndex(x => x.StressRunId);
         });
 
-        modelBuilder.Entity<Run>().HasKey(x => x.Id);
-        modelBuilder.Entity<RunStep>().HasKey(x => x.Id);
+        // Unified run-log tree (Sprint 13): a Run header (source-discriminated) with denormalized
+        // headline columns, and RunStep rows forming a tree via ParentStepId (Loop/Parallel nesting).
+        // Request steps carry request/response JSON snapshots for Replay. Enums stored as integers.
+        modelBuilder.Entity<Run>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
+        modelBuilder.Entity<RunStep>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.RunId);
+            entity.HasIndex(x => x.ParentStepId);
+        });
+
+        // Application log (Sprint 13): Serilog events persisted for the Log Viewer, keyed to the
+        // workspace and indexed by timestamp for recent-first paging. Distinct from LogEntry (the
+        // per-run execution log).
+        modelBuilder.Entity<LogEventRecord>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
         modelBuilder.Entity<Attachment>().HasKey(x => x.Id);
         modelBuilder.Entity<WorkspaceSetting>().HasKey(x => x.Id);
         modelBuilder.Entity<LogEntry>().HasKey(x => x.Id);

@@ -128,7 +128,7 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 - Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
   `AddPackageMetadata`, `AddServiceCatalogHierarchy`, `AddRequestHistory`, `AddWorkflows`,
   `AddNodeVisualMetadata`, `AddProfileAuthAndEnvironmentBinding`, `AddTestsAndAssertions`,
-  `AddStressRuns`.
+  `AddStressRuns`, `AddRunHistory`.
   - `AddServiceCatalogHierarchy` (Sprint 05) adds the `EndpointFolders` table and the
     `Endpoints.FolderId`, `Endpoints.SortOrder`, `Services.SortOrder` columns + indexes. It is
     additive/back-compatible (the `Services`/`Endpoints` base tables already existed from
@@ -170,6 +170,15 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
     `StressMetrics` table (indexed on `StressRunId`). Purely additive — two brand-new tables, nothing
     existing is touched. Paired with a `Workspace.CurrentSchemaVersion` bump to **8**; v7 workspaces
     self-provision the two new tables on open via `MigrateAsync` and stay compatible.
+  - `AddRunHistory` (Sprint 13) creates the `LogEvents` table (indexed on `WorkspaceId`) for the
+    persisted application log, and extends the **existing** `Runs`/`RunSteps` tables (from
+    `InitialCreate`) with the columns that make them the unified run-log tree: `Runs.Source` (int,
+    default 0 = `Request`), `Runs.TargetId`/`TargetName`/`DurationMs`/`Error`, and
+    `RunSteps.ParentStepId`, `Kind`, `StatusCode`, `DurationMs`, `StartedUtc`, `Iteration`, `Error`,
+    `RequestSnapshot`, `ResponseSnapshot`, plus indexes on `Runs.WorkspaceId`, `RunSteps.RunId`,
+    `RunSteps.ParentStepId`. Purely additive — new columns are nullable or defaulted and the tables
+    were empty in practice. Paired with a `Workspace.CurrentSchemaVersion` bump to **9**; v8 workspaces
+    self-provision on open via `MigrateAsync` and stay compatible. See ADR-0011.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
 - At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
@@ -25,6 +26,7 @@ public sealed class StressOrchestrator : IStressOrchestrator
     private readonly IWorkflowRepository _workflows;
     private readonly IWorkflowEngine _workflowEngine;
     private readonly IStressRunStore _store;
+    private readonly IRunRecorder _runRecorder;
     private readonly IWorkspaceSession _session;
     private readonly IClock _clock;
 
@@ -36,6 +38,7 @@ public sealed class StressOrchestrator : IStressOrchestrator
         IWorkflowRepository workflows,
         IWorkflowEngine workflowEngine,
         IStressRunStore store,
+        IRunRecorder runRecorder,
         IWorkspaceSession session,
         IClock clock)
     {
@@ -47,6 +50,7 @@ public sealed class StressOrchestrator : IStressOrchestrator
         _workflows = workflows ?? throw new ArgumentNullException(nameof(workflows));
         _workflowEngine = workflowEngine ?? throw new ArgumentNullException(nameof(workflowEngine));
         _store = store ?? throw new ArgumentNullException(nameof(store));
+        _runRecorder = runRecorder ?? throw new ArgumentNullException(nameof(runRecorder));
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
@@ -83,6 +87,7 @@ public sealed class StressOrchestrator : IStressOrchestrator
         var run = MapRun(workspace.Id, request, plan.Value.TargetName, result, started, completed);
         var metrics = MapMetrics(run.Id, result.Metrics);
         await _store.SaveAsync(run, [metrics], cancellationToken).ConfigureAwait(false);
+        await _runRecorder.RecordStressAsync(run, cancellationToken).ConfigureAwait(false);
 
         return Result.Success(run);
     }

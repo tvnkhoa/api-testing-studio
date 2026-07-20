@@ -24,6 +24,7 @@ public sealed class StressOrchestratorTests
         public FakeRequestExecutor Executor { get; } = new();
         public FakeWorkflowEngine WorkflowEngine { get; } = new();
         public InMemoryStressRunStore Store { get; } = new();
+        public FakeRunRecorder Recorder { get; } = new();
         public FakeStressRunner Runner { get; } = new();
 
         public bool IncludeRunner { get; set; } = true;
@@ -36,6 +37,7 @@ public sealed class StressOrchestratorTests
             Workflows,
             WorkflowEngine,
             Store,
+            Recorder,
             Session,
             new FixedClock(Now));
 

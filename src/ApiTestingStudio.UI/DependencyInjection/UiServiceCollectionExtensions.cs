@@ -1,8 +1,11 @@
 using ApiTestingStudio.Application.Common;
+using ApiTestingStudio.Plugin.Abstractions.Ui;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels;
+using ApiTestingStudio.UI.ViewModels.Dashboard;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
+using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Runner;
 using ApiTestingStudio.UI.ViewModels.Stress;
 using ApiTestingStudio.UI.ViewModels.Testing;
@@ -66,6 +69,19 @@ public static class UiServiceCollectionExtensions
         // Stress Runner (Sprint 12): the config + live-metrics document. Opened on demand from the
         // View menu; drives the IStressOrchestrator and reports the loaded runner plugin via IPluginRegistry.
         services.AddSingleton<StressRunnerViewModel>();
+
+        // Dashboard & Logging (Sprint 13): the Log Viewer tool pane over the persisted Serilog store,
+        // and the Dashboard document with its first-party LiveCharts2 widgets. The widgets are
+        // registered as IDashboardWidget so the DashboardViewModel enumerates them from the container
+        // (the same seam a plugin-contributed widget would arrive through).
+        services.AddSingleton<LogViewerViewModel>();
+        services.AddSingleton<IDashboardWidget, OverviewWidgetViewModel>();
+        services.AddSingleton<IDashboardWidget, SuccessRateWidgetViewModel>();
+        services.AddSingleton<IDashboardWidget, LatencyWidgetViewModel>();
+        services.AddSingleton<IDashboardWidget, SlowestTargetsWidgetViewModel>();
+        services.AddSingleton<IDashboardWidget, MostCalledTargetsWidgetViewModel>();
+        services.AddSingleton<DashboardViewModel>();
+        services.AddSingleton<TimelineViewModel>();
 
         services.AddSingleton<ShellViewModel>();
 

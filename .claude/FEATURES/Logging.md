@@ -54,6 +54,17 @@ directly. Replay re-drives the recorded `Request`s through the normal execution 
 
 - **Sprint 13** — execution log tree, History, Replay, and Serilog app logging wiring.
 
+### Delivered (Sprint 13)
+
+Execution logging is realised as a **unified run tree**: `Run` (source-discriminated:
+request / workflow / stress) + `RunStep` (nested via `ParentStepId`, with request/response JSON
+snapshots), written through `IRunStore` by `IRunRecorder` and read by the Dashboard, Timeline, and
+Replay. `IRunReplayService` re-drives a recorded run (request snapshots re-execute; workflows re-run;
+stress is not replayable). Application logging is persisted to a per-workspace **`LogEvents`** table
+(entity `LogEventRecord`, distinct from the execution `LogEntry`) via a buffered Serilog sink
+(`WorkspaceDbLogSink`: bounded pre-open ring, batched flush to the open workspace); the Log Viewer
+filters it by level / source / text. See **ADR-0011**.
+
 ## Open Questions / Future
 
 - Retention / purge policy and DB size management for large histories.

@@ -210,6 +210,43 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                     b.ToTable("Logs");
                 });
 
+            modelBuilder.Entity("ApiTestingStudio.Domain.Entities.LogEventRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Exception")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Properties")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("TimestampUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("LogEvents");
+                });
+
             modelBuilder.Entity("ApiTestingStudio.Domain.Entities.PackageMetadata", b =>
                 {
                     b.Property<Guid>("Id")
@@ -356,11 +393,27 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("CompletedUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTimeOffset>("StartedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("TargetId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TargetName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid?>("WorkflowId")
                         .HasColumnType("TEXT");
@@ -369,6 +422,8 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Runs");
                 });
@@ -379,6 +434,19 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Iteration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -386,13 +454,32 @@ namespace ApiTestingStudio.Infrastructure.Persistence.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("ParentStepId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestSnapshot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponseSnapshot")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("RunId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("StartedUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentStepId");
+
+                    b.HasIndex("RunId");
 
                     b.ToTable("RunSteps");
                 });

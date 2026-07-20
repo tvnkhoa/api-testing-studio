@@ -39,6 +39,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- Inherits LiveCharts2's net-framework-built transitive deps (SkiaSharp.Views.WPF / OpenTK)
+         via the UI project; they run on .NET 10. See ApiTestingStudio.UI.csproj (Sprint 13). -->
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
   <!-- Deploy the dynamically-loaded sample plugin into <output>/plugins/Sample.HelloWorld/ so the

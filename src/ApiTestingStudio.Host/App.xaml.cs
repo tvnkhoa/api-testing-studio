@@ -1,11 +1,13 @@
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.DependencyInjection;
 using ApiTestingStudio.Core.DependencyInjection;
 using ApiTestingStudio.Core.Plugins;
 using ApiTestingStudio.Host.Composition;
 using ApiTestingStudio.Infrastructure.DependencyInjection;
+using ApiTestingStudio.Infrastructure.Logging;
 using ApiTestingStudio.Plugin.Abstractions.Storage;
 using ApiTestingStudio.UI.DependencyInjection;
 using ApiTestingStudio.UI.Services;
@@ -35,12 +37,22 @@ public partial class App : System.Windows.Application
             "ApiTestingStudio");
         Directory.CreateDirectory(appDataDir);
 
-        ConfigureSerilog(appDataDir);
+        // The DB log sink is created here (Serilog is configured before the container exists) and
+        // handed to the container, which owns its lifetime/disposal. It buffers until Bind supplies the
+        // store/session below.
+        var logSink = new WorkspaceDbLogSink();
+        ConfigureSerilog(appDataDir, logSink);
 
         try
         {
-            _host = BuildHost(appDataDir);
+            _host = BuildHost(appDataDir, logSink);
             await _host.StartAsync().ConfigureAwait(true);
+
+            // The DB log sink can only persist once the container exists and a workspace is open; give
+            // it the store/session now so buffered startup events flush when the first workspace opens.
+            logSink.Bind(
+                _host.Services.GetRequiredService<ILogEventStore>(),
+                _host.Services.GetRequiredService<IWorkspaceSession>());
 
             LogStartupState();
 
@@ -63,6 +75,14 @@ public partial class App : System.Windows.Application
     {
         if (_host is not null)
         {
+            // Drain any buffered log events to the open workspace before the container (which owns the
+            // sink) is torn down.
+            var logSink = _host.Services.GetService<WorkspaceDbLogSink>();
+            if (logSink is not null)
+            {
+                await logSink.FlushAsync().ConfigureAwait(true);
+            }
+
             await _host.StopAsync().ConfigureAwait(true);
             _host.Dispose();
         }
@@ -71,7 +91,7 @@ public partial class App : System.Windows.Application
         base.OnExit(e);
     }
 
-    private static void ConfigureSerilog(string appDataDir)
+    private static void ConfigureSerilog(string appDataDir, WorkspaceDbLogSink dbSink)
     {
         var logPath = Path.Combine(appDataDir, "logs", "log-.txt");
         Log.Logger = new LoggerConfiguration()
@@ -83,10 +103,12 @@ public partial class App : System.Windows.Application
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 14,
                 formatProvider: CultureInfo.InvariantCulture)
+            // Sprint 13: also persist events to the open workspace DB for the in-app Log Viewer.
+            .WriteTo.Sink(dbSink)
             .CreateLogger();
     }
 
-    private static IHost BuildHost(string appDataDir)
+    private static IHost BuildHost(string appDataDir, WorkspaceDbLogSink logSink)
     {
         var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder();
 
@@ -95,6 +117,9 @@ public partial class App : System.Windows.Application
 
         builder.Services.AddApplication();
         builder.Services.AddInfrastructure(appDataDir);
+
+        // The container owns the DB log sink's lifetime (disposed on host shutdown).
+        builder.Services.AddSingleton(logSink);
 
         using var bootstrapLoggerFactory = new SerilogLoggerFactory(Log.Logger);
         var pluginsDirectory = Path.Combine(AppContext.BaseDirectory, "plugins");

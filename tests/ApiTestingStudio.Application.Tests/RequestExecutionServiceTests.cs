@@ -27,7 +27,8 @@ public sealed class RequestExecutionServiceTests
             new FakeVariableScopeSeeder(),
             new VariableResolver(),
             new InMemoryProfileRepository(),
-            new AuthApplicator(new FakeSecretProtector()));
+            new AuthApplicator(new FakeSecretProtector()),
+            new FakeRunRecorder());
     }
 
     [Fact]

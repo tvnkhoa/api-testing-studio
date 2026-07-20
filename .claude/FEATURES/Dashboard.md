@@ -57,6 +57,16 @@ touches EF Core directly.
 
 - **Sprint 13** — dashboard widgets, aggregation queries, and LiveCharts2 integration.
 
+### Delivered (Sprint 13)
+
+Aggregation runs in `IDashboardService`/`DashboardService`, reading run headers from the unified
+`IRunStore` (see `Logging.md`, ADR-0011) into an immutable `DashboardSnapshot` (counts,
+success/failure rate, average duration, timeline, slowest / most-called rankings, status
+distribution). The built-in widgets (Overview, Success Rate donut, Latency line, Slowest /
+Most-Called bars) are first-party `IDashboardWidget` implementations enumerated from DI; the
+`DashboardViewModel` refreshes them live off `IMetricsFeed` as runs complete, marshalled to the UI
+thread. Charts use **LiveCharts2**.
+
 ## Open Questions / Future
 
 - User-arrangeable / savable dashboard layouts.

@@ -47,6 +47,16 @@ binds to view models only, holding no business logic.
 - **Sprint 13** — dashboard, LiveCharts2 widgets, timeline, monitoring, logs, replay.
 - Depends on run history from Sprints 06/08/11/12 and the Sprint 03 plugin registry.
 
+### Delivered (Sprint 13)
+
+`DashboardViewModel` (an AvalonDock **document** opened from View → Dashboard) hosts a responsive
+`WrapPanel` grid of widget view models, each a first-party `DashboardWidgetViewModel`
+(`IDashboardWidget` + a UI-side `IDashboardWidgetContent.Update(DashboardSnapshot)`), rendered by
+implicit `DataTemplate`s. It enumerates the registered `IDashboardWidget`s from the container — the
+same seam a plugin widget would arrive through — and refreshes live off `IMetricsFeed`. The full
+widget data contract for plugin authors (exposing the read-model across the plugin boundary) is a
+future extension; this sprint ships the built-ins first-party. See ADR-0011.
+
 ## Open Questions / Future
 
 - User-customisable widget layout (add/remove/resize, persisted with the dock layout).

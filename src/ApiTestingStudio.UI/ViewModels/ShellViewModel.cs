@@ -5,6 +5,7 @@ using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.Messaging;
 using ApiTestingStudio.UI.Services;
+using ApiTestingStudio.UI.ViewModels.Dashboard;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Panels;
@@ -43,8 +44,10 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly TestCasesPanelViewModel _testCases;
     private readonly TestResultsViewModel _testResults;
     private readonly StressRunnerViewModel _stress;
+    private readonly DashboardViewModel _dashboard;
+    private readonly TimelineViewModel _timeline;
     private readonly IWorkflowEditorViewModelFactory _workflowEditorFactory;
-    private readonly LogsPlaceholderViewModel _logs = new();
+    private readonly LogViewerViewModel _logs;
 
     public ShellViewModel(
         IWorkspaceService workspaceService,
@@ -62,6 +65,9 @@ public sealed partial class ShellViewModel : ObservableObject
         TestCasesPanelViewModel testCases,
         TestResultsViewModel testResults,
         StressRunnerViewModel stress,
+        DashboardViewModel dashboard,
+        TimelineViewModel timeline,
+        LogViewerViewModel logs,
         EnvironmentSwitcherViewModel environmentSwitcher,
         IWorkflowEditorViewModelFactory workflowEditorFactory,
         IMessenger messenger,
@@ -82,6 +88,9 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(testCases);
         ArgumentNullException.ThrowIfNull(testResults);
         ArgumentNullException.ThrowIfNull(stress);
+        ArgumentNullException.ThrowIfNull(dashboard);
+        ArgumentNullException.ThrowIfNull(timeline);
+        ArgumentNullException.ThrowIfNull(logs);
         ArgumentNullException.ThrowIfNull(environmentSwitcher);
         ArgumentNullException.ThrowIfNull(workflowEditorFactory);
         ArgumentNullException.ThrowIfNull(messenger);
@@ -100,6 +109,9 @@ public sealed partial class ShellViewModel : ObservableObject
         _testCases = testCases;
         _testResults = testResults;
         _stress = stress;
+        _dashboard = dashboard;
+        _timeline = timeline;
+        _logs = logs;
         _workflowEditorFactory = workflowEditorFactory;
         _logger = logger;
 
@@ -268,6 +280,32 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task OpenDashboardAsync(CancellationToken cancellationToken)
+    {
+        if (!Documents.Contains(_dashboard))
+        {
+            Documents.Add(_dashboard);
+        }
+
+        _dashboard.IsSelected = true;
+        _dashboard.IsActive = true;
+        await _dashboard.LoadAsync(cancellationToken).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    private async Task OpenTimelineAsync(CancellationToken cancellationToken)
+    {
+        if (!Documents.Contains(_timeline))
+        {
+            Documents.Add(_timeline);
+        }
+
+        _timeline.IsSelected = true;
+        _timeline.IsActive = true;
+        await _timeline.LoadAsync(cancellationToken).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
     private void About() => _statusBar.SetMessage("API Testing Studio — offline workflow-first API testing. Sprint 04 shell.");
 
     [RelayCommand]
@@ -303,6 +341,7 @@ public sealed partial class ShellViewModel : ObservableObject
             await _profiles.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _testCases.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _stress.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await _logs.LoadAsync(cancellationToken).ConfigureAwait(true);
             await Environments.LoadAsync(cancellationToken).ConfigureAwait(true);
         }
         else
@@ -312,7 +351,12 @@ public sealed partial class ShellViewModel : ObservableObject
             _profiles.Clear();
             _testCases.Clear();
             _stress.Clear();
+            _dashboard.Clear();
+            _timeline.Clear();
+            _logs.Clear();
             Documents.Remove(_stress);
+            Documents.Remove(_dashboard);
+            Documents.Remove(_timeline);
             Environments.Clear();
             CloseWorkflowDocuments();
         }

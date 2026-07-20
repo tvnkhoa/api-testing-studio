@@ -44,6 +44,8 @@
                 <MenuItem Header="_Profiles &amp; Environments" Command="{Binding ToggleProfilesCommand}" />
                 <MenuItem Header="_Logs" Command="{Binding ToggleLogsCommand}" />
                 <Separator />
+                <MenuItem Header="_Dashboard" Command="{Binding OpenDashboardCommand}" />
+                <MenuItem Header="Execution _Timeline" Command="{Binding OpenTimelineCommand}" />
                 <MenuItem Header="_Stress Runner" Command="{Binding OpenStressRunnerCommand}" />
                 <Separator />
                 <MenuItem Header="_Dark Theme"

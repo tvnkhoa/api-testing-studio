@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Common;
+using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
@@ -31,6 +32,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
     private readonly INodeViewModelFactory _nodeFactory;
     private readonly GraphMapper _mapper;
     private readonly IStatusBarService _statusBar;
+    private readonly IRunRecorder _runRecorder;
     private readonly ILogger<WorkflowEditorViewModel> _logger;
 
     private readonly Dictionary<NodeViewModel, Point> _dragStart = [];
@@ -48,6 +50,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         INodeViewModelFactory nodeFactory,
         GraphMapper mapper,
         IStatusBarService statusBar,
+        IRunRecorder runRecorder,
         ILogger<WorkflowEditorViewModel> logger)
         : base($"document.workflow.{workflowId}", name)
     {
@@ -58,6 +61,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         ArgumentNullException.ThrowIfNull(nodeFactory);
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(statusBar);
+        ArgumentNullException.ThrowIfNull(runRecorder);
         ArgumentNullException.ThrowIfNull(logger);
 
         _workflowId = workflowId;
@@ -68,6 +72,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         _nodeFactory = nodeFactory;
         _mapper = mapper;
         _statusBar = statusBar;
+        _runRecorder = runRecorder;
         _logger = logger;
 
         Properties = new NodePropertiesViewModel(undo);
@@ -279,6 +284,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
             var result = await _engine
                 .RunAsync(workflow, progress: progress, cancellationToken: cancellationToken)
                 .ConfigureAwait(true);
+            await _runRecorder.RecordWorkflowAsync(workflow, result, cancellationToken).ConfigureAwait(true);
             _statusBar.SetMessage($"Run {result.Status}.");
         }
         catch (Exception ex)

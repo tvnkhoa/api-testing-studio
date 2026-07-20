@@ -27,7 +27,8 @@ public sealed class RequestHistoryServiceTests
             new FakeVariableScopeSeeder(),
             new VariableResolver(),
             new InMemoryProfileRepository(),
-            new AuthApplicator(new FakeSecretProtector()));
+            new AuthApplicator(new FakeSecretProtector()),
+            new FakeRunRecorder());
         _sut = new RequestHistoryService(_history, _session);
     }
 

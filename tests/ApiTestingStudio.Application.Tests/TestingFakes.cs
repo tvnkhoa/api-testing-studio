@@ -1,5 +1,6 @@
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
@@ -173,6 +174,62 @@ internal sealed class FakeWorkflowEngine : IWorkflowEngine
         IProgress<NodeRunResult>? progress = null,
         CancellationToken cancellationToken = default)
         => Task.FromResult(ResultToReturn);
+}
+
+/// <summary>In-memory <see cref="IRunStore"/> capturing saved runs + steps for assertions.</summary>
+internal sealed class InMemoryRunStore : IRunStore
+{
+    public List<Run> Runs { get; } = [];
+
+    public List<RunStep> Steps { get; } = [];
+
+    public Task SaveAsync(Run run, IReadOnlyList<RunStep> steps, CancellationToken cancellationToken = default)
+    {
+        Runs.Add(run);
+        Steps.AddRange(steps);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Run>> ListAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<Run>>(
+            Runs.Where(r => r.WorkspaceId == workspaceId)
+                .OrderByDescending(r => r.CompletedUtc ?? r.StartedUtc)
+                .ToList());
+
+    public Task<Run?> GetAsync(Guid runId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Runs.FirstOrDefault(r => r.Id == runId));
+
+    public Task<IReadOnlyList<RunStep>> GetStepsAsync(Guid runId, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<RunStep>>(
+            Steps.Where(s => s.RunId == runId).OrderBy(s => s.Order).ToList());
+}
+
+/// <summary>Records what was handed to the run recorder; performs no persistence.</summary>
+internal sealed class FakeRunRecorder : IRunRecorder
+{
+    public int RequestCount { get; private set; }
+
+    public int WorkflowCount { get; private set; }
+
+    public List<StressRun> StressRuns { get; } = [];
+
+    public Task RecordRequestAsync(Guid endpointId, HttpRequestModel request, HttpExecutionResult execution, CancellationToken cancellationToken = default)
+    {
+        RequestCount++;
+        return Task.CompletedTask;
+    }
+
+    public Task RecordWorkflowAsync(Workflow workflow, WorkflowRunResult result, CancellationToken cancellationToken = default)
+    {
+        WorkflowCount++;
+        return Task.CompletedTask;
+    }
+
+    public Task RecordStressAsync(StressRun stressRun, CancellationToken cancellationToken = default)
+    {
+        StressRuns.Add(stressRun);
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class InMemoryWorkflowRepository : IWorkflowRepository

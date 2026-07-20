@@ -33,6 +33,7 @@ public sealed class WorkflowEditorViewModelTests
             factory,
             new GraphMapper(factory),
             _status,
+            new FakeRunRecorder(),
             NullLogger<WorkflowEditorViewModel>.Instance);
     }
 

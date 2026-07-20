@@ -1,0 +1,97 @@
+<UserControl x:Class="ApiTestingStudio.UI.Views.Dashboard.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:dash="clr-namespace:ApiTestingStudio.UI.ViewModels.Dashboard">
+    <UserControl.Resources>
+        <!-- Overview KPIs -->
+        <DataTemplate DataType="{x:Type dash:OverviewWidgetViewModel}">
+            <UniformGrid Columns="2" VerticalAlignment="Center">
+                <StackPanel Margin="4">
+                    <TextBlock Text="Runs" Opacity="0.7" />
+                    <TextBlock Text="{Binding RunCount}" FontSize="26" FontWeight="Bold" />
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Success" Opacity="0.7" />
+                    <TextBlock Text="{Binding SuccessRate}" FontSize="26" FontWeight="Bold" />
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Avg duration" Opacity="0.7" />
+                    <TextBlock Text="{Binding AverageDuration}" FontSize="26" FontWeight="Bold" />
+                </StackPanel>
+                <StackPanel Margin="4">
+                    <TextBlock Text="Failed" Opacity="0.7" />
+                    <TextBlock Text="{Binding FailedCount}" FontSize="26" FontWeight="Bold" />
+                </StackPanel>
+            </UniformGrid>
+        </DataTemplate>
+
+        <!-- Success rate donut -->
+        <DataTemplate DataType="{x:Type dash:SuccessRateWidgetViewModel}">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Bottom"
+                           Text="{Binding Caption}"
+                           HorizontalAlignment="Center"
+                           Opacity="0.8"
+                           Margin="0,4,0,0" />
+                <lvc:PieChart Series="{Binding Series}" />
+            </DockPanel>
+        </DataTemplate>
+
+        <!-- Latency line -->
+        <DataTemplate DataType="{x:Type dash:LatencyWidgetViewModel}">
+            <lvc:CartesianChart Series="{Binding Series}"
+                                XAxes="{Binding XAxes}"
+                                YAxes="{Binding YAxes}" />
+        </DataTemplate>
+
+        <!-- Slowest targets -->
+        <DataTemplate DataType="{x:Type dash:SlowestTargetsWidgetViewModel}">
+            <lvc:CartesianChart Series="{Binding Series}" YAxes="{Binding YAxes}" />
+        </DataTemplate>
+
+        <!-- Most-called targets -->
+        <DataTemplate DataType="{x:Type dash:MostCalledTargetsWidgetViewModel}">
+            <lvc:CartesianChart Series="{Binding Series}" YAxes="{Binding YAxes}" />
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,8,8,0">
+            <Button Content="Refresh" Padding="12,2" Command="{Binding RefreshCommand}" />
+            <TextBlock Text="Live — updates as runs complete."
+                       VerticalAlignment="Center"
+                       Opacity="0.6"
+                       Margin="12,0,0,0" />
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Widgets}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="380"
+                                Height="260"
+                                Margin="8"
+                                Padding="10"
+                                CornerRadius="6"
+                                BorderThickness="1"
+                                BorderBrush="#33888888">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top"
+                                           Text="{Binding Title}"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,8" />
+                                <ContentControl Content="{Binding}" />
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

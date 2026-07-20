@@ -7,9 +7,11 @@
                     xmlns:identity="clr-namespace:ApiTestingStudio.UI.ViewModels.Identity"
                     xmlns:testing="clr-namespace:ApiTestingStudio.UI.ViewModels.Testing"
                     xmlns:stress="clr-namespace:ApiTestingStudio.UI.ViewModels.Stress"
+                    xmlns:dashboard="clr-namespace:ApiTestingStudio.UI.ViewModels.Dashboard"
                     xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels"
                     xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner"
-                    xmlns:workflowViews="clr-namespace:ApiTestingStudio.UI.Views.Workflow">
+                    xmlns:workflowViews="clr-namespace:ApiTestingStudio.UI.Views.Workflow"
+                    xmlns:dashboardViews="clr-namespace:ApiTestingStudio.UI.Views.Dashboard">
 
     <!--
         Implicit data templates mapping each panel view model to its view. AvalonDock renders the
@@ -26,8 +28,19 @@
         <views:ServiceExplorerView />
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type panels:LogsPlaceholderViewModel}">
-        <views:LogsPlaceholderView />
+    <!-- Log Viewer (Sprint 13) -->
+    <DataTemplate DataType="{x:Type panels:LogViewerViewModel}">
+        <views:LogViewerView />
+    </DataTemplate>
+
+    <!-- Dashboard (Sprint 13) -->
+    <DataTemplate DataType="{x:Type dashboard:DashboardViewModel}">
+        <dashboardViews:DashboardView />
+    </DataTemplate>
+
+    <!-- Execution Timeline (Sprint 13) -->
+    <DataTemplate DataType="{x:Type panels:TimelineViewModel}">
+        <views:TimelineView />
     </DataTemplate>
 
     <!-- API Runner (Sprint 06) -->

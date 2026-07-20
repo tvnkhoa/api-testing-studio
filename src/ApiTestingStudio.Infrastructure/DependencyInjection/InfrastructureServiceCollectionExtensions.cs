@@ -75,6 +75,12 @@ public static class InfrastructureServiceCollectionExtensions
         // AddPluginHost.
         services.AddSingleton<IStressRunStore, StressRunRepository>();
 
+        // Unified run-log tree + application log persistence (Sprint 13). Both are short-lived-context
+        // repositories keyed off the open workspace; the run store backs the Dashboard/Timeline/Replay
+        // and the log store backs the Log Viewer (fed by the buffered Serilog sink).
+        services.AddSingleton<IRunStore, RunStore>();
+        services.AddSingleton<ILogEventStore, LogEventStore>();
+
         // Import (Sprint 07): user-triggered URL fetch (offline-first) + transactional catalog merge.
         services.AddSingleton<IDefinitionFetcher, DefinitionFetcher>();
         services.AddSingleton<ICatalogMerger, CatalogMerger>();

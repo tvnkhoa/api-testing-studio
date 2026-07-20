@@ -3,6 +3,8 @@ using ApiTestingStudio.Application.ApiRunner;
 using ApiTestingStudio.Application.Environments;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.Profiles;
+using ApiTestingStudio.Application.Dashboard;
+using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.ServiceCatalog;
 using ApiTestingStudio.Application.Stress;
 using ApiTestingStudio.Application.Testing;
@@ -84,6 +86,14 @@ public static class ApplicationServiceCollectionExtensions
         // AddPluginHost) to the raw request executor / workflow engine and persists results via the
         // IStressRunStore bound by AddInfrastructure.
         services.AddSingleton<IStressOrchestrator, StressOrchestrator>();
+
+        // Dashboard & Logging (Sprint 13): the run recorder writes request/workflow/stress executions
+        // into the unified run store (bound by AddInfrastructure) and publishes to the live metrics
+        // stream; the dashboard service aggregates that store; the replay service re-drives a run.
+        services.AddSingleton<IMetricsFeed, MetricsFeed>();
+        services.AddSingleton<IRunRecorder, RunRecorder>();
+        services.AddSingleton<IRunReplayService, RunReplayService>();
+        services.AddSingleton<IDashboardService, DashboardService>();
 
         return services;
     }
