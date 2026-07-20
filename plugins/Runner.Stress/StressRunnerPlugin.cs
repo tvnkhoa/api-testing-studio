@@ -4,7 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ApiTestingStudio.Runner.Stress;
 
-/// <summary>Plugin module for the stress-testing runner.</summary>
+/// <summary>
+/// Plugin module for the stress-testing runner. Registering <see cref="IStressRunner"/> is what
+/// declares the <see cref="PluginCapability.StressRunner"/> capability — the host infers it from the
+/// service collection (see <c>PluginCapabilityMap</c>); there is no marker interface.
+/// </summary>
 public sealed class StressRunnerPluginModule : IPluginModule
 {
     public string Name => "Runner.Stress";
@@ -13,14 +17,4 @@ public sealed class StressRunnerPluginModule : IPluginModule
 
     public void ConfigureServices(IServiceCollection services)
         => services.AddSingleton<IStressRunner, StressRunner>();
-}
-
-/// <summary>
-/// Placeholder stress runner. Sequential/loop/concurrent execution and metric collection are
-/// implemented in the Stress Runner sprint (Sprint 12).
-/// </summary>
-public sealed class StressRunner : IStressRunner
-{
-    public Task<StressMetrics> RunAsync(StressPlan plan, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException("Stress running is delivered in Sprint 12 (Stress Runner).");
 }

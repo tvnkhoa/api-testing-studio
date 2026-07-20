@@ -4,6 +4,7 @@ using ApiTestingStudio.Application.Environments;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Stress;
 using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workflows;
@@ -78,6 +79,11 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IAssertionRunner, AssertionRunner>();
         services.AddSingleton<ITestReportBuilder, TestReportBuilder>();
         services.AddSingleton<ITestSuiteExecutor, TestSuiteExecutor>();
+
+        // Stress Runner (Sprint 12): orchestration wires the IStressRunner plugin (contributed by
+        // AddPluginHost) to the raw request executor / workflow engine and persists results via the
+        // IStressRunStore bound by AddInfrastructure.
+        services.AddSingleton<IStressOrchestrator, StressOrchestrator>();
 
         return services;
     }

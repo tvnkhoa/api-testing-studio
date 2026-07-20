@@ -1,10 +1,12 @@
 using ApiTestingStudio.Application.Settings;
 using ApiTestingStudio.Application.Testing;
+using ApiTestingStudio.Core.Plugins;
 using ApiTestingStudio.Plugin.Abstractions.Assertions;
 using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Stress;
 using ApiTestingStudio.UI.ViewModels.Testing;
 using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.Messaging;
@@ -77,9 +79,18 @@ public sealed class ShellViewModelTests
             session,
             messenger);
         var testResults = new TestResultsViewModel(new TestReportBuilder());
+        var stress = new StressRunnerViewModel(
+            new FakeStressOrchestrator(),
+            new FakeServiceRepository(),
+            new FakeEndpointRepository(),
+            new FakeShellWorkflowRepository(),
+            session,
+            status,
+            new PluginRegistry([]),
+            NullLogger<StressRunnerViewModel>.Instance);
         var vm = new ShellViewModel(
             workspaceService, session, theme, dock, status, dialog, statusVm, recentVm, explorer,
-            runner, workflows, profiles, testCases, testResults, environmentSwitcher,
+            runner, workflows, profiles, testCases, testResults, stress, environmentSwitcher,
             new FakeWorkflowEditorViewModelFactory(), messenger,
             NullLogger<ShellViewModel>.Instance);
 

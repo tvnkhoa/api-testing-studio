@@ -44,8 +44,8 @@ this keeps EF mapping and migrations simple and predictable.
 Mapped entities & tables (`WorkspaceDbContext`):
 `Workspace`, `Service`, `EndpointFolder`, `Endpoint`, `ProfileDefinition`, `EnvironmentDefinition`,
 `Variable`, `WorkflowDefinition`, `WorkflowNode`, `WorkflowEdge`, `TestSuite`, `TestCaseDefinition`,
-`AssertionDefinition`, `TestRunResult`, `Run`, `RunStep`, `Attachment`, `WorkspaceSetting`, `LogEntry`,
-`PackageMetadata`, `RequestHistoryEntry`.
+`AssertionDefinition`, `TestRunResult`, `StressRun`, `StressMetrics`, `Run`, `RunStep`, `Attachment`,
+`WorkspaceSetting`, `LogEntry`, `PackageMetadata`, `RequestHistoryEntry`.
 
 The Service Explorer catalog (Sprint 05) is `Service` → `EndpointFolder` (nestable via
 `ParentFolderId`) → `Endpoint`. Endpoints reference their owner by `ServiceId` plus an optional
@@ -86,6 +86,20 @@ duration, timestamp) plus a JSON `DetailsJson` blob of per-assertion results —
 denormalized-columns + JSON-snapshot pattern as `RequestHistoryEntry`. Read/written via
 `ITestSuiteRepository` / `ITestCaseRepository` / `ITestResultRepository`.
 
+`StressRun` / `StressMetrics` (`StressRuns` / `StressMetrics` tables, Sprint 12) hold stress-run
+history. A `StressRun` (`StressRuns`, indexed on `WorkspaceId`) is a run header: the target
+(`TargetKind` enum-as-int + nullable `TargetId` + denormalized `TargetName`), the load config
+(`Mode`, `VirtualUsers`, `Iterations`, nullable `DurationMs`, `WarmupIterations`), `Cancelled`,
+`StartedUtc`/`CompletedUtc`, plus a few denormalized headline metrics
+(`RequestCount`/`RequestsPerSecond`/`P95Ms`/`ErrorRate`) for cheap list rendering in the Dashboard
+(Sprint 13). Each `StressMetrics` row (`StressMetrics`, indexed on `StressRunId`) carries the full
+metric set (counts, throughput, min/avg/max, P50/P95/P99, error rate, elapsed). Sprint 12 writes a
+single **summary** row per run (`SequenceIndex = -1`); the shape also admits ordered time-series
+snapshots (`SequenceIndex ≥ 0`) for a future live-history feature without a schema change. Timestamps
+are set from `IClock` by the Application orchestrator (the runner plugin stays clock-free). Read/written
+via `IStressRunStore`. Ordering by timestamp is done client-side (SQLite cannot `ORDER BY` a
+`DateTimeOffset`).
+
 `RequestHistoryEntry` (`RequestHistory` table, Sprint 06) records one API Runner send against an
 endpoint: `EndpointId` (indexed FK), denormalized `Method`/`Url`/`StatusCode` and timing
 (`TotalMs`, nullable `DnsMs`/`ConnectMs`/`TimeToFirstByteMs`) for cheap list rendering, plus full
@@ -113,7 +127,8 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 
 - Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
   `AddPackageMetadata`, `AddServiceCatalogHierarchy`, `AddRequestHistory`, `AddWorkflows`,
-  `AddNodeVisualMetadata`, `AddProfileAuthAndEnvironmentBinding`, `AddTestsAndAssertions`.
+  `AddNodeVisualMetadata`, `AddProfileAuthAndEnvironmentBinding`, `AddTestsAndAssertions`,
+  `AddStressRuns`.
   - `AddServiceCatalogHierarchy` (Sprint 05) adds the `EndpointFolders` table and the
     `Endpoints.FolderId`, `Endpoints.SortOrder`, `Services.SortOrder` columns + indexes. It is
     additive/back-compatible (the `Services`/`Endpoints` base tables already existed from
@@ -151,6 +166,10 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
     the `WorkflowId` widening is back-compatible for existing rows. Paired with a
     `Workspace.CurrentSchemaVersion` bump to **7**; v6 workspaces self-provision on open via
     `MigrateAsync` and stay compatible.
+  - `AddStressRuns` (Sprint 12) creates the `StressRuns` table (indexed on `WorkspaceId`) and the
+    `StressMetrics` table (indexed on `StressRunId`). Purely additive — two brand-new tables, nothing
+    existing is touched. Paired with a `Workspace.CurrentSchemaVersion` bump to **8**; v7 workspaces
+    self-provision the two new tables on open via `MigrateAsync` and stay compatible.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
 - At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**

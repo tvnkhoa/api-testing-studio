@@ -43,6 +43,10 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<TestRunResult> TestResults => Set<TestRunResult>();
 
+    public DbSet<StressRun> StressRuns => Set<StressRun>();
+
+    public DbSet<StressMetrics> StressMetrics => Set<StressMetrics>();
+
     public DbSet<Run> Runs => Set<Run>();
 
     public DbSet<RunStep> RunSteps => Set<RunStep>();
@@ -148,6 +152,21 @@ public sealed class WorkspaceDbContext : DbContext
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.WorkspaceId);
             entity.HasIndex(x => x.TestCaseId);
+        });
+
+        // Stress runs (Sprint 12): a run header with a few denormalized headline metrics for cheap
+        // list rendering, plus StressMetrics rows (one summary row today, time-series-ready) keyed by
+        // StressRunId. Enums (Mode/TargetKind) stored as integers by convention.
+        modelBuilder.Entity<StressRun>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
+        modelBuilder.Entity<StressMetrics>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.StressRunId);
         });
 
         modelBuilder.Entity<Run>().HasKey(x => x.Id);

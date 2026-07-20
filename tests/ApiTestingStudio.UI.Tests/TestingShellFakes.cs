@@ -1,6 +1,8 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Stress;
 using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Domain.Entities;
+using ApiTestingStudio.Plugin.Abstractions.Runners;
 using ApiTestingStudio.Shared.Results;
 
 namespace ApiTestingStudio.UI.Tests;
@@ -46,6 +48,13 @@ internal sealed class FakeTestSuiteExecutor : ITestSuiteExecutor
 
     public Task<Result<IReadOnlyList<TestRunResult>>> RunSuiteAsync(Guid suiteId, IProgress<TestRunResult>? progress = null, CancellationToken cancellationToken = default)
         => Task.FromResult(Result.Success<IReadOnlyList<TestRunResult>>([]));
+}
+
+/// <summary>No-op <see cref="IStressOrchestrator"/> for shell tests.</summary>
+internal sealed class FakeStressOrchestrator : IStressOrchestrator
+{
+    public Task<Result<StressRun>> RunAsync(StressRunRequest request, IProgress<StressMetricsSnapshot>? progress = null, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Failure<StressRun>(new Error("stress.none", "No run.")));
 }
 
 /// <summary>No-op <see cref="IWorkflowRepository"/> for shell tests.</summary>

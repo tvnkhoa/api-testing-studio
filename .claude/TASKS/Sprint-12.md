@@ -73,8 +73,33 @@ Implement the `Runner.Stress` plugin (`IStressRunner`) to drive load with sequen
 - Distributed load agents.
 
 ## Checklist
-- [ ] `IStressRunner` contract + config/result models.
-- [ ] Sequential/loop/concurrent strategies.
-- [ ] Metrics aggregator + streaming percentiles.
-- [ ] Persistence + migration.
-- [ ] Stress config + live metrics UI + plugin wiring.
+- [x] `IStressRunner` contract + config/result models.
+- [x] Sequential/loop/concurrent strategies.
+- [x] Metrics aggregator + streaming percentiles.
+- [x] Persistence + migration.
+- [x] Stress config + live metrics UI + plugin wiring.
+
+## Implementation notes (delivered)
+- **Contracts** (`Plugin.Abstractions/Runners`): `StressRunConfig`, `StressSample`,
+  `StressMetricsSnapshot`, `StressRunResult`, `IMetricsAggregator`; `IStressRunner.RunAsync` takes a
+  `Func<CancellationToken, Task<StressSample>>` **workload delegate** + `IProgress<StressMetricsSnapshot>`
+  so the runner is decoupled from the execution engine. `StressMode`/`StressTargetKind` live in
+  `Domain.Enums` (shared by the persisted entity and the contract).
+- **Plugin** (`plugins/Runner.Stress`): `StressRunner` + `Sequential/Loop/ConcurrentStrategy`
+  (bounded VUs via a shared iteration budget / `CancelAfter` duration), `MetricsAggregator`
+  (thread-safe), `LatencyHistogram` (bounded log-linear, ~2% error, no per-sample storage — no new
+  NuGet), `ThroughputMeter`. Live snapshots pumped every 250 ms via `PeriodicTimer`.
+- **Orchestration** (`Application/Stress`): `IStressOrchestrator`/`StressOrchestrator` resolves an
+  endpoint/workflow/ad-hoc-request target into the workload (raw `IRequestExecutor` — not the
+  history-recording service — or `IWorkflowEngine`), stamps timestamps from `IClock`, persists via
+  `IStressRunStore`. `StressRunRequest`/`StressErrors`.
+- **Domain**: `StressRun` (+ headline metrics) and `StressMetrics` records.
+- **Infrastructure**: `StressRuns`/`StressMetrics` tables + `AddStressRuns` migration; schema
+  version bumped **7 → 8**; `StressRunRepository : IStressRunStore`.
+- **UI** (`UI/ViewModels/Stress`): `StressRunnerViewModel` (config + target picker, Run/Stop via
+  `IncludeCancelCommand`) + `LiveMetricsViewModel`, `StressRunnerView` + DataTemplate; opened from
+  **View → Stress Runner**; the loaded runner plugin is reported via `IPluginRegistry` and Run is
+  disabled when none is present.
+- **Tests**: `PluginHost.Tests/StressRunnerTests` (strategies, percentiles, error rate, warm-up,
+  cancellation) and `Application.Tests/StressOrchestratorTests` (target resolution, persistence,
+  runner-unavailable / no-workspace). Full suite green (277 tests), build 0 warnings.

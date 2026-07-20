@@ -71,6 +71,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<ITestCaseRepository, TestCaseRepository>();
         services.AddSingleton<ITestResultRepository, TestResultRepository>();
 
+        // Stress run persistence (Sprint 12). The orchestrator + runner are bound by AddApplication /
+        // AddPluginHost.
+        services.AddSingleton<IStressRunStore, StressRunRepository>();
+
         // Import (Sprint 07): user-triggered URL fetch (offline-first) + transactional catalog merge.
         services.AddSingleton<IDefinitionFetcher, DefinitionFetcher>();
         services.AddSingleton<ICatalogMerger, CatalogMerger>();

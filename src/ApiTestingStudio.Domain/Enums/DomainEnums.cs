@@ -140,3 +140,32 @@ public enum NodeFailurePolicy
     StopOnError,
     ContinueOnError,
 }
+
+/// <summary>
+/// How a stress run issues its workload (Sprint 12). Lives in Domain because it is both a persisted
+/// attribute of a <c>StressRun</c> and part of the <c>IStressRunner</c> plugin contract.
+/// </summary>
+public enum StressMode
+{
+    /// <summary>A single pass of the workload, one request at a time.</summary>
+    Sequential,
+
+    /// <summary>A fixed number of passes back-to-back, one request at a time.</summary>
+    Loop,
+
+    /// <summary>A fixed number of virtual users issuing requests concurrently.</summary>
+    Concurrent,
+}
+
+/// <summary>What a stress run drives: an ad-hoc request, a saved endpoint, or a workflow.</summary>
+public enum StressTargetKind
+{
+    /// <summary>An ad-hoc HTTP request assembled by the caller (no saved target id).</summary>
+    Request,
+
+    /// <summary>A saved endpoint, identified by its endpoint id.</summary>
+    Endpoint,
+
+    /// <summary>A saved workflow, identified by its workflow id.</summary>
+    Workflow,
+}

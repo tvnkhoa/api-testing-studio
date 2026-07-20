@@ -6,6 +6,7 @@
                     xmlns:workflow="clr-namespace:ApiTestingStudio.UI.ViewModels.Workflow"
                     xmlns:identity="clr-namespace:ApiTestingStudio.UI.ViewModels.Identity"
                     xmlns:testing="clr-namespace:ApiTestingStudio.UI.ViewModels.Testing"
+                    xmlns:stress="clr-namespace:ApiTestingStudio.UI.ViewModels.Stress"
                     xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels"
                     xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner"
                     xmlns:workflowViews="clr-namespace:ApiTestingStudio.UI.Views.Workflow">
@@ -59,6 +60,11 @@
 
     <DataTemplate DataType="{x:Type testing:TestResultsViewModel}">
         <views:TestResultsView />
+    </DataTemplate>
+
+    <!-- Stress Runner (Sprint 12) -->
+    <DataTemplate DataType="{x:Type stress:StressRunnerViewModel}">
+        <views:StressRunnerView />
     </DataTemplate>
 
 </ResourceDictionary>

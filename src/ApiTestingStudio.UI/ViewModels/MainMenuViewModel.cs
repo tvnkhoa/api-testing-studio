@@ -49,6 +49,8 @@ public sealed class MainMenuViewModel
 
     public IRelayCommand ToggleLogsCommand => _shell.ToggleLogsCommand;
 
+    public IAsyncRelayCommand OpenStressRunnerCommand => _shell.OpenStressRunnerCommand;
+
     public IAsyncRelayCommand ResetLayoutCommand => _shell.ResetLayoutCommand;
 
     // Help

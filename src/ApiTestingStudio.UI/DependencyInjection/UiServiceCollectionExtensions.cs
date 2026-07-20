@@ -4,6 +4,7 @@ using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Stress;
 using ApiTestingStudio.UI.ViewModels.Testing;
 using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.Messaging;
@@ -61,6 +62,10 @@ public static class UiServiceCollectionExtensions
         // Both are singletons added to / referenced by the shell.
         services.AddSingleton<TestCasesPanelViewModel>();
         services.AddSingleton<TestResultsViewModel>();
+
+        // Stress Runner (Sprint 12): the config + live-metrics document. Opened on demand from the
+        // View menu; drives the IStressOrchestrator and reports the loaded runner plugin via IPluginRegistry.
+        services.AddSingleton<StressRunnerViewModel>();
 
         services.AddSingleton<ShellViewModel>();
 

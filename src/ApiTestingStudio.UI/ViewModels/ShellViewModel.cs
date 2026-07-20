@@ -9,6 +9,7 @@ using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Stress;
 using ApiTestingStudio.UI.ViewModels.Testing;
 using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -41,6 +42,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly ProfilesPanelViewModel _profiles;
     private readonly TestCasesPanelViewModel _testCases;
     private readonly TestResultsViewModel _testResults;
+    private readonly StressRunnerViewModel _stress;
     private readonly IWorkflowEditorViewModelFactory _workflowEditorFactory;
     private readonly LogsPlaceholderViewModel _logs = new();
 
@@ -59,6 +61,7 @@ public sealed partial class ShellViewModel : ObservableObject
         ProfilesPanelViewModel profiles,
         TestCasesPanelViewModel testCases,
         TestResultsViewModel testResults,
+        StressRunnerViewModel stress,
         EnvironmentSwitcherViewModel environmentSwitcher,
         IWorkflowEditorViewModelFactory workflowEditorFactory,
         IMessenger messenger,
@@ -78,6 +81,7 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(testCases);
         ArgumentNullException.ThrowIfNull(testResults);
+        ArgumentNullException.ThrowIfNull(stress);
         ArgumentNullException.ThrowIfNull(environmentSwitcher);
         ArgumentNullException.ThrowIfNull(workflowEditorFactory);
         ArgumentNullException.ThrowIfNull(messenger);
@@ -95,6 +99,7 @@ public sealed partial class ShellViewModel : ObservableObject
         _profiles = profiles;
         _testCases = testCases;
         _testResults = testResults;
+        _stress = stress;
         _workflowEditorFactory = workflowEditorFactory;
         _logger = logger;
 
@@ -250,6 +255,19 @@ public sealed partial class ShellViewModel : ObservableObject
     private void ToggleLogs() => TogglePanel(_logs);
 
     [RelayCommand]
+    private async Task OpenStressRunnerAsync(CancellationToken cancellationToken)
+    {
+        if (!Documents.Contains(_stress))
+        {
+            Documents.Add(_stress);
+        }
+
+        _stress.IsSelected = true;
+        _stress.IsActive = true;
+        await _stress.LoadAsync(cancellationToken).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
     private void About() => _statusBar.SetMessage("API Testing Studio — offline workflow-first API testing. Sprint 04 shell.");
 
     [RelayCommand]
@@ -284,6 +302,7 @@ public sealed partial class ShellViewModel : ObservableObject
             await _workflows.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _profiles.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _testCases.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await _stress.LoadAsync(cancellationToken).ConfigureAwait(true);
             await Environments.LoadAsync(cancellationToken).ConfigureAwait(true);
         }
         else
@@ -292,6 +311,8 @@ public sealed partial class ShellViewModel : ObservableObject
             _workflows.Clear();
             _profiles.Clear();
             _testCases.Clear();
+            _stress.Clear();
+            Documents.Remove(_stress);
             Environments.Clear();
             CloseWorkflowDocuments();
         }
