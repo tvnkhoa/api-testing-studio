@@ -109,6 +109,29 @@ public enum AssertionOutcome
 }
 
 /// <summary>
+/// Which part of an HTTP response an assertion evaluates against. The assertion runner maps the
+/// selected source to the <c>Actual</c> string handed to the assertion plugin, giving a single,
+/// consistent assertion context whether the assertion runs in a test case or a workflow node.
+/// </summary>
+public enum AssertionSource
+{
+    /// <summary>The numeric status code (e.g. <c>200</c>).</summary>
+    StatusCode,
+
+    /// <summary>The HTTP reason phrase (e.g. <c>OK</c>).</summary>
+    ReasonPhrase,
+
+    /// <summary>A named response header; the header name is carried in the assertion's <c>Target</c>.</summary>
+    Header,
+
+    /// <summary>The decoded response body text.</summary>
+    Body,
+
+    /// <summary>Total request duration in whole milliseconds.</summary>
+    TimingTotalMs,
+}
+
+/// <summary>
 /// How the workflow engine reacts when a node fails. <see cref="StopOnError"/> aborts the run;
 /// <see cref="ContinueOnError"/> records the failure and proceeds to the next node.
 /// </summary>

@@ -129,6 +129,16 @@ internal sealed class FakeDialogService : IDialogService
         ApiTestingStudio.Domain.Entities.Variable? existing,
         IReadOnlyList<ApiTestingStudio.Domain.Entities.EnvironmentDefinition> environments) => null;
 
+    public ApiTestingStudio.Application.Testing.TestCaseDraft? PromptTestCase(
+        string title,
+        IReadOnlyList<ApiTestingStudio.Application.Testing.TestCaseTargetOption> targets,
+        ApiTestingStudio.Application.Testing.TestCaseDraft? existing = null) => null;
+
+    public ApiTestingStudio.Application.Testing.AssertionDraft? PromptAssertion(
+        string title,
+        IReadOnlyList<string> kinds,
+        ApiTestingStudio.Application.Testing.AssertionDraft? existing = null) => null;
+
     public bool Confirm(string title, string message) => ConfirmResult;
 
     public bool ShowImportWizard()

@@ -43,8 +43,9 @@ this keeps EF mapping and migrations simple and predictable.
 
 Mapped entities & tables (`WorkspaceDbContext`):
 `Workspace`, `Service`, `EndpointFolder`, `Endpoint`, `ProfileDefinition`, `EnvironmentDefinition`,
-`Variable`, `WorkflowDefinition`, `WorkflowNode`, `WorkflowEdge`, `TestCaseDefinition`, `Run`,
-`RunStep`, `Attachment`, `WorkspaceSetting`, `LogEntry`, `PackageMetadata`, `RequestHistoryEntry`.
+`Variable`, `WorkflowDefinition`, `WorkflowNode`, `WorkflowEdge`, `TestSuite`, `TestCaseDefinition`,
+`AssertionDefinition`, `TestRunResult`, `Run`, `RunStep`, `Attachment`, `WorkspaceSetting`, `LogEntry`,
+`PackageMetadata`, `RequestHistoryEntry`.
 
 The Service Explorer catalog (Sprint 05) is `Service` → `EndpointFolder` (nestable via
 `ParentFolderId`) → `Endpoint`. Endpoints reference their owner by `ServiceId` plus an optional
@@ -69,6 +70,21 @@ they are optional so pre-v5 rows stay valid. An edge carries
 `Mapping` expression. The flat root `Workflows` table (from `InitialCreate`) is unchanged; the
 repository (`IWorkflowRepository`) hydrates the three tables into a runtime `Workflow` aggregate and
 replaces the child rows wholesale on save.
+
+`TestSuite` / `TestCaseDefinition` / `AssertionDefinition` / `TestRunResult` (`TestSuites` /
+`TestCases` / `Assertions` / `TestResults` tables, Sprint 11) hold assertions and test cases. A suite
+(`TestSuites`, indexed on `WorkspaceId`) groups cases. A case (`TestCases`) targets **either** an
+endpoint request (nullable `EndpointId`) **or** a workflow (nullable `WorkflowId`) and belongs to an
+optional `TestSuiteId` (indexes on `WorkspaceId`/`TestSuiteId`); the `TestCases` base table already
+existed from `InitialCreate`, so Sprint 11 extends it (adds `EndpointId`/`TestSuiteId`/`SortOrder` and
+makes `WorkflowId` nullable). Each `AssertionDefinition` (`Assertions`, indexed on `TestCaseId`) carries
+`Kind`/`Source`/`Target`/`Expression`/`Operator`/`Expected`/`Enabled`; the repository hydrates a case
+with its assertions into a runtime `TestCase` aggregate and replaces the child rows wholesale on save
+(like `WorkflowRepository`). A `TestRunResult` (`TestResults`, indexed on `WorkspaceId`/`TestCaseId`)
+records one case execution with denormalized aggregate columns (status, passed/failed/skipped counts,
+duration, timestamp) plus a JSON `DetailsJson` blob of per-assertion results — the same
+denormalized-columns + JSON-snapshot pattern as `RequestHistoryEntry`. Read/written via
+`ITestSuiteRepository` / `ITestCaseRepository` / `ITestResultRepository`.
 
 `RequestHistoryEntry` (`RequestHistory` table, Sprint 06) records one API Runner send against an
 endpoint: `EndpointId` (indexed FK), denormalized `Method`/`Url`/`StatusCode` and timing
@@ -97,7 +113,7 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
 
 - Migrations live in `Infrastructure/Persistence/Migrations`. Applied so far: `InitialCreate`,
   `AddPackageMetadata`, `AddServiceCatalogHierarchy`, `AddRequestHistory`, `AddWorkflows`,
-  `AddNodeVisualMetadata`, `AddProfileAuthAndEnvironmentBinding`.
+  `AddNodeVisualMetadata`, `AddProfileAuthAndEnvironmentBinding`, `AddTestsAndAssertions`.
   - `AddServiceCatalogHierarchy` (Sprint 05) adds the `EndpointFolders` table and the
     `Endpoints.FolderId`, `Endpoints.SortOrder`, `Services.SortOrder` columns + indexes. It is
     additive/back-compatible (the `Services`/`Endpoints` base tables already existed from
@@ -127,6 +143,14 @@ focused repository interfaces in `Application` (e.g. `IEndpointRepository`) impl
     v5 workspaces self-provision on open via `MigrateAsync` and stay compatible. The active
     environment is stored as a per-workspace `Settings` row (`active-environment-id`) — no schema
     change. See ADR-0010 for secret storage.
+  - `AddTestsAndAssertions` (Sprint 11) creates the `TestSuites`, `Assertions`, and `TestResults`
+    tables and extends the existing `TestCases` table with `EndpointId`/`TestSuiteId`/`SortOrder`
+    (nullable/defaulted) plus makes `WorkflowId` nullable, with indexes on `TestSuites.WorkspaceId`,
+    `TestCases.WorkspaceId`/`TestSuiteId`, `Assertions.TestCaseId`, and
+    `TestResults.WorkspaceId`/`TestCaseId`. Purely additive — new columns are nullable/defaulted and
+    the `WorkflowId` widening is back-compatible for existing rows. Paired with a
+    `Workspace.CurrentSchemaVersion` bump to **7**; v6 workspaces self-provision on open via
+    `MigrateAsync` and stay compatible.
 - Create: `dotnet ef migrations add <Name> --project src/ApiTestingStudio.Infrastructure --output-dir Persistence/Migrations`
 - Apply (dev): `dotnet ef database update --project src/ApiTestingStudio.Infrastructure`
 - At runtime the provider runs `Database.MigrateAsync()` when a workspace is **created or opened**

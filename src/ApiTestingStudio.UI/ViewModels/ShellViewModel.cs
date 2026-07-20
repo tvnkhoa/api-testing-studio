@@ -9,6 +9,7 @@ using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Testing;
 using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -38,6 +39,8 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly ApiRunnerViewModel _runner;
     private readonly WorkflowsPanelViewModel _workflows;
     private readonly ProfilesPanelViewModel _profiles;
+    private readonly TestCasesPanelViewModel _testCases;
+    private readonly TestResultsViewModel _testResults;
     private readonly IWorkflowEditorViewModelFactory _workflowEditorFactory;
     private readonly LogsPlaceholderViewModel _logs = new();
 
@@ -54,6 +57,8 @@ public sealed partial class ShellViewModel : ObservableObject
         ApiRunnerViewModel runner,
         WorkflowsPanelViewModel workflows,
         ProfilesPanelViewModel profiles,
+        TestCasesPanelViewModel testCases,
+        TestResultsViewModel testResults,
         EnvironmentSwitcherViewModel environmentSwitcher,
         IWorkflowEditorViewModelFactory workflowEditorFactory,
         IMessenger messenger,
@@ -71,6 +76,8 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(runner);
         ArgumentNullException.ThrowIfNull(workflows);
         ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(testCases);
+        ArgumentNullException.ThrowIfNull(testResults);
         ArgumentNullException.ThrowIfNull(environmentSwitcher);
         ArgumentNullException.ThrowIfNull(workflowEditorFactory);
         ArgumentNullException.ThrowIfNull(messenger);
@@ -86,6 +93,8 @@ public sealed partial class ShellViewModel : ObservableObject
         _runner = runner;
         _workflows = workflows;
         _profiles = profiles;
+        _testCases = testCases;
+        _testResults = testResults;
         _workflowEditorFactory = workflowEditorFactory;
         _logger = logger;
 
@@ -98,6 +107,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Tools.Add(_explorer);
         Tools.Add(_workflows);
         Tools.Add(_profiles);
+        Tools.Add(_testCases);
         Tools.Add(_logs);
 
         // Selecting an endpoint in the Explorer opens (or focuses) the Runner document pane; the
@@ -106,6 +116,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
         // Selecting a workflow in the Workflows panel opens (or focuses) its designer document pane.
         messenger.Register<OpenWorkflowMessage>(this, (_, m) => OpenOrFocusWorkflow(m.WorkflowId, m.Name));
+
+        // A finished test run (Sprint 11) opens (or focuses) the Test Results document with its outcomes.
+        messenger.Register<ShowTestResultsMessage>(this, (_, m) => ShowTestResults(m));
 
         Menu = new MainMenuViewModel(this, RecentWorkspaces);
         Toolbar = new ToolbarViewModel(this);
@@ -231,6 +244,9 @@ public sealed partial class ShellViewModel : ObservableObject
     private void ToggleProfiles() => TogglePanel(_profiles);
 
     [RelayCommand]
+    private void ToggleTestCases() => TogglePanel(_testCases);
+
+    [RelayCommand]
     private void ToggleLogs() => TogglePanel(_logs);
 
     [RelayCommand]
@@ -267,6 +283,7 @@ public sealed partial class ShellViewModel : ObservableObject
             await _explorer.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _workflows.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _profiles.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await _testCases.LoadAsync(cancellationToken).ConfigureAwait(true);
             await Environments.LoadAsync(cancellationToken).ConfigureAwait(true);
         }
         else
@@ -274,6 +291,7 @@ public sealed partial class ShellViewModel : ObservableObject
             _explorer.Clear();
             _workflows.Clear();
             _profiles.Clear();
+            _testCases.Clear();
             Environments.Clear();
             CloseWorkflowDocuments();
         }
@@ -295,6 +313,20 @@ public sealed partial class ShellViewModel : ObservableObject
 
         _runner.IsSelected = true;
         _runner.IsActive = true;
+    }
+
+    private void ShowTestResults(ShowTestResultsMessage message)
+    {
+        _testResults.Title = message.Title;
+        _testResults.Show(message.Results);
+
+        if (!Documents.Contains(_testResults))
+        {
+            Documents.Add(_testResults);
+        }
+
+        _testResults.IsSelected = true;
+        _testResults.IsActive = true;
     }
 
     private void OpenOrFocusWorkflow(Guid workflowId, string name)

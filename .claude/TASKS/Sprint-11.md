@@ -77,8 +77,8 @@ Add assertions and test cases with the `Assertion.*` plugins (JSON, Regex, Schem
 - Custom assertion scripting.
 
 ## Checklist
-- [ ] `IAssertion` contract + assertion context/result.
-- [ ] JSON / Regex / Schema assertion plugins.
-- [ ] Test case/suite models + migration.
-- [ ] Suite executor + report builder.
-- [ ] Assertion editor + results UI + Runner/Workflow integration.
+- [x] `IAssertion` contract + assertion context/result. *(scaffolded in S03; reused unchanged)*
+- [x] JSON / Regex / Schema assertion plugins. *(json-everything: JsonPath.Net + JsonSchema.Net)*
+- [x] Test case/suite models + migration. *(`AddTestsAndAssertions`, schema v7)*
+- [x] Suite executor + report builder. *(`AssertionRunner`, `TestSuiteExecutor`, `TestReportBuilder`)*
+- [x] Assertion editor + results UI + Runner/Workflow integration. *(Test Cases panel, Test Results doc, `AssertionNodeHandler`)*

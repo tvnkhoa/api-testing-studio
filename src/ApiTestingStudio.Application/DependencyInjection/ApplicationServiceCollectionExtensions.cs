@@ -4,6 +4,7 @@ using ApiTestingStudio.Application.Environments;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Application.Workflows.Handlers;
@@ -52,6 +53,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<INodeHandler, LoopNodeHandler>();
         services.AddSingleton<INodeHandler, ParallelNodeHandler>();
         services.AddSingleton<INodeHandler, DelayNodeHandler>();
+        services.AddSingleton<INodeHandler, AssertionNodeHandler>();
         services.AddSingleton<INodeHandlerRegistry, NodeHandlerRegistry>();
         services.AddSingleton<IWorkflowEngine, WorkflowEngine>();
         services.AddSingleton<IWorkflowRunStore, InMemoryWorkflowRunStore>();
@@ -69,6 +71,13 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<IVariableService, VariableService>();
         services.AddSingleton<IVariableScopeSeeder, VariableScopeSeeder>();
         services.AddSingleton<IAuthApplicator, AuthApplicator>();
+
+        // Assertions & Test Cases (Sprint 11): the assertion runner indexes the IAssertion plugins
+        // (contributed by AddPluginHost); the executor reuses the request executor + workflow engine.
+        // Test repositories are bound by AddInfrastructure.
+        services.AddSingleton<IAssertionRunner, AssertionRunner>();
+        services.AddSingleton<ITestReportBuilder, TestReportBuilder>();
+        services.AddSingleton<ITestSuiteExecutor, TestSuiteExecutor>();
 
         return services;
     }

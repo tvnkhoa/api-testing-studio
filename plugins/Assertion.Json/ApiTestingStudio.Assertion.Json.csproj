@@ -6,6 +6,10 @@
     <ProjectReference Include="..\..\src\ApiTestingStudio.Shared\ApiTestingStudio.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="JsonPath.Net" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

@@ -1,5 +1,6 @@
 using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
@@ -29,6 +30,12 @@ public interface IDialogService
 
     /// <summary>Prompts for variable fields; returns the draft, or null if cancelled.</summary>
     VariableDraft? PromptVariable(string title, Variable? existing, IReadOnlyList<EnvironmentDefinition> environments);
+
+    /// <summary>Prompts for test-case fields (name, description, target); returns the draft, or null if cancelled.</summary>
+    TestCaseDraft? PromptTestCase(string title, IReadOnlyList<TestCaseTargetOption> targets, TestCaseDraft? existing = null);
+
+    /// <summary>Prompts for assertion fields; <paramref name="kinds"/> come from the loaded assertion plugins. Null if cancelled.</summary>
+    AssertionDraft? PromptAssertion(string title, IReadOnlyList<string> kinds, AssertionDraft? existing = null);
 
     /// <summary>Shows a yes/no confirmation; returns true when the user confirms.</summary>
     bool Confirm(string title, string message);

@@ -35,7 +35,13 @@ public sealed class WorkspaceDbContext : DbContext
 
     public DbSet<WorkflowEdge> WorkflowEdges => Set<WorkflowEdge>();
 
+    public DbSet<TestSuite> TestSuites => Set<TestSuite>();
+
     public DbSet<TestCaseDefinition> TestCases => Set<TestCaseDefinition>();
+
+    public DbSet<AssertionDefinition> Assertions => Set<AssertionDefinition>();
+
+    public DbSet<TestRunResult> TestResults => Set<TestRunResult>();
 
     public DbSet<Run> Runs => Set<Run>();
 
@@ -115,7 +121,35 @@ public sealed class WorkspaceDbContext : DbContext
             entity.HasIndex(x => x.TargetNodeId);
         });
 
-        modelBuilder.Entity<TestCaseDefinition>().HasKey(x => x.Id);
+        // Tests & assertions (Sprint 11): suites group cases; each case runs an endpoint request or a
+        // workflow and owns AssertionDefinition rows; TestResults denormalize the aggregate + a JSON
+        // details blob (per-assertion outcomes). Enums stored as integers by convention.
+        modelBuilder.Entity<TestSuite>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+        });
+
+        modelBuilder.Entity<TestCaseDefinition>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+            entity.HasIndex(x => x.TestSuiteId);
+        });
+
+        modelBuilder.Entity<AssertionDefinition>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TestCaseId);
+        });
+
+        modelBuilder.Entity<TestRunResult>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.WorkspaceId);
+            entity.HasIndex(x => x.TestCaseId);
+        });
+
         modelBuilder.Entity<Run>().HasKey(x => x.Id);
         modelBuilder.Entity<RunStep>().HasKey(x => x.Id);
         modelBuilder.Entity<Attachment>().HasKey(x => x.Id);

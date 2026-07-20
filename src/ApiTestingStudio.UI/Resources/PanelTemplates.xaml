@@ -5,6 +5,7 @@
                     xmlns:runner="clr-namespace:ApiTestingStudio.UI.ViewModels.Runner"
                     xmlns:workflow="clr-namespace:ApiTestingStudio.UI.ViewModels.Workflow"
                     xmlns:identity="clr-namespace:ApiTestingStudio.UI.ViewModels.Identity"
+                    xmlns:testing="clr-namespace:ApiTestingStudio.UI.ViewModels.Testing"
                     xmlns:views="clr-namespace:ApiTestingStudio.UI.Views.Panels"
                     xmlns:runnerViews="clr-namespace:ApiTestingStudio.UI.Views.Runner"
                     xmlns:workflowViews="clr-namespace:ApiTestingStudio.UI.Views.Workflow">
@@ -49,6 +50,15 @@
     <!-- Profiles & Environments (Sprint 10) -->
     <DataTemplate DataType="{x:Type identity:ProfilesPanelViewModel}">
         <views:ProfilesPanelView />
+    </DataTemplate>
+
+    <!-- Assertions & Test Cases (Sprint 11) -->
+    <DataTemplate DataType="{x:Type testing:TestCasesPanelViewModel}">
+        <views:TestCasesPanelView />
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type testing:TestResultsViewModel}">
+        <views:TestResultsView />
     </DataTemplate>
 
 </ResourceDictionary>

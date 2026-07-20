@@ -4,6 +4,7 @@ using System.Windows;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
+using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
@@ -63,6 +64,20 @@ public sealed class DialogService : IDialogService
     {
         var viewModel = new VariableEditorViewModel(title, existing, environments);
         var dialog = new VariableEditorDialog { DataContext = viewModel, Owner = ActiveWindow() };
+        return dialog.ShowDialog() == true ? viewModel.ToDraft() : null;
+    }
+
+    public TestCaseDraft? PromptTestCase(string title, IReadOnlyList<TestCaseTargetOption> targets, TestCaseDraft? existing = null)
+    {
+        var viewModel = new TestCaseEditorViewModel(title, targets, existing);
+        var dialog = new TestCaseEditorDialog { DataContext = viewModel, Owner = ActiveWindow() };
+        return dialog.ShowDialog() == true ? viewModel.ToDraft() : null;
+    }
+
+    public AssertionDraft? PromptAssertion(string title, IReadOnlyList<string> kinds, AssertionDraft? existing = null)
+    {
+        var viewModel = new AssertionEditorViewModel(title, kinds, existing);
+        var dialog = new AssertionEditorDialog { DataContext = viewModel, Owner = ActiveWindow() };
         return dialog.ShowDialog() == true ? viewModel.ToDraft() : null;
     }
 

@@ -32,6 +32,17 @@
     <PackageVersion Include="Microsoft.OpenApi.Readers" Version="1.6.24" />
   </ItemGroup>
 
+  <ItemGroup Label="Assertions (JSONPath / JSON Schema — referenced only by Assertion.Json/Assertion.Schema)">
+    <!--
+      json-everything suite: JsonPath.Net (JSONPath selection) and JsonSchema.Net (JSON Schema
+      validation). Both are built on System.Text.Json (matching the app's serializer choice) and run
+      fully offline. Their shared dependencies (Json.More.Net, JsonPointer.Net) arrive transitively
+      and are pinned via CentralPackageTransitivePinningEnabled.
+    -->
+    <PackageVersion Include="JsonPath.Net" Version="3.0.2" />
+    <PackageVersion Include="JsonSchema.Net" Version="9.2.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Persistence (EF Core + SQLite)">
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />

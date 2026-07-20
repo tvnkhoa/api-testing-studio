@@ -4,6 +4,7 @@ using ApiTestingStudio.UI.ViewModels;
 using ApiTestingStudio.UI.ViewModels.Explorer;
 using ApiTestingStudio.UI.ViewModels.Identity;
 using ApiTestingStudio.UI.ViewModels.Runner;
+using ApiTestingStudio.UI.ViewModels.Testing;
 using ApiTestingStudio.UI.ViewModels.Workflow;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +56,11 @@ public static class UiServiceCollectionExtensions
         // switcher. Both are singletons added to / referenced by the shell.
         services.AddSingleton<ProfilesPanelViewModel>();
         services.AddSingleton<EnvironmentSwitcherViewModel>();
+
+        // Assertions & Test Cases (Sprint 11): the Test Cases tool panel and the Test Results document.
+        // Both are singletons added to / referenced by the shell.
+        services.AddSingleton<TestCasesPanelViewModel>();
+        services.AddSingleton<TestResultsViewModel>();
 
         services.AddSingleton<ShellViewModel>();
 

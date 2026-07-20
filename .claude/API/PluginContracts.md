@@ -111,6 +111,14 @@ public interface IAssertion
 (`schema`). Context: `AssertionContext(Actual, Expected, Options)` →
 `AssertionEvaluation(AssertionOutcome, Message?)`.
 
+Fully implemented in Sprint 11 (see `FEATURES/TestCases.md`). The `Options` dictionary carries
+kind-specific settings: `json` reads `path` (JSONPath, `JsonPath.Net`) + `operator`
+(`equals`/`contains`/`exists`/`gt`/…); `regex` reads `pattern` + `operator` (`matches`/`notMatches`)
++ `ignoreCase`; `schema` validates `Actual` against the JSON Schema in `Expected` (`JsonSchema.Net`).
+An Application-layer `IAssertionRunner` maps a response field (status/header/body/timing) into `Actual`,
+so the contract itself stays response-agnostic and unchanged (no `PluginApiVersion` bump). Malformed
+input yields a `Failed`/`Skipped` evaluation with a reason rather than throwing.
+
 ## IWorkflowNode
 
 Executes one kind of workflow node; one implementation per `WorkflowNodeKind`.

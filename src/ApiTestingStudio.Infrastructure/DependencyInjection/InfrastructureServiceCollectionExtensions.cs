@@ -66,6 +66,11 @@ public static class InfrastructureServiceCollectionExtensions
         // Workflow graph persistence (Sprint 08). The engine itself is bound by AddApplication.
         services.AddSingleton<IWorkflowRepository, WorkflowRepository>();
 
+        // Tests & assertions persistence (Sprint 11). Executor/runner services are bound by AddApplication.
+        services.AddSingleton<ITestSuiteRepository, TestSuiteRepository>();
+        services.AddSingleton<ITestCaseRepository, TestCaseRepository>();
+        services.AddSingleton<ITestResultRepository, TestResultRepository>();
+
         // Import (Sprint 07): user-triggered URL fetch (offline-first) + transactional catalog merge.
         services.AddSingleton<IDefinitionFetcher, DefinitionFetcher>();
         services.AddSingleton<ICatalogMerger, CatalogMerger>();

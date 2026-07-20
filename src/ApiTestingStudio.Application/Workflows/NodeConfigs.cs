@@ -87,3 +87,37 @@ public sealed record DelayNodeConfig
 {
     public int DelayMs { get; init; }
 }
+
+/// <summary>
+/// Configuration for a <see cref="WorkflowNodeKind.Assertion"/> node: evaluates one or more
+/// assertions against the response outputs (<c>status</c>/<c>reason</c>/<c>body</c>) published by an
+/// upstream node named <see cref="SourceNode"/>. The node passes only when every assertion passes.
+/// </summary>
+public sealed record AssertionNodeConfig
+{
+    /// <summary>Name of the upstream node whose published response outputs are asserted.</summary>
+    public string SourceNode { get; init; } = string.Empty;
+
+    public IReadOnlyList<AssertionSpec> Assertions { get; init; } = [];
+}
+
+/// <summary>
+/// One assertion inside an <see cref="AssertionNodeConfig"/> — the workflow-node mirror of the
+/// persisted <see cref="AssertionDefinition"/> (no test-case ownership).
+/// </summary>
+public sealed record AssertionSpec
+{
+    public string Kind { get; init; } = "json";
+
+    public AssertionSource Source { get; init; } = AssertionSource.Body;
+
+    public string? Target { get; init; }
+
+    public string? Expression { get; init; }
+
+    public string? Operator { get; init; }
+
+    public string Expected { get; init; } = string.Empty;
+
+    public bool Enabled { get; init; } = true;
+}
