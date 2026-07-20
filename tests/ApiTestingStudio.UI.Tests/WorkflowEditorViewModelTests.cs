@@ -18,6 +18,8 @@ public sealed class WorkflowEditorViewModelTests
     private readonly InMemoryWorkflowRepository _repository = new();
     private readonly RecordingEngine _engine = new();
     private readonly FakeStatusBarService _status = new();
+    private readonly FakeEndpointRepository _endpoints = new();
+    private readonly FakeServiceRepository _services = new();
 
     private WorkflowEditorViewModel CreateEditor()
     {
@@ -34,6 +36,8 @@ public sealed class WorkflowEditorViewModelTests
             new GraphMapper(factory),
             _status,
             new FakeRunRecorder(),
+            _endpoints,
+            _services,
             NullLogger<WorkflowEditorViewModel>.Instance);
     }
 
@@ -51,6 +55,48 @@ public sealed class WorkflowEditorViewModelTests
 
         editor.RedoCommand.Execute(null);
         editor.Nodes.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task AddApiNodeFromEndpoint_creates_a_prefilled_Api_node()
+    {
+        var editor = CreateEditor();
+        await editor.LoadAsync();
+
+        var serviceId = Guid.NewGuid();
+        _services.Seed(new Service { Id = serviceId, WorkspaceId = _workspaceId, Name = "Orders", BaseUrl = "https://api.test/" });
+        var endpointId = Guid.NewGuid();
+        _endpoints.Seed(new Endpoint
+        {
+            Id = endpointId,
+            ServiceId = serviceId,
+            Name = "Create order",
+            Method = HttpVerb.Post,
+            Path = "/orders",
+            DefaultBody = "{}",
+        });
+
+        await editor.AddApiNodeFromEndpointAsync(endpointId, new Point(20, 20));
+
+        var node = editor.Nodes.Should().ContainSingle().Subject;
+        node.Kind.Should().Be(WorkflowNodeKind.Api);
+        node.Title.Should().Be("Create order");
+        var config = node.Config.Should().BeOfType<RequestNodeConfig>().Subject;
+        config.Method.Should().Be(HttpVerb.Post);
+        config.Url.Should().Be("https://api.test/orders");
+        config.Body.Should().Be("{}");
+    }
+
+    [Fact]
+    public async Task AddApiNodeFromEndpoint_reports_when_endpoint_is_missing()
+    {
+        var editor = CreateEditor();
+        await editor.LoadAsync();
+
+        await editor.AddApiNodeFromEndpointAsync(Guid.NewGuid(), new Point(0, 0));
+
+        editor.Nodes.Should().BeEmpty();
+        _status.Message.Should().Be("The dropped endpoint could not be found.");
     }
 
     [Fact]
@@ -147,6 +193,68 @@ public sealed class WorkflowEditorViewModelTests
             }
 
             return Task.FromResult(new WorkflowRunResult { WorkflowId = workflow.Id, Status = RunStatus.Passed, Nodes = [] });
+        }
+    }
+
+    private sealed class FakeEndpointRepository : IEndpointRepository
+    {
+        private readonly Dictionary<Guid, Endpoint> _store = [];
+
+        public void Seed(Endpoint endpoint) => _store[endpoint.Id] = endpoint;
+
+        public Task<Endpoint?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+            => Task.FromResult(_store.TryGetValue(id, out var endpoint) ? endpoint : null);
+
+        public Task<IReadOnlyList<Endpoint>> GetByServiceAsync(Guid serviceId, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<Endpoint>>(_store.Values.Where(e => e.ServiceId == serviceId).ToList());
+
+        public Task AddAsync(Endpoint endpoint, CancellationToken cancellationToken = default)
+        {
+            _store[endpoint.Id] = endpoint;
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(Endpoint endpoint, CancellationToken cancellationToken = default)
+        {
+            _store[endpoint.Id] = endpoint;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            _store.Remove(id);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakeServiceRepository : IServiceRepository
+    {
+        private readonly Dictionary<Guid, Service> _store = [];
+
+        public void Seed(Service service) => _store[service.Id] = service;
+
+        public Task<Service?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+            => Task.FromResult(_store.TryGetValue(id, out var service) ? service : null);
+
+        public Task<IReadOnlyList<Service>> GetByWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<Service>>(_store.Values.Where(s => s.WorkspaceId == workspaceId).ToList());
+
+        public Task AddAsync(Service service, CancellationToken cancellationToken = default)
+        {
+            _store[service.Id] = service;
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(Service service, CancellationToken cancellationToken = default)
+        {
+            _store[service.Id] = service;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteCascadeAsync(Guid serviceId, CancellationToken cancellationToken = default)
+        {
+            _store.Remove(serviceId);
+            return Task.CompletedTask;
         }
     }
 

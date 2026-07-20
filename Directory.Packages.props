@@ -24,12 +24,13 @@
 
   <ItemGroup Label="Import parsers (OpenAPI / Swagger — referenced only by Import.OpenApi/Import.Scalar)">
     <!--
-      Official Microsoft OpenAPI reader: parses OpenAPI 3.x and Swagger 2.0 from JSON or YAML,
-      fully offline. SharpYaml (YAML support) and Microsoft.OpenApi arrive transitively and are
-      pinned via CentralPackageTransitivePinningEnabled.
+      Official Microsoft OpenAPI reader (v2): parses OpenAPI 3.1, 3.0 and Swagger 2.0, fully
+      offline. v2 folded the JSON reader into the core Microsoft.OpenApi package (the old
+      Microsoft.OpenApi.Readers package is gone); YAML support is an opt-in add-on package. Both are
+      pinned to the same version. Transitive deps arrive via CentralPackageTransitivePinningEnabled.
     -->
-    <PackageVersion Include="Microsoft.OpenApi" Version="1.6.24" />
-    <PackageVersion Include="Microsoft.OpenApi.Readers" Version="1.6.24" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageVersion Include="Microsoft.OpenApi.YamlReader" Version="2.7.5" />
   </ItemGroup>
 
   <ItemGroup Label="Assertions (JSONPath / JSON Schema — referenced only by Assertion.Json/Assertion.Schema)">

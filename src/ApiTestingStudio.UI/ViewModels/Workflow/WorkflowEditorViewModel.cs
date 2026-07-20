@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Windows;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Common;
@@ -24,6 +25,8 @@ namespace ApiTestingStudio.UI.ViewModels.Workflow;
 /// </summary>
 public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly Guid _workflowId;
     private readonly IWorkflowRepository _repository;
     private readonly IWorkflowEngine _engine;
@@ -33,6 +36,8 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
     private readonly GraphMapper _mapper;
     private readonly IStatusBarService _statusBar;
     private readonly IRunRecorder _runRecorder;
+    private readonly IEndpointRepository _endpoints;
+    private readonly IServiceRepository _services;
     private readonly ILogger<WorkflowEditorViewModel> _logger;
 
     private readonly Dictionary<NodeViewModel, Point> _dragStart = [];
@@ -51,6 +56,8 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         GraphMapper mapper,
         IStatusBarService statusBar,
         IRunRecorder runRecorder,
+        IEndpointRepository endpoints,
+        IServiceRepository services,
         ILogger<WorkflowEditorViewModel> logger)
         : base($"document.workflow.{workflowId}", name)
     {
@@ -62,6 +69,8 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(statusBar);
         ArgumentNullException.ThrowIfNull(runRecorder);
+        ArgumentNullException.ThrowIfNull(endpoints);
+        ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(logger);
 
         _workflowId = workflowId;
@@ -73,6 +82,8 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         _mapper = mapper;
         _statusBar = statusBar;
         _runRecorder = runRecorder;
+        _endpoints = endpoints;
+        _services = services;
         _logger = logger;
 
         Properties = new NodePropertiesViewModel(undo);
@@ -135,6 +146,47 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         var node = _nodeFactory.Create(kind, location);
         node.Selected += OnNodeSelected;
         _undo.Execute(new AddNodeCommand(Nodes, node, RecomputeConnectivity));
+    }
+
+    /// <summary>
+    /// Creates an <see cref="WorkflowNodeKind.Api"/> node at a canvas point, pre-filled from a saved
+    /// endpoint (method, resolved URL, default headers and body). Used when an endpoint is dropped
+    /// from the Service Explorer. Resolution failures are surfaced on the status bar, not thrown, so
+    /// the caller can fire-and-forget from the drop handler.
+    /// </summary>
+    public async Task AddApiNodeFromEndpointAsync(Guid endpointId, Point location, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var endpoint = await _endpoints.GetAsync(endpointId, cancellationToken).ConfigureAwait(true);
+            if (endpoint is null)
+            {
+                _statusBar.SetMessage("The dropped endpoint could not be found.");
+                return;
+            }
+
+            var service = await _services.GetAsync(endpoint.ServiceId, cancellationToken).ConfigureAwait(true);
+
+            var node = _nodeFactory.Create(WorkflowNodeKind.Api, location);
+            node.Title = endpoint.Name;
+            node.Config = new RequestNodeConfig
+            {
+                Method = endpoint.Method,
+                Url = CombineUrl(service?.BaseUrl, endpoint.Path),
+                Headers = DeserializeHeaders(endpoint.DefaultHeaders),
+                BodyKind = BodyKind.Json,
+                Body = endpoint.DefaultBody,
+            };
+            node.Selected += OnNodeSelected;
+
+            _undo.Execute(new AddNodeCommand(Nodes, node, RecomputeConnectivity));
+            _statusBar.SetMessage($"Added '{endpoint.Name}' as an API node.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to add endpoint {EndpointId} to workflow {WorkflowId}.", endpointId, _workflowId);
+            _statusBar.SetMessage("Failed to add the dropped endpoint.");
+        }
     }
 
     partial void OnSelectedNodeChanged(NodeViewModel? value) => Properties.Load(value);
@@ -357,6 +409,38 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
             SourcePort = c.Source.Key,
             TargetPort = c.Target.Key,
         }).ToList();
+
+    private static string CombineUrl(string? baseUrl, string path)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return path;
+        }
+
+        if (string.IsNullOrEmpty(path))
+        {
+            return baseUrl;
+        }
+
+        return $"{baseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
+    }
+
+    private static List<HttpHeader> DeserializeHeaders(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<HttpHeader>>(json, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
     private bool HasSelectedNode() => SelectedNode is not null;
 

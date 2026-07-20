@@ -48,8 +48,9 @@ Plugin contract (`ApiTestingStudio.Plugin.Abstractions`):
 The orchestration around the importers lives in the Application layer: `ISourceFormatDetector`
 (auto-detect), `IImportOrchestrator` (fetch → detect → parse → preview → merge), `IDefinitionFetcher`
 (user-triggered, offline-first URL fetch + auto-probe), and `ICatalogMerger` (transactional commit
-into the catalog). OpenAPI/Swagger parsing uses the `Microsoft.OpenApi.Readers` package (JSON + YAML,
-2.0 + 3.x), referenced only by the `Import.OpenApi` / `Import.Scalar` plugins.
+into the catalog). OpenAPI/Swagger parsing uses `Microsoft.OpenApi` v2 (JSON built in; YAML via the
+`Microsoft.OpenApi.YamlReader` add-on) — Swagger 2.0 and OpenAPI 3.0 **and 3.1**, referenced only by
+the `Import.OpenApi` / `Import.Scalar` plugins.
 
 Implementations ship as `Import.*` plugins (e.g. `Import.Curl`, `Import.OpenApi`, `Import.Postman`,
 `Import.Scalar`). The auto-detection probe selects the appropriate `IImporter` by trying candidate

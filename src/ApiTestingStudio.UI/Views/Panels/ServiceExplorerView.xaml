@@ -57,7 +57,10 @@
                   ContextMenu="{StaticResource NodeContextMenu}"
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling"
-                  ScrollViewer.CanContentScroll="True">
+                  ScrollViewer.CanContentScroll="True"
+                  PreviewMouseLeftButtonDown="OnTreePreviewLeftButtonDown"
+                  PreviewMouseLeftButtonUp="OnTreePreviewLeftButtonUp"
+                  PreviewMouseMove="OnTreePreviewMouseMove">
 
             <TreeView.ItemContainerStyle>
                 <Style TargetType="TreeViewItem">

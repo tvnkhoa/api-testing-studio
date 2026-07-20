@@ -1,15 +1,17 @@
+using System.Net.Http;
 using System.Text.Json;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
 using ApiTestingStudio.Plugin.Abstractions.Importing;
-using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Readers;
+using Microsoft.OpenApi;
+using Microsoft.OpenApi.Reader;
+using Microsoft.OpenApi.YamlReader;
 
 namespace ApiTestingStudio.Import.OpenApi;
 
 /// <summary>
-/// Maps an OpenAPI 3.x / Swagger 2.0 document (JSON or YAML) into a single <see cref="Service"/> plus
-/// one <see cref="Endpoint"/> per (path, HTTP method) operation. Shared by the OpenAPI and Scalar
+/// Maps an OpenAPI 3.1 / 3.0 / Swagger 2.0 document (JSON or YAML) into a single <see cref="Service"/>
+/// plus one <see cref="Endpoint"/> per (path, HTTP method) operation. Shared by the OpenAPI and Scalar
 /// importers (Scalar reference endpoints expose an underlying OpenAPI document).
 /// </summary>
 public static class OpenApiEndpointMapper
@@ -21,16 +23,27 @@ public static class OpenApiEndpointMapper
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(content);
 
-        var document = new OpenApiStringReader().Read(content, out var diagnostic);
+        // v2 registers the JSON reader by default; add YAML so we keep accepting both formats. The
+        // format hint is derived from the content (a JSON document starts with '{').
+        var settings = new OpenApiReaderSettings();
+        settings.AddYamlReader();
+
+        var format = content.TrimStart().StartsWith('{') ? OpenApiConstants.Json : OpenApiConstants.Yaml;
+        var result = OpenApiDocument.Parse(content, format, settings);
+
+        var document = result.Document;
         if (document is null)
         {
-            throw new InvalidOperationException("The OpenAPI document could not be parsed.");
+            var reasons = result.Diagnostic?.Errors.Count > 0
+                ? string.Join("; ", result.Diagnostic.Errors.Select(e => e.Message))
+                : "unknown error";
+            throw new InvalidOperationException($"The OpenAPI document could not be parsed: {reasons}");
         }
 
         // A document with no paths and reader errors is effectively unusable — surface the reasons.
-        if ((document.Paths is null || document.Paths.Count == 0) && diagnostic.Errors.Count > 0)
+        if ((document.Paths is null || document.Paths.Count == 0) && result.Diagnostic?.Errors.Count > 0)
         {
-            var reasons = string.Join("; ", diagnostic.Errors.Select(e => e.Message));
+            var reasons = string.Join("; ", result.Diagnostic.Errors.Select(e => e.Message));
             throw new InvalidOperationException($"The OpenAPI document is invalid: {reasons}");
         }
 
@@ -67,9 +80,9 @@ public static class OpenApiEndpointMapper
                     continue;
                 }
 
-                foreach (var (operationType, operation) in item.Operations)
+                foreach (var (method, operation) in item.Operations)
                 {
-                    if (!TryMapVerb(operationType, out var verb))
+                    if (!TryMapVerb(method, out var verb))
                     {
                         continue;
                     }
@@ -104,25 +117,28 @@ public static class OpenApiEndpointMapper
 
         var headers = operation.Parameters
             .Where(p => p.In == ParameterLocation.Header && !string.IsNullOrWhiteSpace(p.Name))
-            .Select(p => new HttpHeader(p.Name, string.Empty))
+            .Select(p => new HttpHeader(p.Name!, string.Empty))
             .ToList();
 
         return headers.Count == 0 ? null : JsonSerializer.Serialize(headers, HeaderJsonOptions);
     }
 
-    private static bool TryMapVerb(OperationType operationType, out HttpVerb verb)
+    /// <summary>
+    /// Maps the HTTP method key (v2 keys operations by <see cref="HttpMethod"/>) to our
+    /// <see cref="HttpVerb"/>. TRACE has no <see cref="HttpVerb"/> equivalent and is skipped.
+    /// </summary>
+    private static bool TryMapVerb(HttpMethod method, out HttpVerb verb)
     {
-        switch (operationType)
-        {
-            case OperationType.Get: verb = HttpVerb.Get; return true;
-            case OperationType.Post: verb = HttpVerb.Post; return true;
-            case OperationType.Put: verb = HttpVerb.Put; return true;
-            case OperationType.Patch: verb = HttpVerb.Patch; return true;
-            case OperationType.Delete: verb = HttpVerb.Delete; return true;
-            case OperationType.Head: verb = HttpVerb.Head; return true;
-            case OperationType.Options: verb = HttpVerb.Options; return true;
-            default: verb = HttpVerb.Get; return false; // Trace has no HttpVerb equivalent.
-        }
+        if (method == HttpMethod.Get) { verb = HttpVerb.Get; return true; }
+        if (method == HttpMethod.Post) { verb = HttpVerb.Post; return true; }
+        if (method == HttpMethod.Put) { verb = HttpVerb.Put; return true; }
+        if (method == HttpMethod.Patch) { verb = HttpVerb.Patch; return true; }
+        if (method == HttpMethod.Delete) { verb = HttpVerb.Delete; return true; }
+        if (method == HttpMethod.Head) { verb = HttpVerb.Head; return true; }
+        if (method == HttpMethod.Options) { verb = HttpVerb.Options; return true; }
+
+        verb = HttpVerb.Get;
+        return false;
     }
 
     private static string? FirstNonEmpty(params string?[] candidates) =>

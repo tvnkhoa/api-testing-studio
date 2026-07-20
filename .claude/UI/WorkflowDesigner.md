@@ -14,7 +14,8 @@ and wiring data between them, with **no scripting**.
   `Parallel`, `Switch`, `Variable`, `Assertion`). Each node exposes typed input/output ports.
 - **Edges** — connections drag from an output port to an input port, creating a `NodeConnection`.
 - **Drag & drop** — a node palette (toolbox) supplies draggable node types onto the canvas;
-  Endpoints can be dropped from the Explorer to create pre-configured `Api` nodes (future).
+  Endpoints can also be dragged from the Service Explorer onto the canvas to create a pre-configured
+  `Api` node (method, resolved URL, default headers and body pulled from the saved endpoint).
 - **Visual data mapping** — an output field of one node (e.g. `Login.token`) is wired to a later
   node's input without code; mappings resolve through the variable substitution engine.
 - **Zoom / pan** and a **minimap** for large graphs (both Nodify features).
@@ -49,6 +50,12 @@ node to its registered `IWorkflowNode`. New node kinds arrive as plugins without
 - Graph ↔ domain mapping is done by the UI-side `GraphMapper` (+ `INodeViewModelFactory`), using the
   Application `NodePortCatalog` for port names so the designer can only produce engine-traversable
   edges. `ConnectorValidator` (Application) rejects self/duplicate/unknown-port/wrong-direction edges.
+- **Endpoint drop:** the Service Explorer starts an endpoint drag (payload = endpoint id, via the
+  shared `DragFormats.EndpointRef` key); the canvas `Drop` handler calls
+  `WorkflowEditorViewModel.AddApiNodeFromEndpointAsync`, which resolves the endpoint + its service
+  (`IEndpointRepository`/`IServiceRepository`), builds a `RequestNodeConfig` (URL composed from the
+  service base URL + endpoint path) and adds the node through the undo stack. Drag-source and
+  drop-target views share the format-key contract via `DragFormats` (no magic strings).
 - Material Design iconography per node kind; verb colour coding via `HttpVerbToBrushConverter` and
   live per-node status via `RunStatusToBrushConverter` (`Semantic.*` tokens); status always shows a
   label, never colour alone.
@@ -62,7 +69,6 @@ node to its registered `IWorkflowNode`. New node kinds arrive as plugins without
 
 ## Open Questions / Future
 
-- Drag Endpoints from the Explorer directly onto the canvas as `Api` nodes.
 - Sub-workflows / reusable node groups; auto-layout of imported graphs.
 - Visual diff of two workflow runs.
 - Optional sandboxed scripting node (deliberately deferred).

@@ -73,6 +73,52 @@ public sealed class ImporterParseTests
     }
 
     [Fact]
+    public async Task OpenApi_parses_3_1_document_with_31_specific_schema()
+    {
+        // OpenAPI 3.1.1 with 3.1-only constructs: JSON-Schema `type` as an array (nullable) and
+        // `exclusiveMinimum` as a number. The 1.x reader rejected 3.1 outright; 2.x parses it.
+        const string json = """
+        {
+          "openapi": "3.1.1",
+          "info": { "title": "Modern API", "version": "v1" },
+          "servers": [ { "url": "https://api.modern.test/" } ],
+          "paths": {
+            "/orders/{id}": {
+              "get": {
+                "operationId": "GetOrder",
+                "summary": "Get an order",
+                "parameters": [
+                  { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+                  { "name": "X-Tenant", "in": "header", "schema": { "type": ["string", "null"] } }
+                ]
+              },
+              "delete": {
+                "operationId": "DeleteOrder",
+                "requestBody": {
+                  "content": { "application/json": { "schema": { "type": "integer", "exclusiveMinimum": 0 } } }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var importer = new OpenApiImporter();
+        importer.CanImport(new ImportSource("openapi", json)).Should().BeTrue();
+
+        var result = await importer.ImportAsync(new ImportSource("openapi", json));
+
+        result.Services.Should().ContainSingle().Which.Name.Should().Be("Modern API");
+        result.Services[0].BaseUrl.Should().Be("https://api.modern.test/");
+        result.Endpoints.Should().HaveCount(2);
+
+        var get = result.Endpoints.Should().ContainSingle(e => e.Method == HttpVerb.Get && e.Path == "/orders/{id}").Subject;
+        get.DefaultHeaders.Should().NotBeNull();
+        get.DefaultHeaders.Should().Contain("X-Tenant");
+        result.Endpoints.Should().Contain(e => e.Method == HttpVerb.Delete && e.Path == "/orders/{id}");
+    }
+
+    [Fact]
     public async Task OpenApi_parses_yaml()
     {
         const string yaml = """
