@@ -16,21 +16,102 @@
     <sys:Double x:Key="Spacing.Xl">24</sys:Double>
     <sys:Double x:Key="Spacing.Xxl">32</sys:Double>
 
+    <!--
+        Uniform Thickness variants of the same scale, so Margin/Padding can be set from the scale
+        (a Double cannot be used directly in a Thickness). Same values as above; no view should use
+        a raw literal margin/padding. Directional variants are added here on demand, never inlined.
+    -->
+    <Thickness x:Key="Spacing.Xs.Thickness">4</Thickness>
+    <Thickness x:Key="Spacing.Sm.Thickness">8</Thickness>
+    <Thickness x:Key="Spacing.Md.Thickness">12</Thickness>
+    <Thickness x:Key="Spacing.Lg.Thickness">16</Thickness>
+    <Thickness x:Key="Spacing.Xl.Thickness">24</Thickness>
+    <Thickness x:Key="Spacing.Xxl.Thickness">32</Thickness>
+
+    <!-- Directional variants (added on demand). Right-only gap for icon/badge → label pairs. -->
+    <Thickness x:Key="Spacing.Sm.RightThickness">0,0,8,0</Thickness>
+    <Thickness x:Key="Spacing.Xs.RightThickness">0,0,4,0</Thickness>
+    <Thickness x:Key="Spacing.Md.RightThickness">0,0,12,0</Thickness>
+    <Thickness x:Key="Spacing.Lg.RightThickness">0,0,16,0</Thickness>
+    <Thickness x:Key="Spacing.Sm.LeftThickness">8,0,0,0</Thickness>
+    <Thickness x:Key="Spacing.Sm.TopThickness">0,8,0,0</Thickness>
+    <Thickness x:Key="Spacing.Md.TopThickness">0,12,0,0</Thickness>
+    <Thickness x:Key="Spacing.Lg.TopThickness">0,16,0,0</Thickness>
+    <Thickness x:Key="Spacing.Sm.BottomThickness">0,0,0,8</Thickness>
+    <Thickness x:Key="Spacing.Md.BottomThickness">0,0,0,12</Thickness>
+    <Thickness x:Key="Spacing.Xs.LeftThickness">4,0,0,0</Thickness>
+    <Thickness x:Key="Spacing.Xs.TopThickness">0,4,0,0</Thickness>
+    <Thickness x:Key="Spacing.Xs.BottomThickness">0,0,0,4</Thickness>
+    <Thickness x:Key="Spacing.Md.LeftThickness">12,0,0,0</Thickness>
+    <Thickness x:Key="Spacing.Lg.LeftThickness">16,0,0,0</Thickness>
+    <Thickness x:Key="Spacing.Sm.VerticalThickness">0,8</Thickness>
+    <!--
+        Composite margins that combine two scale steps and have no single-axis name:
+        · Separator — major gap above a section rule, tight gap below (before the section header).
+        · SubItemIndent — indent for content nested under a RadioButton/CheckBox, aligned to the
+          control's label glyph (the 20px lead is an intentional alignment value, off the step scale).
+    -->
+    <Thickness x:Key="Spacing.Separator.Thickness">0,16,0,8</Thickness>
+    <Thickness x:Key="Spacing.SubItemIndent.Thickness">20,4,0,0</Thickness>
+    <!-- Horizontal (left+right) and vertical (top+bottom) pairs. -->
+    <Thickness x:Key="Spacing.Sm.HorizontalThickness">8,0</Thickness>
+    <Thickness x:Key="Spacing.Xs.VerticalThickness">0,4</Thickness>
+
+    <!-- Control padding (button chrome). Standard for regular buttons; Compact for inline/row actions. -->
+    <Thickness x:Key="Button.Padding">12,4</Thickness>
+    <Thickness x:Key="Button.Padding.Compact">6,2</Thickness>
+
     <!-- Typography ramp (font sizes) -->
     <sys:Double x:Key="Typography.Headline">28</sys:Double>
     <sys:Double x:Key="Typography.Title">20</sys:Double>
     <sys:Double x:Key="Typography.Body">14</sys:Double>
     <sys:Double x:Key="Typography.Caption">12</sys:Double>
+    <!-- Overline: micro uppercase labels / badges (e.g. HTTP verb chips). Smallest legible step. -->
+    <sys:Double x:Key="Typography.Overline">10</sys:Double>
 
     <!-- Semantic state colours + brushes -->
     <Color x:Key="Semantic.Success.Color">#2E7D32</Color>
     <Color x:Key="Semantic.Error.Color">#C62828</Color>
     <Color x:Key="Semantic.Warning.Color">#EF6C00</Color>
     <Color x:Key="Semantic.Info.Color">#1565C0</Color>
+    <!-- Muted / neutral state (e.g. a skipped assertion): reads as "not applicable", never as pass or fail. -->
+    <Color x:Key="Semantic.Muted.Color">#9E9E9E</Color>
 
     <SolidColorBrush x:Key="Semantic.Success.Brush" Color="{StaticResource Semantic.Success.Color}" />
     <SolidColorBrush x:Key="Semantic.Error.Brush" Color="{StaticResource Semantic.Error.Color}" />
     <SolidColorBrush x:Key="Semantic.Warning.Brush" Color="{StaticResource Semantic.Warning.Color}" />
     <SolidColorBrush x:Key="Semantic.Info.Brush" Color="{StaticResource Semantic.Info.Color}" />
+    <SolidColorBrush x:Key="Semantic.Muted.Brush" Color="{StaticResource Semantic.Muted.Color}" />
+
+    <!-- Text drawn on a saturated accent/state fill (e.g. the HTTP verb chip). White in both themes. -->
+    <Color x:Key="Text.OnAccent.Color">White</Color>
+    <SolidColorBrush x:Key="Text.OnAccent.Brush" Color="{StaticResource Text.OnAccent.Color}" />
+
+    <!--
+        Neutral border / divider for subtle 1px separators between surfaces (panel edges, list-row
+        rules). Centralises the formerly inlined #22000000 hex; value is unchanged so appearance is
+        identical. A theme-aware variant (adapting to the dark palette) is tracked future work.
+    -->
+    <Color x:Key="Border.Divider.Color">#22000000</Color>
+    <SolidColorBrush x:Key="Border.Divider.Brush" Color="{StaticResource Border.Divider.Color}" />
+
+    <!--
+        Card outline — a slightly heavier neutral than the divider, for the 1px border around raised
+        card surfaces (dashboard widgets, wizard steps). Centralises the formerly inlined #33888888
+        hex; value unchanged. Unifying the neutral-border palette (divider vs card) into one adaptive
+        set is a future design-system refinement (a deliberate visual change, so out of scope here).
+    -->
+    <Color x:Key="Border.Card.Color">#33888888</Color>
+    <SolidColorBrush x:Key="Border.Card.Brush" Color="{StaticResource Border.Card.Color}" />
+
+    <!--
+        Muted surface fills — subtle neutral-grey tints for raised panels/callouts (metrics panel,
+        status strip). Two strengths preserve the formerly inlined #18808080 / #22808080 hex exactly.
+        Candidates to collapse into a single elevation scale once dark-theme surfaces are addressed.
+    -->
+    <Color x:Key="Surface.Muted.Color">#18808080</Color>
+    <Color x:Key="Surface.MutedStrong.Color">#22808080</Color>
+    <SolidColorBrush x:Key="Surface.Muted.Brush" Color="{StaticResource Surface.Muted.Color}" />
+    <SolidColorBrush x:Key="Surface.MutedStrong.Brush" Color="{StaticResource Surface.MutedStrong.Color}" />
 
 </ResourceDictionary>

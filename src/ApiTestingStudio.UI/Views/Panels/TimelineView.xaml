@@ -12,26 +12,27 @@
         </Grid.ColumnDefinitions>
 
         <!-- Run list -->
-        <DockPanel Grid.Column="0" Margin="8">
-            <TextBlock DockPanel.Dock="Top" Text="Runs" FontWeight="SemiBold" Margin="0,0,0,6" />
+        <DockPanel Grid.Column="0" Margin="{StaticResource Spacing.Sm.Thickness}">
+            <TextBlock DockPanel.Dock="Top" Text="Runs" FontWeight="SemiBold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
             <TextBlock DockPanel.Dock="Top"
                        Text="No runs recorded yet."
                        Opacity="0.7"
                        Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
             <ListBox ItemsSource="{Binding Runs}"
                      SelectedItem="{Binding SelectedRun}"
+                     AutomationProperties.Name="Runs"
                      VirtualizingPanel.IsVirtualizing="True"
                      VirtualizingPanel.VirtualizationMode="Recycling"
                      ScrollViewer.CanContentScroll="True">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="0,2">
+                        <StackPanel Margin="{StaticResource Spacing.Xs.VerticalThickness}">
                             <TextBlock Text="{Binding Display}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                             <StackPanel Orientation="Horizontal" Opacity="0.7">
                                 <TextBlock Text="{Binding Source}" />
-                                <TextBlock Text="·" Margin="6,0" />
+                                <TextBlock Text="·" Margin="{StaticResource Spacing.Sm.HorizontalThickness}" />
                                 <TextBlock Text="{Binding Status}" />
-                                <TextBlock Text="·" Margin="6,0" />
+                                <TextBlock Text="·" Margin="{StaticResource Spacing.Sm.HorizontalThickness}" />
                                 <TextBlock Text="{Binding When}" />
                             </StackPanel>
                         </StackPanel>
@@ -41,12 +42,13 @@
         </DockPanel>
 
         <!-- Detail: step tree + replay -->
-        <DockPanel Grid.Column="1" Margin="0,8,8,8">
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,6">
-                <Button Content="Refresh" Padding="12,2" Command="{Binding RefreshCommand}" Margin="0,0,8,0" />
-                <Button Content="Replay" Padding="12,2" Command="{Binding ReplayCommand}" />
+        <DockPanel Grid.Column="1" Margin="{StaticResource Spacing.Sm.Thickness}">
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="{StaticResource Spacing.Sm.BottomThickness}">
+                <Button Content="Refresh" Command="{Binding RefreshCommand}" Margin="{StaticResource Spacing.Sm.RightThickness}" />
+                <Button Content="Replay" Command="{Binding ReplayCommand}" />
             </StackPanel>
             <TreeView ItemsSource="{Binding Steps}"
+                      AutomationProperties.Name="Run steps"
                       VirtualizingPanel.IsVirtualizing="True"
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       ScrollViewer.CanContentScroll="True">
@@ -54,8 +56,8 @@
                     <HierarchicalDataTemplate DataType="{x:Type panels:RunStepNode}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                            <TextBlock Text="{Binding Kind}" Opacity="0.6" Margin="8,0,0,0" />
-                            <TextBlock Text="{Binding Detail}" Opacity="0.85" Margin="12,0,0,0" />
+                            <TextBlock Text="{Binding Kind}" Opacity="0.6" Margin="{StaticResource Spacing.Sm.LeftThickness}" />
+                            <TextBlock Text="{Binding Detail}" Opacity="0.85" Margin="{StaticResource Spacing.Md.LeftThickness}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
                 </TreeView.Resources>

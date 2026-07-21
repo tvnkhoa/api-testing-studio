@@ -1,5 +1,7 @@
 # Workflow Designer
 
+> UX rationale & benchmark (n8n / Node-RED): see `../UI_BENCHMARK.md` (Feature Mapping, Create/Execute Workflow journeys).
+
 ## Overview
 
 The **Workflow Designer** is the visual canvas for composing a workflow as a graph of nodes and

@@ -13,7 +13,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Main request/response area -->
-        <Grid Grid.Column="0" Margin="8">
+        <Grid Grid.Column="0" Margin="{StaticResource Spacing.Sm.Thickness}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="2*" />
@@ -31,18 +31,18 @@
                 </Grid.ColumnDefinitions>
                 <ComboBox Grid.Column="0" MinWidth="90" VerticalContentAlignment="Center"
                           ItemsSource="{Binding Builder.Methods}"
-                          SelectedItem="{Binding Builder.Method}" />
-                <TextBox Grid.Column="1" Margin="6,0" VerticalContentAlignment="Center"
+                          SelectedItem="{Binding Builder.Method}"
+                          AutomationProperties.Name="HTTP method" />
+                <TextBox Grid.Column="1" Margin="{StaticResource Spacing.Sm.HorizontalThickness}" VerticalContentAlignment="Center"
                          Text="{Binding Builder.Url, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Request URL"
                          ToolTip="Request URL" />
-                <Button Grid.Column="2" Content="Send" MinWidth="72" Padding="12,4"
-                        Command="{Binding SendCommand}" />
-                <Button Grid.Column="3" Content="Cancel" MinWidth="60" Margin="6,0,0,0" Padding="8,4"
-                        Command="{Binding SendCancelCommand}" />
+                <Button Grid.Column="2" Content="Send" MinWidth="72"                        Command="{Binding SendCommand}" />
+                <Button Grid.Column="3" Content="Cancel" MinWidth="60" Margin="{StaticResource Spacing.Sm.LeftThickness}"                        Command="{Binding SendCancelCommand}" />
             </Grid>
 
             <!-- Request builder tabs -->
-            <TabControl Grid.Row="1" Margin="0,8,0,0">
+            <TabControl Grid.Row="1" Margin="{StaticResource Spacing.Sm.TopThickness}">
                 <TabItem Header="Params">
                     <DataGrid ItemsSource="{Binding Builder.QueryParams}"
                               AutoGenerateColumns="False" CanUserAddRows="True" HeadersVisibility="Column">
@@ -78,7 +78,8 @@
                 </TabItem>
             </TabControl>
 
-            <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" Margin="0,4" />
+            <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" Margin="{StaticResource Spacing.Xs.VerticalThickness}"
+                          AutomationProperties.Name="Resize request and response areas" />
 
             <!-- Response -->
             <Grid Grid.Row="3">
@@ -89,12 +90,12 @@
 
                 <StackPanel Grid.Row="0" Orientation="Horizontal"
                             Visibility="{Binding Response.HasResponse, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="{Binding Response.StatusText}" FontWeight="SemiBold" Margin="0,0,16,0" />
-                    <TextBlock Text="{Binding Response.SizeText}" Margin="0,0,16,0" />
+                    <TextBlock Text="{Binding Response.StatusText}" FontWeight="SemiBold" Margin="{StaticResource Spacing.Lg.RightThickness}" />
+                    <TextBlock Text="{Binding Response.SizeText}" Margin="{StaticResource Spacing.Lg.RightThickness}" />
                     <TextBlock Text="{Binding Response.TimingText}" Opacity="0.8" />
                 </StackPanel>
 
-                <TabControl Grid.Row="1" Margin="0,6,0,0">
+                <TabControl Grid.Row="1" Margin="{StaticResource Spacing.Sm.TopThickness}">
                     <TabItem Header="Body">
                         <ContentControl Content="{Binding Response.Body}" />
                     </TabItem>
@@ -111,10 +112,11 @@
             </Grid>
         </Grid>
 
-        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                      AutomationProperties.Name="Resize request/response and history areas" />
 
         <!-- History -->
-        <DockPanel Grid.Column="2" Margin="4,8,8,8">
+        <DockPanel Grid.Column="2" Margin="{StaticResource Spacing.Sm.Thickness}">
             <Grid DockPanel.Dock="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -122,23 +124,22 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="History" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <Button Grid.Column="1" Content="Replay" Margin="0,0,4,0" Padding="6,2"
-                        Command="{Binding ReplayCommand}" />
-                <Button Grid.Column="2" Content="Clear" Padding="6,2"
-                        Command="{Binding ClearHistoryCommand}" />
+                <Button Grid.Column="1" Content="Replay" Margin="{StaticResource Spacing.Xs.RightThickness}"                        Command="{Binding ReplayCommand}" />
+                <Button Grid.Column="2" Content="Clear"                        Command="{Binding ClearHistoryCommand}" />
             </Grid>
 
-            <ListBox Margin="0,6,0,0"
+            <ListBox Margin="{StaticResource Spacing.Sm.TopThickness}"
                      ItemsSource="{Binding History}"
-                     SelectedItem="{Binding SelectedHistoryEntry}">
+                     SelectedItem="{Binding SelectedHistoryEntry}"
+                     AutomationProperties.Name="Request history">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Method}" FontWeight="SemiBold" Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding Method}" FontWeight="SemiBold" Margin="{StaticResource Spacing.Sm.RightThickness}" />
                                 <TextBlock Text="{Binding StatusCode}" />
                             </StackPanel>
-                            <TextBlock Text="{Binding TimestampUtc, StringFormat=g}" FontSize="10" Opacity="0.7" />
+                            <TextBlock Text="{Binding TimestampUtc, StringFormat=g}" FontSize="{StaticResource Typography.Caption}" Opacity="0.7" />
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

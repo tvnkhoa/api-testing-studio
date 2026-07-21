@@ -29,16 +29,16 @@
         </ToolBarTray>
 
         <!-- Palette (left): drag a kind onto the canvas, or click to add -->
-        <Border DockPanel.Dock="Left" Width="140" BorderThickness="0,0,1,0" BorderBrush="#22000000">
+        <Border DockPanel.Dock="Left" Width="140" BorderThickness="0,0,1,0" BorderBrush="{StaticResource Border.Divider.Brush}">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Top" Text="Nodes" FontWeight="Bold" Margin="8,6" />
+                <TextBlock DockPanel.Dock="Top" Text="Nodes" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.Thickness}" />
                 <ItemsControl x:Name="Palette" ItemsSource="{Binding Palette.Items}"
+                              AutomationProperties.Name="Node palette"
                               PreviewMouseLeftButtonDown="Palette_PreviewMouseLeftButtonDown"
                               PreviewMouseMove="Palette_PreviewMouseMove">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Button Content="{Binding Label}" Margin="6,2" Padding="8,4"
-                                    HorizontalContentAlignment="Left"
+                            <Button Content="{Binding Label}" Margin="{StaticResource Spacing.Xs.Thickness}"                                    HorizontalContentAlignment="Left"
                                     Command="{Binding DataContext.AddNodeCommand,
                                         RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                     CommandParameter="{Binding Kind}"
@@ -50,15 +50,16 @@
         </Border>
 
         <!-- Property inspector (right) -->
-        <Border DockPanel.Dock="Right" Width="260" BorderThickness="1,0,0,0" BorderBrush="#22000000">
-            <ContentControl Content="{Binding Properties}" Margin="8">
+        <Border DockPanel.Dock="Right" Width="260" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Border.Divider.Brush}">
+            <ContentControl Content="{Binding Properties}" Margin="{StaticResource Spacing.Sm.Thickness}">
                 <ContentControl.ContentTemplate>
                     <DataTemplate DataType="{x:Type wf:NodePropertiesViewModel}">
                         <StackPanel>
-                            <TextBlock Text="Properties" FontWeight="Bold" Margin="0,0,0,8" />
+                            <TextBlock Text="Properties" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
                             <StackPanel Visibility="{Binding HasNode, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="Name" Margin="0,4,0,0" />
-                                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}" />
+                                <TextBlock Text="Name" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                <TextBox Text="{Binding Title, UpdateSourceTrigger=LostFocus}"
+                                         AutomationProperties.Name="Node name" />
 
                                 <!-- Request -->
                                 <StackPanel>
@@ -72,13 +73,13 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
-                                    <TextBlock Text="Method" Margin="0,8,0,0" />
-                                    <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding RequestMethod}" />
-                                    <TextBlock Text="URL" Margin="0,4,0,0" />
-                                    <TextBox Text="{Binding RequestUrl, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBlock Text="Body" Margin="0,4,0,0" />
+                                    <TextBlock Text="Method" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+                                    <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding RequestMethod}" AutomationProperties.Name="Method" />
+                                    <TextBlock Text="URL" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <TextBox Text="{Binding RequestUrl, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="URL" />
+                                    <TextBlock Text="Body" Margin="{StaticResource Spacing.Xs.TopThickness}" />
                                     <TextBox Text="{Binding RequestBody, UpdateSourceTrigger=LostFocus}"
-                                             AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap" />
+                                             AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap" AutomationProperties.Name="Body" />
                                 </StackPanel>
 
                                 <!-- Condition -->
@@ -93,12 +94,12 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
-                                    <TextBlock Text="Left" Margin="0,8,0,0" />
-                                    <TextBox Text="{Binding ConditionLeft, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBlock Text="Operator" Margin="0,4,0,0" />
-                                    <ComboBox ItemsSource="{Binding Operators}" SelectedItem="{Binding ConditionOperator}" />
-                                    <TextBlock Text="Right" Margin="0,4,0,0" />
-                                    <TextBox Text="{Binding ConditionRight, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Left" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+                                    <TextBox Text="{Binding ConditionLeft, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Left" />
+                                    <TextBlock Text="Operator" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <ComboBox ItemsSource="{Binding Operators}" SelectedItem="{Binding ConditionOperator}" AutomationProperties.Name="Operator" />
+                                    <TextBlock Text="Right" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <TextBox Text="{Binding ConditionRight, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Right" />
                                 </StackPanel>
 
                                 <!-- Loop -->
@@ -113,14 +114,14 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
-                                    <TextBlock Text="Collection expression" Margin="0,8,0,0" />
-                                    <TextBox Text="{Binding LoopCollectionExpression, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBlock Text="Count" Margin="0,4,0,0" />
-                                    <TextBox Text="{Binding LoopCount, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBlock Text="Item variable" Margin="0,4,0,0" />
-                                    <TextBox Text="{Binding LoopItemVariable, UpdateSourceTrigger=LostFocus}" />
-                                    <TextBlock Text="Index variable" Margin="0,4,0,0" />
-                                    <TextBox Text="{Binding LoopIndexVariable, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Collection expression" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+                                    <TextBox Text="{Binding LoopCollectionExpression, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Collection expression" />
+                                    <TextBlock Text="Count" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <TextBox Text="{Binding LoopCount, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Count" />
+                                    <TextBlock Text="Item variable" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <TextBox Text="{Binding LoopItemVariable, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Item variable" />
+                                    <TextBlock Text="Index variable" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <TextBox Text="{Binding LoopIndexVariable, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Index variable" />
                                 </StackPanel>
 
                                 <!-- Parallel -->
@@ -135,8 +136,8 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
-                                    <TextBlock Text="Max degree of parallelism" Margin="0,8,0,0" />
-                                    <TextBox Text="{Binding ParallelDegree, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Max degree of parallelism" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+                                    <TextBox Text="{Binding ParallelDegree, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Max degree of parallelism" />
                                 </StackPanel>
 
                                 <!-- Delay -->
@@ -151,8 +152,8 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
-                                    <TextBlock Text="Delay (ms)" Margin="0,8,0,0" />
-                                    <TextBox Text="{Binding DelayMs, UpdateSourceTrigger=LostFocus}" />
+                                    <TextBlock Text="Delay (ms)" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+                                    <TextBox Text="{Binding DelayMs, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Delay (ms)" />
                                 </StackPanel>
 
                                 <!-- Assertion -->
@@ -167,23 +168,22 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
-                                    <TextBlock Text="Source node" Margin="0,8,0,0" />
-                                    <TextBox Text="{Binding AssertionSourceNode, UpdateSourceTrigger=LostFocus}" />
-                                    <DockPanel Margin="0,8,0,0">
+                                    <TextBlock Text="Source node" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+                                    <TextBox Text="{Binding AssertionSourceNode, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Source node" />
+                                    <DockPanel Margin="{StaticResource Spacing.Sm.TopThickness}">
                                         <TextBlock Text="Assertions" FontWeight="SemiBold" VerticalAlignment="Center" DockPanel.Dock="Left" />
-                                        <Button Content="Add" HorizontalAlignment="Right" Padding="8,2"
-                                                Command="{Binding AddAssertionCommand}" />
+                                        <Button Content="Add" HorizontalAlignment="Right"                                                Command="{Binding AddAssertionCommand}" />
                                     </DockPanel>
-                                    <ItemsControl ItemsSource="{Binding Assertions}" Margin="0,4,0,0">
+                                    <ItemsControl ItemsSource="{Binding Assertions}" Margin="{StaticResource Spacing.Xs.TopThickness}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type wf:AssertionRowViewModel}">
-                                                <Border BorderThickness="0,0,0,1" BorderBrush="#22000000" Padding="0,4">
+                                                <Border BorderThickness="0,0,0,1" BorderBrush="{StaticResource Border.Divider.Brush}" Padding="{StaticResource Spacing.Xs.VerticalThickness}">
                                                     <DockPanel>
-                                                        <Button Content="✕" DockPanel.Dock="Right" Margin="4,0,0,0" Padding="6,0"
+                                                        <Button Content="✕" DockPanel.Dock="Right" Margin="{StaticResource Spacing.Xs.LeftThickness}" Style="{StaticResource CompactButton}"
                                                                 ToolTip="Remove"
                                                                 Command="{Binding DataContext.RemoveAssertionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                 CommandParameter="{Binding}" />
-                                                        <Button Content="Edit" DockPanel.Dock="Right" Padding="6,0"
+                                                        <Button Content="Edit" DockPanel.Dock="Right" Style="{StaticResource CompactButton}"
                                                                 Command="{Binding DataContext.EditAssertionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                 CommandParameter="{Binding}" />
                                                         <TextBlock Text="{Binding Summary}" VerticalAlignment="Center"
@@ -204,6 +204,7 @@
         <!-- Canvas -->
         <Grid>
             <nodify:NodifyEditor x:Name="Editor"
+                                 AutomationProperties.Name="Workflow canvas"
                                  ItemsSource="{Binding Nodes}"
                                  Connections="{Binding Connections}"
                                  ConnectionCompletedCommand="{Binding ConnectCommand}"
@@ -240,7 +241,7 @@
                                 </DataTemplate>
                             </nodify:Node.OutputConnectorTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <Border Width="10" Height="10" CornerRadius="5" Margin="0,0,6,0"
+                                <Border Width="10" Height="10" CornerRadius="5" Margin="{StaticResource Spacing.Sm.RightThickness}"
                                         Background="{Binding Status, Converter={StaticResource StatusToBrush}}" />
                                 <TextBlock Text="{Binding Status}" />
                             </StackPanel>
@@ -264,7 +265,7 @@
 
             <!-- Minimap overlay -->
             <nodify:Minimap HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                            Width="200" Height="140" Margin="8"
+                            Width="200" Height="140" Margin="{StaticResource Spacing.Sm.Thickness}"
                             ItemsSource="{Binding Nodes}"
                             ItemsExtent="{Binding ItemsExtent, ElementName=Editor}"
                             ViewportLocation="{Binding ViewportLocation, ElementName=Editor, Mode=TwoWay}"

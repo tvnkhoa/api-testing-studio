@@ -13,6 +13,7 @@
                      UI assembly so the shell and every panel read from one palette. -->
                 <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Themes/MaterialTheme.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Themes/Tokens.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Themes/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/ApiTestingStudio.UI;component/Resources/PanelTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

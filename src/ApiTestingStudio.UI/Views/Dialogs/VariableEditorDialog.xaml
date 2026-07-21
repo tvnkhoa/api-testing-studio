@@ -7,14 +7,16 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
-    <StackPanel Margin="16">
+    <StackPanel Margin="{StaticResource Spacing.Lg.Thickness}">
         <TextBlock Text="Key" />
-        <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBox Text="{Binding Key, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Key" />
 
-        <TextBlock Text="Scope" Margin="0,12,0,0" />
-        <ComboBox ItemsSource="{Binding Scopes}" SelectedItem="{Binding Scope}" Margin="0,4,0,0" />
+        <TextBlock Text="Scope" Margin="{StaticResource Spacing.Md.TopThickness}" />
+        <ComboBox ItemsSource="{Binding Scopes}" SelectedItem="{Binding Scope}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                  AutomationProperties.Name="Scope" />
 
-        <StackPanel Margin="0,12,0,0">
+        <StackPanel Margin="{StaticResource Spacing.Md.TopThickness}">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -29,20 +31,22 @@
             <ComboBox ItemsSource="{Binding Environments}"
                       SelectedItem="{Binding SelectedEnvironment}"
                       DisplayMemberPath="Name"
-                      Margin="0,4,0,0" />
+                      Margin="{StaticResource Spacing.Xs.TopThickness}"
+                      AutomationProperties.Name="Environment" />
         </StackPanel>
 
-        <TextBlock Text="Value" Margin="0,12,0,0" />
+        <TextBlock Text="Value" Margin="{StaticResource Spacing.Md.TopThickness}" />
         <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,4,0,0"
+                 Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Value"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
                  MinLines="2" />
 
-        <CheckBox Content="Secret (encrypt value at rest)" IsChecked="{Binding IsSecret}" Margin="0,12,0,0" />
+        <CheckBox Content="Secret (encrypt value at rest)" IsChecked="{Binding IsSecret}" Margin="{StaticResource Spacing.Md.TopThickness}" />
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="0,0,8,0" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Spacing.Lg.TopThickness}">
+            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="{StaticResource Spacing.Sm.RightThickness}" />
             <Button Content="OK" IsDefault="True" MinWidth="80" IsEnabled="{Binding CanConfirm}" Click="OnConfirm" />
         </StackPanel>
     </StackPanel>

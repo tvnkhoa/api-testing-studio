@@ -7,28 +7,28 @@
         ResizeMode="CanResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="16">
+    <DockPanel Margin="{StaticResource Spacing.Lg.Thickness}">
 
-        <TextBlock DockPanel.Dock="Top" Text="Backup settings" FontWeight="Bold" Margin="0,0,0,8" />
+        <TextBlock DockPanel.Dock="Top" Text="Backup settings" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
 
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+        <StackPanel DockPanel.Dock="Top" Margin="{StaticResource Spacing.Md.BottomThickness}">
             <CheckBox Content="Automatically back up when the workspace is closed"
                       IsChecked="{Binding AutoBackupOnClose}" />
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" Margin="{StaticResource Spacing.Sm.TopThickness}">
                 <TextBlock Text="Keep this many backups per workspace:" VerticalAlignment="Center" />
-                <TextBox Width="60" Margin="8,0,0,0"
+                <TextBox Width="60" Margin="{StaticResource Spacing.Sm.LeftThickness}"
                          Text="{Binding BackupRetention, UpdateSourceTrigger=PropertyChanged}" />
-                <Button Content="Save Settings" MinWidth="100" Margin="16,0,0,0"
+                <Button Content="Save Settings" MinWidth="100" Margin="{StaticResource Spacing.Lg.LeftThickness}"
                         Command="{Binding SaveCommand}" />
             </StackPanel>
         </StackPanel>
 
-        <TextBlock DockPanel.Dock="Top" Text="Backups of this workspace" FontWeight="Bold" Margin="0,4,0,8" />
+        <TextBlock DockPanel.Dock="Top" Text="Backups of this workspace" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.VerticalThickness}" />
 
-        <TextBlock DockPanel.Dock="Bottom" Text="{Binding StatusMessage}" Margin="0,8,0,0"
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding StatusMessage}" Margin="{StaticResource Spacing.Sm.TopThickness}"
                    TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Spacing.Md.TopThickness}">
             <Button Content="Close" IsCancel="True" MinWidth="80" />
         </StackPanel>
 

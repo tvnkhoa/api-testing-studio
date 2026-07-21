@@ -1,11 +1,11 @@
 <UserControl x:Class="ApiTestingStudio.UI.Views.Panels.WelcomeDocumentView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StackPanel Margin="32" VerticalAlignment="Top">
+    <StackPanel Margin="{StaticResource Spacing.Xxl.Thickness}" VerticalAlignment="Top">
         <TextBlock Text="{Binding Headline}"
-                   FontSize="28"
+                   FontSize="{StaticResource Typography.Headline}"
                    FontWeight="Light"
-                   Margin="0,0,0,12" />
+                   Margin="{StaticResource Spacing.Md.BottomThickness}" />
         <TextBlock Text="{Binding Message}"
                    TextWrapping="Wrap"
                    MaxWidth="520"

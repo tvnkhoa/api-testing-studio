@@ -15,6 +15,7 @@
         <ListBox ItemsSource="{Binding Workflows}"
                  SelectedItem="{Binding SelectedWorkflow}"
                  DisplayMemberPath="Name"
-                 Margin="4" />
+                 Margin="{StaticResource Spacing.Xs.Thickness}"
+                 AutomationProperties.Name="Workflows" />
     </DockPanel>
 </UserControl>

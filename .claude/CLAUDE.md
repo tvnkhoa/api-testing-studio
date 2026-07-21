@@ -40,7 +40,8 @@ For **every** task:
 
 1. Read `CLAUDE.md`.
 2. Read the related architecture documents (`ARCHITECTURE.md`, `CODING_STANDARDS.md`, relevant
-   `FEATURES/*`, `API/*`, `UI/*`).
+   `FEATURES/*`, `API/*`, `UI/*`). For any UI work, also read `UI_BENCHMARK.md` (UX foundation &
+   design system), `UI_INFORMATION_ARCHITECTURE.md` (IA & user flows), and `UI_GUIDELINES.md`.
 3. Read the current sprint in `TASKS/`.
 4. Understand the existing implementation before proposing changes.
 5. Propose an implementation plan. **Wait for confirmation if the architecture changes.**

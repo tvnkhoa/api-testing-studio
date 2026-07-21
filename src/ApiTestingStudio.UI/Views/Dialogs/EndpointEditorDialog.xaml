@@ -7,34 +7,38 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
-    <StackPanel Margin="16">
+    <StackPanel Margin="{StaticResource Spacing.Lg.Thickness}">
         <TextBlock Text="Name" />
-        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Name" />
 
-        <Grid Margin="0,12,0,0">
+        <Grid Margin="{StaticResource Spacing.Md.TopThickness}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+            <StackPanel Grid.Column="0" Margin="{StaticResource Spacing.Md.RightThickness}">
                 <TextBlock Text="Method" />
-                <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" MinWidth="110" Margin="0,4,0,0" />
+                <ComboBox ItemsSource="{Binding Methods}" SelectedItem="{Binding Method}" MinWidth="110" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                          AutomationProperties.Name="Method" />
             </StackPanel>
             <StackPanel Grid.Column="1">
                 <TextBlock Text="Path" />
-                <TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+                <TextBox Text="{Binding Path, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                         AutomationProperties.Name="Path" />
             </StackPanel>
         </Grid>
 
-        <TextBlock Text="Description" Margin="0,12,0,0" />
+        <TextBlock Text="Description" Margin="{StaticResource Spacing.Md.TopThickness}" />
         <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                 Margin="0,4,0,0"
+                 Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Description"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
                  MinLines="2" />
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="0,0,8,0" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Spacing.Lg.TopThickness}">
+            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="{StaticResource Spacing.Sm.RightThickness}" />
             <Button Content="OK" IsDefault="True" MinWidth="80" IsEnabled="{Binding CanConfirm}" Click="OnConfirm" />
         </StackPanel>
     </StackPanel>

@@ -7,21 +7,24 @@
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner">
-    <StackPanel Margin="16">
+    <StackPanel Margin="{StaticResource Spacing.Lg.Thickness}">
         <TextBlock Text="Name" />
-        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Name" />
 
-        <TextBlock Text="Description" Margin="0,12,0,0" />
-        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBlock Text="Description" Margin="{StaticResource Spacing.Md.TopThickness}" />
+        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Description" />
 
-        <TextBlock Text="Target (endpoint or workflow)" Margin="0,12,0,0" />
+        <TextBlock Text="Target (endpoint or workflow)" Margin="{StaticResource Spacing.Md.TopThickness}" />
         <ComboBox ItemsSource="{Binding Targets}"
                   SelectedItem="{Binding SelectedTarget}"
                   DisplayMemberPath="Display"
-                  Margin="0,4,0,0" />
+                  Margin="{StaticResource Spacing.Xs.TopThickness}"
+                  AutomationProperties.Name="Target" />
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="0,0,8,0" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Spacing.Lg.TopThickness}">
+            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="{StaticResource Spacing.Sm.RightThickness}" />
             <Button Content="OK" IsDefault="True" MinWidth="80" IsEnabled="{Binding CanConfirm}" Click="OnConfirm" />
         </StackPanel>
     </StackPanel>

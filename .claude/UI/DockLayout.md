@@ -1,5 +1,7 @@
 # Dock Layout
 
+> UX rationale & recommended layout (Rider/VSCode/VS, activity rail): see `../UI_BENCHMARK.md` (Dock Layout, Navigation Flow).
+
 ## Overview
 
 The application shell is a single **AvalonDock** `DockingManager` that hosts every workspace

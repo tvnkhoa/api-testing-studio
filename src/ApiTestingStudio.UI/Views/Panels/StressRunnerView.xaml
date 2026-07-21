@@ -9,26 +9,26 @@
         </Style>
         <Style TargetType="TextBlock" x:Key="MetricLabel">
             <Setter Property="Opacity" Value="0.75" />
-            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontSize" Value="{StaticResource Typography.Caption}" />
         </Style>
         <Style TargetType="TextBlock" x:Key="MetricValue">
-            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontSize" Value="{StaticResource Typography.Title}" />
             <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="Margin" Value="{StaticResource Spacing.Sm.BottomThickness}" />
         </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="12">
+        <StackPanel Margin="{StaticResource Spacing.Md.Thickness}">
 
             <!-- Runner (plugin) status -->
-            <Border Padding="8" Margin="0,0,0,10" Background="#22808080" CornerRadius="4">
+            <Border Padding="{StaticResource Spacing.Sm.Thickness}" Margin="{StaticResource Spacing.Sm.BottomThickness}" Background="{StaticResource Surface.MutedStrong.Brush}" CornerRadius="4">
                 <TextBlock Text="{Binding RunnerStatus}" FontWeight="SemiBold" TextWrapping="Wrap" />
             </Border>
 
             <!-- Configuration -->
-            <TextBlock Text="Configuration" FontWeight="Bold" Margin="0,0,0,6" />
-            <Grid Margin="0,0,0,12">
+            <TextBlock Text="Configuration" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
+            <Grid Margin="{StaticResource Spacing.Md.BottomThickness}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -43,46 +43,52 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Target" Style="{StaticResource FieldLabel}" />
-                <ComboBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,6"
+                <ComboBox Grid.Row="0" Grid.Column="1" Margin="{StaticResource Spacing.Sm.BottomThickness}"
                           ItemsSource="{Binding Targets}"
                           SelectedItem="{Binding SelectedTarget}"
-                          DisplayMemberPath="Label" />
+                          DisplayMemberPath="Label"
+                          AutomationProperties.Name="Target" />
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Mode" Style="{StaticResource FieldLabel}" />
-                <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,6"
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="{StaticResource Spacing.Sm.BottomThickness}"
                           ItemsSource="{Binding Modes}"
-                          SelectedItem="{Binding SelectedMode}" />
+                          SelectedItem="{Binding SelectedMode}"
+                          AutomationProperties.Name="Mode" />
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Virtual users" Style="{StaticResource FieldLabel}" />
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="0,0,0,6"
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="{StaticResource Spacing.Sm.BottomThickness}"
                          Text="{Binding VirtualUsers, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Virtual users"
                          ToolTip="Concurrent workers (concurrent mode)." />
 
                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Iterations" Style="{StaticResource FieldLabel}" />
-                <TextBox Grid.Row="3" Grid.Column="1" Margin="0,0,0,6"
+                <TextBox Grid.Row="3" Grid.Column="1" Margin="{StaticResource Spacing.Sm.BottomThickness}"
                          Text="{Binding Iterations, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Iterations"
                          ToolTip="Total request budget (loop / concurrent modes)." />
 
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Duration (s)" Style="{StaticResource FieldLabel}" />
-                <TextBox Grid.Row="4" Grid.Column="1" Margin="0,0,0,6"
+                <TextBox Grid.Row="4" Grid.Column="1" Margin="{StaticResource Spacing.Sm.BottomThickness}"
                          Text="{Binding DurationSeconds, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Duration (seconds)"
                          ToolTip="Concurrent-mode time limit; 0 means iteration-bounded." />
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="Warm-up" Style="{StaticResource FieldLabel}" />
                 <TextBox Grid.Row="5" Grid.Column="1"
                          Text="{Binding WarmupIterations, UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.Name="Warm-up iterations"
                          ToolTip="Invocations excluded from the metrics." />
             </Grid>
 
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                <Button Content="Run" MinWidth="90" Margin="0,0,8,0" Command="{Binding RunCommand}" />
+            <StackPanel Orientation="Horizontal" Margin="{StaticResource Spacing.Md.BottomThickness}">
+                <Button Content="Run" MinWidth="90" Margin="{StaticResource Spacing.Sm.RightThickness}" Command="{Binding RunCommand}" />
                 <Button Content="Stop" MinWidth="90" Command="{Binding RunCancelCommand}"
                         IsEnabled="{Binding IsRunning}" />
             </StackPanel>
 
             <!-- Live metrics -->
-            <TextBlock Text="Live metrics" FontWeight="Bold" Margin="0,0,0,6" />
-            <Border Padding="12" Background="#18808080" CornerRadius="4">
+            <TextBlock Text="Live metrics" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
+            <Border Padding="{StaticResource Spacing.Md.Thickness}" Background="{StaticResource Surface.Muted.Brush}" CornerRadius="4">
                 <Grid DataContext="{Binding LiveMetrics}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -146,7 +152,7 @@
                 </Grid>
             </Border>
 
-            <TextBlock Text="{Binding LastRunSummary}" Margin="0,10,0,0" TextWrapping="Wrap" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding LastRunSummary}" Margin="{StaticResource Spacing.Sm.TopThickness}" TextWrapping="Wrap" FontWeight="SemiBold" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

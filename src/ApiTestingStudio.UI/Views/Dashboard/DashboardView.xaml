@@ -7,21 +7,21 @@
         <!-- Overview KPIs -->
         <DataTemplate DataType="{x:Type dash:OverviewWidgetViewModel}">
             <UniformGrid Columns="2" VerticalAlignment="Center">
-                <StackPanel Margin="4">
+                <StackPanel Margin="{StaticResource Spacing.Xs.Thickness}">
                     <TextBlock Text="Runs" Opacity="0.7" />
-                    <TextBlock Text="{Binding RunCount}" FontSize="26" FontWeight="Bold" />
+                    <TextBlock Text="{Binding RunCount}" FontSize="{StaticResource Typography.Headline}" FontWeight="Bold" />
                 </StackPanel>
-                <StackPanel Margin="4">
+                <StackPanel Margin="{StaticResource Spacing.Xs.Thickness}">
                     <TextBlock Text="Success" Opacity="0.7" />
-                    <TextBlock Text="{Binding SuccessRate}" FontSize="26" FontWeight="Bold" />
+                    <TextBlock Text="{Binding SuccessRate}" FontSize="{StaticResource Typography.Headline}" FontWeight="Bold" />
                 </StackPanel>
-                <StackPanel Margin="4">
+                <StackPanel Margin="{StaticResource Spacing.Xs.Thickness}">
                     <TextBlock Text="Avg duration" Opacity="0.7" />
-                    <TextBlock Text="{Binding AverageDuration}" FontSize="26" FontWeight="Bold" />
+                    <TextBlock Text="{Binding AverageDuration}" FontSize="{StaticResource Typography.Headline}" FontWeight="Bold" />
                 </StackPanel>
-                <StackPanel Margin="4">
+                <StackPanel Margin="{StaticResource Spacing.Xs.Thickness}">
                     <TextBlock Text="Failed" Opacity="0.7" />
-                    <TextBlock Text="{Binding FailedCount}" FontSize="26" FontWeight="Bold" />
+                    <TextBlock Text="{Binding FailedCount}" FontSize="{StaticResource Typography.Headline}" FontWeight="Bold" />
                 </StackPanel>
             </UniformGrid>
         </DataTemplate>
@@ -33,7 +33,7 @@
                            Text="{Binding Caption}"
                            HorizontalAlignment="Center"
                            Opacity="0.8"
-                           Margin="0,4,0,0" />
+                           Margin="{StaticResource Spacing.Xs.TopThickness}" />
                 <lvc:PieChart Series="{Binding Series}" />
             </DockPanel>
         </DataTemplate>
@@ -57,16 +57,17 @@
     </UserControl.Resources>
 
     <DockPanel LastChildFill="True">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,8,8,0">
-            <Button Content="Refresh" Padding="12,2" Command="{Binding RefreshCommand}" />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="{StaticResource Spacing.Sm.Thickness}">
+            <Button Content="Refresh" Command="{Binding RefreshCommand}" />
             <TextBlock Text="Live — updates as runs complete."
                        VerticalAlignment="Center"
                        Opacity="0.6"
-                       Margin="12,0,0,0" />
+                       Margin="{StaticResource Spacing.Md.LeftThickness}" />
         </StackPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding Widgets}">
+            <ItemsControl ItemsSource="{Binding Widgets}"
+                          AutomationProperties.Name="Dashboard widgets">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel Orientation="Horizontal" />
@@ -76,16 +77,17 @@
                     <DataTemplate>
                         <Border Width="380"
                                 Height="260"
-                                Margin="8"
-                                Padding="10"
+                                Margin="{StaticResource Spacing.Sm.Thickness}"
+                                Padding="{StaticResource Spacing.Sm.Thickness}"
                                 CornerRadius="6"
                                 BorderThickness="1"
-                                BorderBrush="#33888888">
+                                BorderBrush="{StaticResource Border.Card.Brush}"
+                                AutomationProperties.Name="{Binding Title}">
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Top"
                                            Text="{Binding Title}"
                                            FontWeight="SemiBold"
-                                           Margin="0,0,0,8" />
+                                           Margin="{StaticResource Spacing.Sm.BottomThickness}" />
                                 <ContentControl Content="{Binding}" />
                             </DockPanel>
                         </Border>

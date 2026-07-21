@@ -1,5 +1,7 @@
 # Explorer
 
+> UX rationale & benchmark (Rider Solution Explorer): see `../UI_BENCHMARK.md` (Feature Mapping).
+
 ## Overview
 
 The **Explorer** is a dockable tool window that presents the workspace's Services and Endpoints

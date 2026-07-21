@@ -6,7 +6,7 @@
     </UserControl.Resources>
     <DockPanel LastChildFill="True">
         <!-- Filter bar -->
-        <Grid DockPanel.Dock="Top" Margin="8,8,8,4">
+        <Grid DockPanel.Dock="Top" Margin="{StaticResource Spacing.Sm.Thickness}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -16,34 +16,37 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0" Text="Level" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBlock Grid.Column="0" Text="Level" VerticalAlignment="Center" Margin="{StaticResource Spacing.Sm.RightThickness}" />
             <ComboBox Grid.Column="1"
                       Width="120"
-                      Margin="0,0,12,0"
+                      Margin="{StaticResource Spacing.Md.RightThickness}"
                       ItemsSource="{Binding LevelOptions}"
-                      SelectedItem="{Binding SelectedLevel}" />
+                      SelectedItem="{Binding SelectedLevel}"
+                      AutomationProperties.Name="Log level filter" />
 
-            <TextBlock Grid.Column="2" Text="Source" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBlock Grid.Column="2" Text="Source" VerticalAlignment="Center" Margin="{StaticResource Spacing.Sm.RightThickness}" />
             <ComboBox Grid.Column="3"
                       Width="200"
-                      Margin="0,0,12,0"
+                      Margin="{StaticResource Spacing.Md.RightThickness}"
                       ItemsSource="{Binding SourceOptions}"
-                      SelectedItem="{Binding SelectedSource}" />
+                      SelectedItem="{Binding SelectedSource}"
+                      AutomationProperties.Name="Log source filter" />
 
             <TextBox Grid.Column="4"
-                     Margin="0,0,12,0"
+                     Margin="{StaticResource Spacing.Md.RightThickness}"
                      VerticalContentAlignment="Center"
+                     AutomationProperties.Name="Search log messages"
+                     ToolTip="Search log messages"
                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=250}" />
 
             <Button Grid.Column="5"
                     Content="Refresh"
-                    Padding="12,2"
-                    Command="{Binding RefreshCommand}" />
+                                       Command="{Binding RefreshCommand}" />
         </Grid>
 
         <!-- Empty state -->
         <TextBlock DockPanel.Dock="Top"
-                   Margin="12,8"
+                   Margin="{StaticResource Spacing.Md.Thickness}"
                    Opacity="0.7"
                    Text="No log events match the current filters."
                    Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
@@ -61,7 +64,8 @@
                   VirtualizingPanel.IsVirtualizing="True"
                   VirtualizingPanel.VirtualizationMode="Recycling"
                   ScrollViewer.CanContentScroll="True"
-                  Margin="8,0,8,8">
+                  AutomationProperties.Name="Log events"
+                  Margin="{StaticResource Spacing.Sm.Thickness}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Time"
                                     Binding="{Binding TimestampUtc, StringFormat='yyyy-MM-dd HH:mm:ss'}"

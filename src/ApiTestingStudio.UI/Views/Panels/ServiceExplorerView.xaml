@@ -37,8 +37,8 @@
                 <Button Content="Duplicate" Command="{Binding DuplicateCommand}" ToolTip="Duplicate the selected endpoint" />
                 <Button Content="Delete" Command="{Binding DeleteCommand}" ToolTip="Delete the selection" />
                 <Separator />
-                <Button Content="↑" Command="{Binding MoveUpCommand}" ToolTip="Move up" />
-                <Button Content="↓" Command="{Binding MoveDownCommand}" ToolTip="Move down" />
+                <Button Content="↑" Command="{Binding MoveUpCommand}" ToolTip="Move up" AutomationProperties.Name="Move up" />
+                <Button Content="↓" Command="{Binding MoveDownCommand}" ToolTip="Move down" AutomationProperties.Name="Move down" />
                 <Separator />
                 <Button Content="Import…" Command="{Binding ImportCommand}" ToolTip="Import endpoints from cURL, OpenAPI, Postman or Scalar" />
                 <Button Content="Refresh" Command="{Binding RefreshCommand}" ToolTip="Reload the tree" />
@@ -47,8 +47,9 @@
 
         <!-- Search -->
         <TextBox DockPanel.Dock="Top"
-                 Margin="8"
+                 Margin="{StaticResource Spacing.Sm.Thickness}"
                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 AutomationProperties.Name="Filter services, folders and endpoints"
                  ToolTip="Filter services, folders and endpoints" />
 
         <!-- Tree -->
@@ -76,7 +77,7 @@
                 <HierarchicalDataTemplate DataType="{x:Type explorer:ServiceNodeViewModel}"
                                           ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🗂" Margin="0,0,6,0" />
+                        <TextBlock Text="🗂" Margin="{StaticResource Spacing.Sm.RightThickness}" />
                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                     </StackPanel>
                 </HierarchicalDataTemplate>
@@ -85,7 +86,7 @@
                 <HierarchicalDataTemplate DataType="{x:Type explorer:FolderNodeViewModel}"
                                           ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📁" Margin="0,0,6,0" />
+                        <TextBlock Text="📁" Margin="{StaticResource Spacing.Sm.RightThickness}" />
                         <TextBlock Text="{Binding Name}" />
                     </StackPanel>
                 </HierarchicalDataTemplate>
@@ -96,11 +97,11 @@
                         <Border Background="{Binding Method, Converter={StaticResource VerbToBrush}}"
                                 CornerRadius="3"
                                 Padding="4,1"
-                                Margin="0,0,6,0"
+                                Margin="{StaticResource Spacing.Sm.RightThickness}"
                                 VerticalAlignment="Center">
                             <TextBlock Text="{Binding MethodLabel}"
-                                       Foreground="White"
-                                       FontSize="10"
+                                       Foreground="{StaticResource Text.OnAccent.Brush}"
+                                       FontSize="{StaticResource Typography.Overline}"
                                        FontWeight="Bold" />
                         </Border>
                         <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />

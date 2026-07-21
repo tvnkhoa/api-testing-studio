@@ -74,12 +74,13 @@
                 <Separator />
                 <Button Content="Theme" Command="{Binding ToggleThemeCommand}" ToolTip="Toggle light/dark theme" />
                 <Separator />
-                <TextBlock Text="Env:" VerticalAlignment="Center" Margin="4,0" />
+                <TextBlock Text="Env:" VerticalAlignment="Center" Margin="{StaticResource Spacing.Xs.Thickness}" />
                 <ComboBox MinWidth="140"
                           ItemsSource="{Binding Shell.Environments.Environments}"
                           SelectedItem="{Binding Shell.Environments.SelectedEnvironment}"
                           DisplayMemberPath="Name"
                           IsEnabled="{Binding Shell.Environments.IsWorkspaceOpen}"
+                          AutomationProperties.Name="Active environment"
                           ToolTip="Active environment (variable resolution scope)" />
             </ToolBar>
         </ToolBarTray>

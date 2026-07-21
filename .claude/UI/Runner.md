@@ -1,5 +1,7 @@
 # Runner (UI)
 
+> UX rationale & benchmark (Postman/Insomnia + Monaco): see `../UI_BENCHMARK.md` (Feature Mapping, Run Request journey).
+
 ## Overview
 
 The **API Runner** is the primary **document pane** (centre of the shell), where the user builds

@@ -1,5 +1,7 @@
 # Dashboard
 
+> UX rationale & benchmark (Grafana): see `../UI_BENCHMARK.md` (Feature Mapping, Analyze Dashboard journey).
+
 ## Overview
 
 The **Dashboard** is a workspace-level analytics surface built on **LiveCharts2**. It aggregates

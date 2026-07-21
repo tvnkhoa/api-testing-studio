@@ -12,18 +12,18 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
 
-    <DockPanel Margin="16">
+    <DockPanel Margin="{StaticResource Spacing.Lg.Thickness}">
         <!-- Buttons -->
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Spacing.Lg.TopThickness}">
             <Button Content="Back"
                     MinWidth="80"
-                    Margin="0,0,8,0"
+                    Margin="{StaticResource Spacing.Sm.RightThickness}"
                     Command="{Binding BackCommand}"
                     Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVis}}" />
             <Button Content="Cancel"
                     IsCancel="True"
                     MinWidth="80"
-                    Margin="0,0,8,0"
+                    Margin="{StaticResource Spacing.Sm.RightThickness}"
                     Visibility="{Binding ShowNavigation, Converter={StaticResource BoolToVis}}" />
             <Button MinWidth="90"
                     IsDefault="True"
@@ -41,12 +41,12 @@
         <StackPanel DockPanel.Dock="Bottom">
             <ProgressBar Height="4"
                          IsIndeterminate="True"
-                         Margin="0,8,0,0"
+                         Margin="{StaticResource Spacing.Sm.TopThickness}"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" />
             <TextBlock Text="{Binding ErrorMessage}"
-                       Foreground="#C62828"
+                       Foreground="{StaticResource Semantic.Error.Brush}"
                        TextWrapping="Wrap"
-                       Margin="0,8,0,0"
+                       Margin="{StaticResource Spacing.Sm.TopThickness}"
                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
         </StackPanel>
 
@@ -54,11 +54,11 @@
         <Grid>
             <!-- Source step -->
             <StackPanel Visibility="{Binding IsSourceStep, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="Choose a source" FontWeight="Bold" Margin="0,0,0,8" />
+                <TextBlock Text="Choose a source" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
 
                 <RadioButton GroupName="src" Content="Paste text (cURL, OpenAPI, Postman)"
                              IsChecked="{Binding IsPasteMode}" />
-                <TextBox Margin="20,4,0,0"
+                <TextBox Margin="{StaticResource Spacing.SubItemIndent.Thickness}"
                          Height="140"
                          AcceptsReturn="True"
                          VerticalScrollBarVisibility="Auto"
@@ -67,25 +67,25 @@
                          IsEnabled="{Binding IsPasteMode}"
                          Text="{Binding PastedText, UpdateSourceTrigger=PropertyChanged}" />
 
-                <RadioButton GroupName="src" Content="From file" Margin="0,12,0,0"
+                <RadioButton GroupName="src" Content="From file" Margin="{StaticResource Spacing.Md.TopThickness}"
                              IsChecked="{Binding IsFileMode}" />
-                <Grid Margin="20,4,0,0" IsEnabled="{Binding IsFileMode}">
+                <Grid Margin="{StaticResource Spacing.SubItemIndent.Thickness}" IsEnabled="{Binding IsFileMode}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBox Grid.Column="0" IsReadOnly="True" Text="{Binding FilePath}" />
-                    <Button Grid.Column="1" Content="Browse…" MinWidth="80" Margin="8,0,0,0"
+                    <Button Grid.Column="1" Content="Browse…" MinWidth="80" Margin="{StaticResource Spacing.Sm.LeftThickness}"
                             Command="{Binding BrowseCommand}" />
                 </Grid>
 
-                <RadioButton GroupName="src" Content="From URL (Swagger / OpenAPI / Scalar)" Margin="0,12,0,0"
+                <RadioButton GroupName="src" Content="From URL (Swagger / OpenAPI / Scalar)" Margin="{StaticResource Spacing.Md.TopThickness}"
                              IsChecked="{Binding IsUrlMode}" />
-                <TextBox Margin="20,4,0,0"
+                <TextBox Margin="{StaticResource Spacing.SubItemIndent.Thickness}"
                          IsEnabled="{Binding IsUrlMode}"
                          Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Margin="20,4,0,0"
-                           Foreground="Gray"
+                <TextBlock Margin="{StaticResource Spacing.SubItemIndent.Thickness}"
+                           Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
                            TextWrapping="Wrap"
                            Text="A base URL is probed for common definition paths. Network access happens only when you click Next." />
             </StackPanel>
@@ -93,7 +93,7 @@
             <!-- Preview step -->
             <DockPanel Visibility="{Binding IsPreviewStep, Converter={StaticResource BoolToVis}}">
                 <StackPanel DockPanel.Dock="Top">
-                    <TextBlock Margin="0,0,0,4">
+                    <TextBlock Margin="{StaticResource Spacing.Xs.BottomThickness}">
                         <Run Text="Detected format:" FontWeight="Bold" />
                         <Run Text="{Binding PreviewFormat, Mode=OneWay}" />
                         <Run Text="  —  " />
@@ -101,7 +101,7 @@
                         <Run Text="endpoint(s)" />
                     </TextBlock>
                     <CheckBox Content="Overwrite endpoints that already exist (same method + path)"
-                              Margin="0,4,0,8"
+                              Margin="{StaticResource Spacing.Sm.VerticalThickness}"
                               IsChecked="{Binding OverwriteExisting}" />
                 </StackPanel>
 
@@ -109,15 +109,15 @@
                     <ItemsControl ItemsSource="{Binding PreviewServices}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="#DDDDDD" BorderThickness="1" CornerRadius="3" Padding="8" Margin="0,0,0,8">
+                                <Border BorderBrush="{StaticResource Border.Card.Brush}" BorderThickness="1" CornerRadius="3" Padding="{StaticResource Spacing.Sm.Thickness}" Margin="{StaticResource Spacing.Sm.BottomThickness}">
                                     <StackPanel>
                                         <TextBlock>
                                             <Run Text="{Binding Change, Mode=OneWay}" FontWeight="Bold" />
                                             <Run Text=" service: " />
                                             <Run Text="{Binding Name, Mode=OneWay}" FontWeight="Bold" />
                                         </TextBlock>
-                                        <TextBlock Text="{Binding BaseUrl, Mode=OneWay}" Foreground="Gray" />
-                                        <ItemsControl ItemsSource="{Binding Endpoints}" Margin="12,4,0,0">
+                                        <TextBlock Text="{Binding BaseUrl, Mode=OneWay}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
+                                        <ItemsControl ItemsSource="{Binding Endpoints}" Margin="{StaticResource Spacing.Md.LeftThickness}">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <TextBlock>
@@ -125,7 +125,7 @@
                                                         <Run Text="{Binding Method, Mode=OneWay}" FontWeight="Bold" />
                                                         <Run Text="{Binding Path, Mode=OneWay}" />
                                                         <Run Text=" — " />
-                                                        <Run Text="{Binding Name, Mode=OneWay}" Foreground="Gray" />
+                                                        <Run Text="{Binding Name, Mode=OneWay}" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                                                     </TextBlock>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
@@ -140,7 +140,7 @@
 
             <!-- Result step -->
             <StackPanel Visibility="{Binding IsResultStep, Converter={StaticResource BoolToVis}}">
-                <TextBlock Text="Import complete" FontWeight="Bold" Margin="0,0,0,8" />
+                <TextBlock Text="Import complete" FontWeight="Bold" Margin="{StaticResource Spacing.Sm.BottomThickness}" />
                 <TextBlock Text="{Binding ResultSummary}" TextWrapping="Wrap" />
             </StackPanel>
         </Grid>

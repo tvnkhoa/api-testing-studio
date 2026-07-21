@@ -70,7 +70,9 @@ public partial class ShellWindow : Window
                 _logger.LogError(ex, "Failed to save the shell layout on close.");
             }
 
-            Close();
+            // Re-close on a fresh dispatcher cycle. Calling Close() directly here re-enters the
+            // still-unwinding close pipeline and throws ("Cannot ... while a Window is closing").
+            _ = Dispatcher.BeginInvoke(new Action(Close));
             return;
         }
 

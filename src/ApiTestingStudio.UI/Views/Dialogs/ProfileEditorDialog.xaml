@@ -11,7 +11,7 @@
     <Window.Resources>
         <!-- Secret controls swap between masked (PasswordBox) and revealed (TextBox) on RevealSecrets. -->
         <Style x:Key="SecretPasswordStyle" TargetType="PasswordBox">
-            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="Margin" Value="{StaticResource Spacing.Xs.TopThickness}" />
             <Setter Property="Visibility" Value="Visible" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RevealSecrets}" Value="True">
@@ -20,7 +20,7 @@
             </Style.Triggers>
         </Style>
         <Style x:Key="SecretTextStyle" TargetType="TextBox">
-            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="Margin" Value="{StaticResource Spacing.Xs.TopThickness}" />
             <Setter Property="Visibility" Value="Collapsed" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding RevealSecrets}" Value="True">
@@ -30,11 +30,12 @@
         </Style>
     </Window.Resources>
 
-    <StackPanel Margin="16">
+    <StackPanel Margin="{StaticResource Spacing.Lg.Thickness}">
         <TextBlock Text="Name" />
-        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Name" />
 
-        <Grid Margin="0,12,0,0">
+        <Grid Margin="{StaticResource Spacing.Md.TopThickness}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="12" />
@@ -42,24 +43,29 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
                 <TextBlock Text="Role" />
-                <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding Kind}" Margin="0,4,0,0" />
+                <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding Kind}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                          AutomationProperties.Name="Role" />
             </StackPanel>
             <StackPanel Grid.Column="2">
                 <TextBlock Text="Auth scheme" />
-                <ComboBox ItemsSource="{Binding Schemes}" SelectedItem="{Binding Auth}" Margin="0,4,0,0" />
+                <ComboBox ItemsSource="{Binding Schemes}" SelectedItem="{Binding Auth}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                          AutomationProperties.Name="Auth scheme" />
             </StackPanel>
         </Grid>
 
-        <TextBlock Text="API key header name" Margin="0,12,0,0" />
-        <TextBox Text="{Binding ApiKeyHeaderName, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBlock Text="API key header name" Margin="{StaticResource Spacing.Md.TopThickness}" />
+        <TextBox Text="{Binding ApiKeyHeaderName, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="API key header name" />
 
-        <TextBlock Text="Username" Margin="0,12,0,0" />
-        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBlock Text="Username" Margin="{StaticResource Spacing.Md.TopThickness}" />
+        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Username" />
 
-        <TextBlock Text="Email" Margin="0,12,0,0" />
-        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+        <TextBlock Text="Email" Margin="{StaticResource Spacing.Md.TopThickness}" />
+        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                 AutomationProperties.Name="Email" />
 
-        <Grid Margin="0,12,0,0">
+        <Grid Margin="{StaticResource Spacing.Md.TopThickness}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="12" />
@@ -67,43 +73,45 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
                 <TextBlock Text="Tenant" />
-                <TextBox Text="{Binding Tenant, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+                <TextBox Text="{Binding Tenant, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                         AutomationProperties.Name="Tenant" />
             </StackPanel>
             <StackPanel Grid.Column="2">
                 <TextBlock Text="User id" />
-                <TextBox Text="{Binding UserId, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" />
+                <TextBox Text="{Binding UserId, UpdateSourceTrigger=PropertyChanged}" Margin="{StaticResource Spacing.Xs.TopThickness}"
+                         AutomationProperties.Name="User id" />
             </StackPanel>
         </Grid>
 
-        <Separator Margin="0,16,0,8" />
+        <Separator Margin="{StaticResource Spacing.Separator.Thickness}" />
         <DockPanel>
             <TextBlock Text="Secrets" FontWeight="SemiBold" />
             <CheckBox Content="Reveal" IsChecked="{Binding RevealSecrets}" HorizontalAlignment="Right" />
         </DockPanel>
-        <TextBlock Text="{Binding SecretHint}" Opacity="0.7" FontStyle="Italic" Margin="0,2,0,0" />
+        <TextBlock Text="{Binding SecretHint}" Opacity="0.7" FontStyle="Italic" Margin="{StaticResource Spacing.Xs.TopThickness}" />
 
-        <TextBlock Text="Access token" Margin="0,8,0,0" />
-        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding AccessToken, Mode=TwoWay}" />
-        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding AccessToken, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Text="Access token" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding AccessToken, Mode=TwoWay}" AutomationProperties.Name="Access token" />
+        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding AccessToken, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Access token" />
 
-        <TextBlock Text="Refresh token" Margin="0,8,0,0" />
-        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding RefreshToken, Mode=TwoWay}" />
-        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding RefreshToken, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Text="Refresh token" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding RefreshToken, Mode=TwoWay}" AutomationProperties.Name="Refresh token" />
+        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding RefreshToken, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Refresh token" />
 
-        <TextBlock Text="Password" Margin="0,8,0,0" />
-        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding Password, Mode=TwoWay}" />
-        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Text="Password" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding Password, Mode=TwoWay}" AutomationProperties.Name="Password" />
+        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Password" />
 
-        <TextBlock Text="API key" Margin="0,8,0,0" />
-        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding ApiKey, Mode=TwoWay}" />
-        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Text="API key" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding ApiKey, Mode=TwoWay}" AutomationProperties.Name="API key" />
+        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="API key" />
 
-        <TextBlock Text="Secret" Margin="0,8,0,0" />
-        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding Secret, Mode=TwoWay}" />
-        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding Secret, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBlock Text="Secret" Margin="{StaticResource Spacing.Sm.TopThickness}" />
+        <PasswordBox Style="{StaticResource SecretPasswordStyle}" behaviors:PasswordBoxBehavior.BoundPassword="{Binding Secret, Mode=TwoWay}" AutomationProperties.Name="Secret" />
+        <TextBox Style="{StaticResource SecretTextStyle}" Text="{Binding Secret, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Secret" />
 
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="0,0,8,0" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="{StaticResource Spacing.Lg.TopThickness}">
+            <Button Content="Cancel" IsCancel="True" MinWidth="80" Margin="{StaticResource Spacing.Sm.RightThickness}" />
             <Button Content="OK" IsDefault="True" MinWidth="80" IsEnabled="{Binding CanConfirm}" Click="OnConfirm" />
         </StackPanel>
     </StackPanel>
