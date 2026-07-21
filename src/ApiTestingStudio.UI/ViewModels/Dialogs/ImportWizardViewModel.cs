@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.UI.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,13 +28,15 @@ public sealed partial class ImportWizardViewModel : ObservableObject
 
     private readonly IImportOrchestrator _orchestrator;
     private readonly IFileDialogService _fileDialog;
+    private readonly IFileContentReader _fileReader;
 
     private ImportPreview? _preview;
 
-    public ImportWizardViewModel(IImportOrchestrator orchestrator, IFileDialogService fileDialog)
+    public ImportWizardViewModel(IImportOrchestrator orchestrator, IFileDialogService fileDialog, IFileContentReader fileReader)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _fileDialog = fileDialog ?? throw new ArgumentNullException(nameof(fileDialog));
+        _fileReader = fileReader ?? throw new ArgumentNullException(nameof(fileReader));
     }
 
     /// <summary>True once an import has been committed to the catalog (drives the caller's refresh).</summary>
@@ -263,16 +266,14 @@ public sealed partial class ImportWizardViewModel : ObservableObject
 
         if (IsFileMode)
         {
-            try
+            var read = await _fileReader.ReadTextAsync(FilePath, cancellationToken).ConfigureAwait(true);
+            if (read.IsFailure)
             {
-                var content = await File.ReadAllTextAsync(FilePath, cancellationToken).ConfigureAwait(true);
-                return new ImportRequest { Content = content, FileName = Path.GetFileName(FilePath) };
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                ErrorMessage = $"Could not read the file: {ex.Message}";
+                ErrorMessage = read.Error.Message;
                 return null;
             }
+
+            return new ImportRequest { Content = read.Value, FileName = Path.GetFileName(FilePath) };
         }
 
         return new ImportRequest { Content = PastedText };

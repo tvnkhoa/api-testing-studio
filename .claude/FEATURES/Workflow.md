@@ -13,8 +13,11 @@ Variables, and produces a `Run` tree (see `Logging.md`) when executed.
 
 ## Scope / Capabilities
 
-- **Node types:** `API`, `Condition`, `Loop`, `Delay`, `Parallel`, `Switch`, `Variable`,
-  `Assertion`.
+- **Node types:** `API`, `Condition`, `Loop`, `Delay`, `Parallel`, `Assertion` are **implemented**
+  (each has an engine `INodeHandler`). `Switch` and `Variable` are defined in the `WorkflowNodeKind`
+  enum but **not yet implemented** — they have no handler, so the designer palette is driven by the
+  registered handlers (`INodeHandlerRegistry.SupportedKinds`) and does not offer them until their
+  handlers land. See the recovery backlog.
 - **Drag-and-drop data mapping:** an output field of one node (e.g. `Login.token`) is wired to an
   input of a later node without writing code. Mappings resolve through the variable substitution
   engine (see `Variables.md`).

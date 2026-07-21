@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ApiTestingStudio.Plugin.Abstractions\ApiTestingStudio.Plugin.Abstractions.csproj" />
-    <ProjectReference Include="..\..\src\ApiTestingStudio.Application\ApiTestingStudio.Application.csproj" />
     <ProjectReference Include="..\..\src\ApiTestingStudio.Domain\ApiTestingStudio.Domain.csproj" />
     <ProjectReference Include="..\..\src\ApiTestingStudio.Shared\ApiTestingStudio.Shared.csproj" />
   </ItemGroup>

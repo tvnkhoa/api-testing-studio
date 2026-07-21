@@ -30,6 +30,15 @@ Import maps discovered operations to Endpoints (method, path, headers, params, b
 where applicable (Postman Environment), to Variables/Environments. Network access happens **only**
 when the user explicitly triggers a URL-based import (offline-first).
 
+OpenAPI/Swagger mapping specifics (`Import.OpenApi`): path parameters are preserved in the path
+template (`/orders/{id}`); query parameters are appended as an editable template
+(`?limit=&q=`), since an Endpoint has no dedicated query field; header parameters become
+`DefaultHeaders`; and the `application/json` request body becomes `DefaultBody` — the media type's
+`example` when present, otherwise a JSON skeleton generated from the schema (objects → properties,
+arrays → one item, primitives → empty/zero/false), bounded to guard against `$ref` cycles.
+Non-JSON request bodies are not synthesized. **Postman Environment → Variables/Environments is not
+yet implemented** (see recovery backlog).
+
 ## Domain & Contracts
 
 Domain records (`ApiTestingStudio.Domain`): `Service`, `Endpoint` (method, path template, headers,

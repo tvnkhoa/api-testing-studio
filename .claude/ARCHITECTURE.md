@@ -35,7 +35,7 @@ abstractions.
 |---|---|---|---|
 | **Domain** | net10.0 | Immutable entity records, enums. No framework deps. | — |
 | **Shared** | net10.0 | Cross-cutting primitives (`Result`, `Error`, `VersionCompatibility`). | — |
-| **Plugin.Abstractions** | net10.0 | All plugin contracts + `PluginManifest`, `IPluginLifecycle`, `PluginApiVersion`, `PluginCapability`. | Domain, Shared |
+| **Plugin.Abstractions** | net10.0 | All plugin contracts + `PluginManifest`, `IPluginLifecycle`, `PluginApiVersion`, `PluginCapability`. | Domain, Shared (+ `Microsoft.Extensions.DependencyInjection.Abstractions` pkg, for `IPluginModule.ConfigureServices`; resolves from the default ALC — see isolation boundary below) |
 | **Application** | net10.0 | Use cases + ports (`IClock`, `ISecretProtector`, `IWorkspaceService`). | Domain, Shared, Plugin.Abstractions |
 | **Core** | net10.0 | Plugin host: loader, registry, lifecycle, `PluginLoadContext` (ALC), `AddPluginHost`. | Application, Domain, Shared, Plugin.Abstractions |
 | **Infrastructure** | net10.0 | EF Core `WorkspaceDbContext`, `SqliteStorageProvider`, `SystemClock`, secret protector. | Application, Core, Domain, Shared, Plugin.Abstractions |
@@ -58,8 +58,12 @@ Every capability is a plugin behind an abstraction. Contracts live in `Plugin.Ab
 
 - `IPluginModule` — the entry point each plugin assembly exposes (`Name`, `Version`,
   `ConfigureServices(IServiceCollection)`).
-- `IImporter`, `IExporter`, `IWorkspaceSerializer`, `IAssertion`, `IWorkflowNode`,
+- `IImporter`, `IExporter`, `IWorkspaceSerializer`, `IAssertion`,
   `IStressRunner`, `IStorageProvider`, `IDashboardWidget`, `IToolWindow`.
+- `IWorkflowNode` — **reserved extension point, not yet implemented.** The built-in workflow engine
+  executes nodes via the Application-layer `INodeHandler` contract (an internal strategy, not a
+  plugin). `IWorkflowNode` is kept for a future sprint that opens workflow nodes to third-party
+  plugins; it currently has no implementations.
 
 **Two discovery sources feed one pipeline** (`Core`, hardened in Sprint 03 — see ADR-0007):
 

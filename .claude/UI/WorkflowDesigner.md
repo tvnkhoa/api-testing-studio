@@ -42,7 +42,10 @@ node to its registered `IWorkflowNode`. New node kinds arrive as plugins without
   `SelectedNode`, `PendingConnection`, and a command surface (AddNode/DeleteSelection/Connect/
   Disconnect/Undo/Redo/Save/Run/ZoomToFit). `NodePropertiesViewModel` provides typed per-kind editors
   for the selected node's config (bound to the public `*NodeConfig` records via `NodeConfigSerializer`);
-  edits route through the undo stack. No business logic in code-behind.
+  edits route through the undo stack. No business logic in code-behind. The **Assertion** node's
+  inspector edits its source node plus a list of assertions (add/edit/remove), reusing the shared
+  `IDialogService.PromptAssertion` dialog and the assertion kinds contributed by the loaded
+  `IAssertion` plugins; each list change is committed as an undoable `EditNodeCommand`.
 - **Entry point:** a dockable **Workflows tool panel** (`WorkflowsPanelViewModel`) lists workflows
   (New/Rename/Delete via `IWorkflowCatalogService`); selecting one publishes `OpenWorkflowMessage`,
   which the shell handles by opening/focusing the designer pane (created via

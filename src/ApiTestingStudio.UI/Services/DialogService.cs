@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Application.ServiceCatalog;
@@ -18,11 +19,13 @@ public sealed class DialogService : IDialogService
 {
     private readonly IImportOrchestrator _importOrchestrator;
     private readonly IFileDialogService _fileDialog;
+    private readonly IFileContentReader _fileReader;
 
-    public DialogService(IImportOrchestrator importOrchestrator, IFileDialogService fileDialog)
+    public DialogService(IImportOrchestrator importOrchestrator, IFileDialogService fileDialog, IFileContentReader fileReader)
     {
         _importOrchestrator = importOrchestrator ?? throw new System.ArgumentNullException(nameof(importOrchestrator));
         _fileDialog = fileDialog ?? throw new System.ArgumentNullException(nameof(fileDialog));
+        _fileReader = fileReader ?? throw new System.ArgumentNullException(nameof(fileReader));
     }
 
     public ServiceDraft? PromptService(string title, ServiceDraft? existing = null)
@@ -89,7 +92,7 @@ public sealed class DialogService : IDialogService
 
     public bool ShowImportWizard()
     {
-        var viewModel = new ImportWizardViewModel(_importOrchestrator, _fileDialog);
+        var viewModel = new ImportWizardViewModel(_importOrchestrator, _fileDialog, _fileReader);
         var dialog = new ImportWizardDialog { DataContext = viewModel, Owner = ActiveWindow() };
         dialog.ShowDialog();
         return viewModel.Committed;

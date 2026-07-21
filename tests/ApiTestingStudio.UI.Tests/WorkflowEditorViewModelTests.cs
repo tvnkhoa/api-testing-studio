@@ -2,6 +2,7 @@ using System.Windows;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Common;
 using ApiTestingStudio.Application.Workflows;
+using ApiTestingStudio.Application.Workflows.Handlers;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
 using ApiTestingStudio.UI.ViewModels.Workflow;
@@ -32,12 +33,15 @@ public sealed class WorkflowEditorViewModelTests
             _engine,
             new UndoRedoService(),
             new ConnectorValidator(),
+            new NodeHandlerRegistry([new ConditionNodeHandler()]),
             factory,
             new GraphMapper(factory),
             _status,
             new FakeRunRecorder(),
             _endpoints,
             _services,
+            new FakeDialogService(),
+            [],
             NullLogger<WorkflowEditorViewModel>.Instance);
     }
 

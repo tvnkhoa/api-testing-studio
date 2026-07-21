@@ -119,6 +119,56 @@ public sealed class ImporterParseTests
     }
 
     [Fact]
+    public async Task OpenApi_maps_query_params_to_path_and_body_schema_to_default_body()
+    {
+        const string json = """
+        {
+          "openapi": "3.0.0",
+          "info": { "title": "Shop", "version": "1.0" },
+          "paths": {
+            "/products": {
+              "get": {
+                "operationId": "listProducts",
+                "parameters": [
+                  { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+                  { "name": "q", "in": "query", "schema": { "type": "string" } }
+                ]
+              },
+              "post": {
+                "operationId": "createProduct",
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "price": { "type": "number" },
+                          "inStock": { "type": "boolean" },
+                          "tags": { "type": "array", "items": { "type": "string" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+        var importer = new OpenApiImporter();
+        var result = await importer.ImportAsync(new ImportSource("openapi", json));
+
+        var get = result.Endpoints.Should().ContainSingle(e => e.Method == HttpVerb.Get).Subject;
+        get.Path.Should().Be("/products?limit=&q=");
+
+        var post = result.Endpoints.Should().ContainSingle(e => e.Method == HttpVerb.Post).Subject;
+        post.DefaultBody.Should().NotBeNull();
+        post.DefaultBody.Should().Contain("\"name\"").And.Contain("\"price\"").And.Contain("\"inStock\"").And.Contain("\"tags\"");
+    }
+
+    [Fact]
     public async Task OpenApi_parses_yaml()
     {
         const string yaml = """

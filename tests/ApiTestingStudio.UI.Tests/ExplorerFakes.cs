@@ -110,6 +110,8 @@ internal sealed class FakeDialogService : IDialogService
 
     public bool ImportWizardResult { get; set; }
 
+    public ApiTestingStudio.Application.Testing.AssertionDraft? AssertionResult { get; set; }
+
     public int ShowImportWizardCount { get; private set; }
 
     public ServiceDraft? PromptService(string title, ServiceDraft? existing = null) => ServiceResult;
@@ -137,7 +139,7 @@ internal sealed class FakeDialogService : IDialogService
     public ApiTestingStudio.Application.Testing.AssertionDraft? PromptAssertion(
         string title,
         IReadOnlyList<string> kinds,
-        ApiTestingStudio.Application.Testing.AssertionDraft? existing = null) => null;
+        ApiTestingStudio.Application.Testing.AssertionDraft? existing = null) => AssertionResult;
 
     public bool Confirm(string title, string message) => ConfirmResult;
 

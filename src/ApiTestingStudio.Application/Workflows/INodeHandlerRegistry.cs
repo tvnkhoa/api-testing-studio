@@ -9,5 +9,12 @@ namespace ApiTestingStudio.Application.Workflows;
 /// </summary>
 public interface INodeHandlerRegistry
 {
+    /// <summary>
+    /// The node kinds that have a registered handler and can therefore be executed. Callers (e.g. the
+    /// designer palette) should offer only these kinds so a user cannot place a node the engine has no
+    /// handler for.
+    /// </summary>
+    IReadOnlyCollection<WorkflowNodeKind> SupportedKinds { get; }
+
     Result<INodeHandler> Resolve(WorkflowNodeKind kind);
 }

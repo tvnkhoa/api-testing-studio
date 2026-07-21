@@ -1,9 +1,13 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using ApiTestingStudio.Application.Common;
+using ApiTestingStudio.Application.Testing;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Enums;
+using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels.Workflow.Commands;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace ApiTestingStudio.UI.ViewModels.Workflow;
 
@@ -16,13 +20,17 @@ namespace ApiTestingStudio.UI.ViewModels.Workflow;
 public sealed partial class NodePropertiesViewModel : ObservableObject
 {
     private readonly IUndoRedoService _undo;
+    private readonly IDialogService _dialog;
+    private readonly IReadOnlyList<string> _assertionKinds;
     private NodeViewModel? _node;
     private (string Title, object? Config) _committed;
     private bool _loading;
 
-    public NodePropertiesViewModel(IUndoRedoService undo)
+    public NodePropertiesViewModel(IUndoRedoService undo, IDialogService dialog, IReadOnlyList<string> assertionKinds)
     {
         _undo = undo ?? throw new ArgumentNullException(nameof(undo));
+        _dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
+        _assertionKinds = assertionKinds ?? throw new ArgumentNullException(nameof(assertionKinds));
     }
 
     /// <summary>Available HTTP verbs for the Request editor.</summary>
@@ -81,6 +89,13 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
     [ObservableProperty]
     private int _delayMs;
 
+    // Assertion
+    [ObservableProperty]
+    private string _assertionSourceNode = string.Empty;
+
+    /// <summary>The assertions configured on the selected Assertion node (edited via the dialog).</summary>
+    public ObservableCollection<AssertionRowViewModel> Assertions { get; } = [];
+
     /// <summary>Binds the inspector to a node (or clears it when null).</summary>
     public void Load(NodeViewModel? node)
     {
@@ -96,6 +111,8 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
 
             Kind = node.Kind;
             Title = node.Title;
+            AssertionSourceNode = string.Empty;
+            Assertions.Clear();
 
             switch (node.Config)
             {
@@ -120,6 +137,10 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
                     break;
                 case DelayNodeConfig d:
                     DelayMs = d.DelayMs;
+                    break;
+                case AssertionNodeConfig a:
+                    AssertionSourceNode = a.SourceNode;
+                    RefreshAssertionRows(a.Assertions);
                     break;
                 default:
                     break;
@@ -182,6 +203,132 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
             with { MaxDegreeOfParallelism = ParallelDegree },
         WorkflowNodeKind.Delay => (_committed.Config as DelayNodeConfig ?? new DelayNodeConfig())
             with { DelayMs = DelayMs },
+        // Only the scalar SourceNode flows through Apply; the assertion list is committed explicitly by
+        // the Add/Edit/Remove commands, so the existing list reference is preserved here.
+        WorkflowNodeKind.Assertion => (_committed.Config as AssertionNodeConfig ?? new AssertionNodeConfig())
+            with { SourceNode = AssertionSourceNode },
         _ => _committed.Config,
     };
+
+    [RelayCommand]
+    private void AddAssertion()
+    {
+        if (_node is null)
+        {
+            return;
+        }
+
+        var draft = _dialog.PromptAssertion("New Assertion", _assertionKinds);
+        if (draft is null)
+        {
+            return;
+        }
+
+        var specs = CurrentSpecs();
+        specs.Add(FromDraft(draft));
+        CommitAssertions(specs);
+    }
+
+    [RelayCommand]
+    private void EditAssertion(AssertionRowViewModel? row)
+    {
+        if (_node is null || row is null)
+        {
+            return;
+        }
+
+        var draft = _dialog.PromptAssertion("Edit Assertion", _assertionKinds, ToDraft(row.Spec));
+        if (draft is null)
+        {
+            return;
+        }
+
+        var specs = CurrentSpecs();
+        var index = specs.FindIndex(s => ReferenceEquals(s, row.Spec));
+        if (index < 0)
+        {
+            return;
+        }
+
+        specs[index] = FromDraft(draft);
+        CommitAssertions(specs);
+    }
+
+    [RelayCommand]
+    private void RemoveAssertion(AssertionRowViewModel? row)
+    {
+        if (_node is null || row is null)
+        {
+            return;
+        }
+
+        var specs = CurrentSpecs();
+        specs.RemoveAll(s => ReferenceEquals(s, row.Spec));
+        CommitAssertions(specs);
+    }
+
+    private List<AssertionSpec> CurrentSpecs() =>
+        (_committed.Config as AssertionNodeConfig)?.Assertions.ToList() ?? [];
+
+    private void CommitAssertions(IReadOnlyList<AssertionSpec> specs)
+    {
+        var current = _committed.Config as AssertionNodeConfig ?? new AssertionNodeConfig();
+        var after = (Title, (object?)(current with { Assertions = specs }));
+
+        _undo.Execute(new EditNodeCommand(_node!, _committed, after));
+        _committed = after;
+        RefreshAssertionRows(specs);
+    }
+
+    private void RefreshAssertionRows(IEnumerable<AssertionSpec> specs)
+    {
+        Assertions.Clear();
+        foreach (var spec in specs)
+        {
+            Assertions.Add(new AssertionRowViewModel(spec));
+        }
+    }
+
+    private static AssertionDraft ToDraft(AssertionSpec spec) =>
+        new(spec.Kind, spec.Source, spec.Target, spec.Expression, spec.Operator, spec.Expected, spec.Enabled);
+
+    private static AssertionSpec FromDraft(AssertionDraft draft) => new()
+    {
+        Kind = draft.Kind,
+        Source = draft.Source,
+        Target = draft.Target,
+        Expression = draft.Expression,
+        Operator = draft.Operator,
+        Expected = draft.Expected,
+        Enabled = draft.Enabled,
+    };
+}
+
+/// <summary>One assertion row shown in the Assertion node's property inspector list.</summary>
+public sealed class AssertionRowViewModel
+{
+    public AssertionRowViewModel(AssertionSpec spec)
+    {
+        Spec = spec ?? throw new ArgumentNullException(nameof(spec));
+    }
+
+    /// <summary>The immutable assertion this row displays; edits replace it via the dialog.</summary>
+    public AssertionSpec Spec { get; }
+
+    /// <summary>A one-line human-readable summary for the list.</summary>
+    public string Summary
+    {
+        get
+        {
+            var target = string.IsNullOrWhiteSpace(Spec.Expression) ? Spec.Target : Spec.Expression;
+            var comparison = string.IsNullOrWhiteSpace(Spec.Operator)
+                ? Spec.Expected
+                : $"{Spec.Operator} {Spec.Expected}";
+            var detail = string.Join(" · ", new[] { target, comparison }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            var summary = $"{Spec.Kind} · {Spec.Source}";
+            return string.IsNullOrWhiteSpace(detail) ? summary : $"{summary} · {detail}";
+        }
+    }
+
+    public bool Enabled => Spec.Enabled;
 }

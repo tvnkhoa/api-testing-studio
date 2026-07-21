@@ -3,6 +3,7 @@ using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Backup;
 using ApiTestingStudio.Application.Import;
 using ApiTestingStudio.Infrastructure.Http;
+using ApiTestingStudio.Infrastructure.IO;
 using ApiTestingStudio.Infrastructure.Persistence;
 using ApiTestingStudio.Infrastructure.Security;
 using ApiTestingStudio.Infrastructure.Settings;
@@ -90,6 +91,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Import (Sprint 07): user-triggered URL fetch (offline-first) + transactional catalog merge.
         services.AddSingleton<IDefinitionFetcher, DefinitionFetcher>();
+        services.AddSingleton<IFileContentReader, FileContentReader>();
         services.AddSingleton<ICatalogMerger, CatalogMerger>();
 
         var recentStorePath = Path.Combine(appDataDirectory, RecentWorkspacesFileName);

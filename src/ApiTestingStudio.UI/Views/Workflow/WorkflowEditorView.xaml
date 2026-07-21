@@ -154,6 +154,46 @@
                                     <TextBlock Text="Delay (ms)" Margin="0,8,0,0" />
                                     <TextBox Text="{Binding DelayMs, UpdateSourceTrigger=LostFocus}" />
                                 </StackPanel>
+
+                                <!-- Assertion -->
+                                <StackPanel>
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Kind}" Value="Assertion">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Source node" Margin="0,8,0,0" />
+                                    <TextBox Text="{Binding AssertionSourceNode, UpdateSourceTrigger=LostFocus}" />
+                                    <DockPanel Margin="0,8,0,0">
+                                        <TextBlock Text="Assertions" FontWeight="SemiBold" VerticalAlignment="Center" DockPanel.Dock="Left" />
+                                        <Button Content="Add" HorizontalAlignment="Right" Padding="8,2"
+                                                Command="{Binding AddAssertionCommand}" />
+                                    </DockPanel>
+                                    <ItemsControl ItemsSource="{Binding Assertions}" Margin="0,4,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type wf:AssertionRowViewModel}">
+                                                <Border BorderThickness="0,0,0,1" BorderBrush="#22000000" Padding="0,4">
+                                                    <DockPanel>
+                                                        <Button Content="✕" DockPanel.Dock="Right" Margin="4,0,0,0" Padding="6,0"
+                                                                ToolTip="Remove"
+                                                                Command="{Binding DataContext.RemoveAssertionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                CommandParameter="{Binding}" />
+                                                        <Button Content="Edit" DockPanel.Dock="Right" Padding="6,0"
+                                                                Command="{Binding DataContext.EditAssertionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                CommandParameter="{Binding}" />
+                                                        <TextBlock Text="{Binding Summary}" VerticalAlignment="Center"
+                                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Summary}" />
+                                                    </DockPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>

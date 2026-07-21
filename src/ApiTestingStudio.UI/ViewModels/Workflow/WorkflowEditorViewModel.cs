@@ -7,6 +7,7 @@ using ApiTestingStudio.Application.Runs;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
+using ApiTestingStudio.Plugin.Abstractions.Assertions;
 using ApiTestingStudio.UI.Services;
 using ApiTestingStudio.UI.ViewModels.Panels;
 using ApiTestingStudio.UI.ViewModels.Workflow.Commands;
@@ -32,6 +33,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
     private readonly IWorkflowEngine _engine;
     private readonly IUndoRedoService _undo;
     private readonly IConnectorValidator _validator;
+    private readonly INodeHandlerRegistry _nodeHandlers;
     private readonly INodeViewModelFactory _nodeFactory;
     private readonly GraphMapper _mapper;
     private readonly IStatusBarService _statusBar;
@@ -52,12 +54,15 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         IWorkflowEngine engine,
         IUndoRedoService undo,
         IConnectorValidator validator,
+        INodeHandlerRegistry nodeHandlers,
         INodeViewModelFactory nodeFactory,
         GraphMapper mapper,
         IStatusBarService statusBar,
         IRunRecorder runRecorder,
         IEndpointRepository endpoints,
         IServiceRepository services,
+        IDialogService dialog,
+        IEnumerable<IAssertion> assertions,
         ILogger<WorkflowEditorViewModel> logger)
         : base($"document.workflow.{workflowId}", name)
     {
@@ -65,12 +70,15 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         ArgumentNullException.ThrowIfNull(engine);
         ArgumentNullException.ThrowIfNull(undo);
         ArgumentNullException.ThrowIfNull(validator);
+        ArgumentNullException.ThrowIfNull(nodeHandlers);
         ArgumentNullException.ThrowIfNull(nodeFactory);
         ArgumentNullException.ThrowIfNull(mapper);
         ArgumentNullException.ThrowIfNull(statusBar);
         ArgumentNullException.ThrowIfNull(runRecorder);
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(dialog);
+        ArgumentNullException.ThrowIfNull(assertions);
         ArgumentNullException.ThrowIfNull(logger);
 
         _workflowId = workflowId;
@@ -78,6 +86,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         _engine = engine;
         _undo = undo;
         _validator = validator;
+        _nodeHandlers = nodeHandlers;
         _nodeFactory = nodeFactory;
         _mapper = mapper;
         _statusBar = statusBar;
@@ -86,7 +95,13 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         _services = services;
         _logger = logger;
 
-        Properties = new NodePropertiesViewModel(undo);
+        var assertionKinds = assertions
+            .Select(a => a.Kind)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        Palette = new NodePaletteViewModel(_nodeHandlers.SupportedKinds);
+        Properties = new NodePropertiesViewModel(undo, dialog, assertionKinds);
         _undo.StateChanged += OnUndoStateChanged;
         Nodes.CollectionChanged += (_, _) => RunCommand.NotifyCanExecuteChanged();
     }
@@ -97,8 +112,8 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
     /// <summary>Connections bound to the Nodify editor's <c>Connections</c>.</summary>
     public ObservableCollection<ConnectionViewModel> Connections { get; } = [];
 
-    /// <summary>The draggable node toolbox.</summary>
-    public NodePaletteViewModel Palette { get; } = new();
+    /// <summary>The draggable node toolbox (only kinds the engine has a handler for).</summary>
+    public NodePaletteViewModel Palette { get; }
 
     /// <summary>The property inspector bound to <see cref="SelectedNode"/>.</summary>
     public NodePropertiesViewModel Properties { get; }

@@ -28,6 +28,9 @@ public sealed class NodeHandlerRegistry : INodeHandlerRegistry
         _handlers = map;
     }
 
+    /// <inheritdoc />
+    public IReadOnlyCollection<WorkflowNodeKind> SupportedKinds => _handlers.Keys;
+
     public Result<INodeHandler> Resolve(WorkflowNodeKind kind) =>
         _handlers.TryGetValue(kind, out var handler)
             ? Result.Success(handler)
