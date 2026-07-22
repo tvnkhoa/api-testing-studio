@@ -82,6 +82,14 @@
                           IsEnabled="{Binding Shell.Environments.IsWorkspaceOpen}"
                           AutomationProperties.Name="Active environment"
                           ToolTip="Active environment (variable resolution scope)" />
+                <TextBlock Text="Run as:" VerticalAlignment="Center" Margin="{StaticResource Spacing.Xs.Thickness}" />
+                <ComboBox MinWidth="140"
+                          ItemsSource="{Binding Shell.Profiles.Profiles}"
+                          SelectedItem="{Binding Shell.Profiles.SelectedProfile}"
+                          DisplayMemberPath="Name"
+                          IsEnabled="{Binding Shell.Profiles.IsWorkspaceOpen}"
+                          AutomationProperties.Name="Active Run As profile"
+                          ToolTip="Profile applied as authorization when sending requests" />
             </ToolBar>
         </ToolBarTray>
 

@@ -43,3 +43,9 @@ live on secret-typed variables or in profiles (see `Profiles.md`, `Variables.md`
 - Per-environment variable diff and bulk edit.
 - Per-environment profile overrides (different creds per environment).
 - Import of Postman environments.
+
+## Sprint 16 update (Consolidation Phase 1)
+
+- Creating a workspace now seeds a default **Development** environment and marks it active (plus a
+  starter `baseUrl` variable), so a new workspace resolves variables immediately instead of starting
+  empty. See `WorkspaceService.SeedNewWorkspaceAsync`.

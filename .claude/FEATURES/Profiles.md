@@ -67,3 +67,11 @@ on update keeps the stored ciphertext, an empty string clears it).
 - Per-environment Profile overrides (different creds per Development/QA/Staging/Production).
 - Optional master-password / key rotation for the secret store.
 - Import of credentials from Postman Environments into Profiles.
+
+## Sprint 16 update (Consolidation Phase 1)
+
+- **"Run As" is now reachable.** A toolbar Profile switcher (mirroring the environment switcher)
+  persists the active profile per workspace via `IProfileService.GetActiveIdAsync/SetActiveAsync`
+  (stored as the `active-profile-id` workspace setting). The Runner applies it on send, and the
+  workflow Request node has its own profile picker — so `IAuthApplicator` is no longer dead code from
+  the UI.

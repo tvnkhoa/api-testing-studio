@@ -1,3 +1,5 @@
+using ApiTestingStudio.Application.Environments;
+using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workspaces;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Shared.Results;
@@ -11,11 +13,17 @@ public sealed class WorkspaceServiceTests
 
     private readonly FakeStorageProvider _storage = new();
     private readonly FakeRecentWorkspacesService _recent = new();
+    private readonly FakeWorkspaceSession _session = new();
+    private readonly InMemoryEnvironmentRepository _environments = new();
+    private readonly InMemoryVariableRepository _variables = new();
+    private readonly InMemoryWorkspaceSettingRepository _settings = new();
     private readonly WorkspaceService _service;
 
     public WorkspaceServiceTests()
     {
-        _service = new WorkspaceService(_storage, _recent, new FixedClock(Now));
+        var environments = new EnvironmentService(_environments, _settings, _session);
+        var variables = new VariableService(_variables, new FakeSecretProtector(), _session);
+        _service = new WorkspaceService(_storage, _recent, new FixedClock(Now), environments, variables);
     }
 
     [Fact]
@@ -141,5 +149,25 @@ public sealed class WorkspaceServiceTests
 
         result.IsFailure.Should().BeTrue();
         _recent.Removed.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Create_seeds_a_default_active_environment_and_baseUrl_variable()
+    {
+        // Simulate the storage provider opening the new workspace's session (real provider does this).
+        var workspace = new Workspace { Name = "Seeded" };
+        _storage.CreateResult = Result.Success();
+        _session.Current = workspace;
+
+        await _service.CreateAsync("ws.db", "Seeded");
+
+        var environments = await _environments.GetByWorkspaceAsync(workspace.Id);
+        environments.Should().ContainSingle(e => e.Name == "Development");
+
+        var activeId = await new EnvironmentService(_environments, _settings, _session).GetActiveIdAsync();
+        activeId.Should().Be(environments[0].Id);
+
+        var variables = await _variables.GetByWorkspaceAsync(workspace.Id);
+        variables.Should().ContainSingle(v => v.Key == WorkspaceService.DefaultBaseUrlKey);
     }
 }

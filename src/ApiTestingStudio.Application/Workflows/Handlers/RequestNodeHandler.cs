@@ -41,14 +41,18 @@ public sealed class RequestNodeHandler : INodeHandler
             return Failed(node, WorkflowErrors.InvalidConfig(node.Name, "a request URL is required.").Message);
         }
 
+        // Collect any {{tokens}} that could not be resolved against the run's variable context so the
+        // node reports them as warnings rather than silently sending empty values.
+        var unresolved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         var request = new HttpRequestModel
         {
             Method = config.Method,
-            Url = context.Resolver.Resolve(config.Url, context.Context),
-            QueryParams = Resolve(config.QueryParams, context),
-            Headers = Resolve(config.Headers, context),
+            Url = context.Resolver.Resolve(config.Url, context.Context, unresolved),
+            QueryParams = Resolve(config.QueryParams, context, unresolved),
+            Headers = Resolve(config.Headers, context, unresolved),
             BodyKind = config.BodyKind,
-            Body = string.IsNullOrEmpty(config.Body) ? null : context.Resolver.Resolve(config.Body, context.Context),
+            Body = string.IsNullOrEmpty(config.Body) ? null : context.Resolver.Resolve(config.Body, context.Context, unresolved),
         };
 
         request = await ApplyProfileAsync(request, config.ProfileId, cancellationToken).ConfigureAwait(false);
@@ -75,6 +79,7 @@ public sealed class RequestNodeHandler : INodeHandler
             Kind = Kind,
             Status = RunStatus.Passed,
             Outputs = outputs,
+            Warnings = unresolved.Count > 0 ? [.. unresolved] : [],
         };
     }
 
@@ -89,11 +94,11 @@ public sealed class RequestNodeHandler : INodeHandler
         return _authApplicator.Apply(request, profile);
     }
 
-    private static List<QueryParam> Resolve(IReadOnlyList<QueryParam> parameters, NodeHandlerContext context) =>
-        parameters.Select(p => p with { Value = context.Resolver.Resolve(p.Value, context.Context) }).ToList();
+    private static List<QueryParam> Resolve(IReadOnlyList<QueryParam> parameters, NodeHandlerContext context, ICollection<string> unresolved) =>
+        parameters.Select(p => p with { Value = context.Resolver.Resolve(p.Value, context.Context, unresolved) }).ToList();
 
-    private static List<HttpHeader> Resolve(IReadOnlyList<HttpHeader> headers, NodeHandlerContext context) =>
-        headers.Select(h => h with { Value = context.Resolver.Resolve(h.Value, context.Context) }).ToList();
+    private static List<HttpHeader> Resolve(IReadOnlyList<HttpHeader> headers, NodeHandlerContext context, ICollection<string> unresolved) =>
+        headers.Select(h => h with { Value = context.Resolver.Resolve(h.Value, context.Context, unresolved) }).ToList();
 
     private NodeRunResult Failed(WorkflowNode node, string error) => new()
     {

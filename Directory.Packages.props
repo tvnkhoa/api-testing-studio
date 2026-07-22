@@ -91,4 +91,20 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
   </ItemGroup>
 
+  <ItemGroup Label="Executable Scenarios (UI automation — Scenarios test project only)">
+    <!--
+      FlaUI drives the real WPF app through UI Automation for the on-demand Executable-Scenarios
+      harness (Sprint 15 Deliverable 13 / Sprint 16 item 8). UIA3 is the modern provider. These are
+      referenced ONLY by tests/ApiTestingStudio.Scenarios and never by the app.
+    -->
+    <PackageVersion Include="FlaUI.Core" Version="4.0.0" />
+    <PackageVersion Include="FlaUI.UIA3" Version="4.0.0" />
+    <!--
+      FlaUI 4.0.0 transitively pulls System.Drawing.Common 5.0.2, which carries a critical advisory
+      (GHSA-rxg9-xrhp-64gj / NU1904). Transitive pinning bumps it to a patched line. Used only by the
+      Scenarios harness for screenshot capture.
+    -->
+    <PackageVersion Include="System.Drawing.Common" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

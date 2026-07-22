@@ -1,3 +1,4 @@
+using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
@@ -295,5 +296,74 @@ public sealed class WorkflowEngineTests
 
         run.Status.Should().Be(RunStatus.Passed);
         run.Nodes.Should().BeEmpty();
+    }
+
+    // --- Sprint 16: the engine seeds the run context when the caller supplies none ---
+
+    [Fact]
+    public async Task Run_seeds_variable_context_when_no_context_is_supplied()
+    {
+        var executor = new FakeRequestExecutor
+        {
+            ResultToReturn = Result.Success(new HttpExecutionResult
+            {
+                Response = new HttpResponseModel { StatusCode = 200, ReasonPhrase = "OK" },
+                Timing = new RequestTiming { Total = TimeSpan.Zero },
+            }),
+        };
+        var seeder = new StubScopeSeeder(("host", "https://seeded.example.com"));
+        var engine = CreateEngine(executor, scopeSeeder: seeder);
+
+        var call = Node("Call", WorkflowNodeKind.Api, ConfigJson(new RequestNodeConfig
+        {
+            Url = "{{vars.host}}/orders",
+        }));
+        var run = await engine.RunAsync(Graph([call], []));
+
+        run.Status.Should().Be(RunStatus.Passed);
+        executor.LastRequest!.Url.Should().Be("https://seeded.example.com/orders");
+    }
+
+    [Fact]
+    public async Task Request_node_reports_unresolved_variables_as_warnings()
+    {
+        var executor = new FakeRequestExecutor
+        {
+            ResultToReturn = Result.Success(new HttpExecutionResult
+            {
+                Response = new HttpResponseModel { StatusCode = 200, ReasonPhrase = "OK" },
+                Timing = new RequestTiming { Total = TimeSpan.Zero },
+            }),
+        };
+        var engine = CreateEngine(executor);
+
+        var call = Node("Call", WorkflowNodeKind.Api, ConfigJson(new RequestNodeConfig
+        {
+            Url = "{{vars.missingHost}}/orders",
+        }));
+        var run = await engine.RunAsync(Graph([call], []));
+
+        run.Status.Should().Be(RunStatus.Passed);
+        run.Nodes[0].Warnings.Should().Contain("vars.missingHost");
+    }
+
+    private sealed class StubScopeSeeder(params (string Key, string Value)[] variables) : IVariableScopeSeeder
+    {
+        public Task SeedAsync(IWorkflowContext context, CancellationToken cancellationToken = default)
+        {
+            foreach (var (key, value) in variables)
+            {
+                context.SetVariable(key, value);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<IWorkflowContext> BuildContextAsync(CancellationToken cancellationToken = default)
+        {
+            var context = new WorkflowContext();
+            await SeedAsync(context, cancellationToken).ConfigureAwait(false);
+            return context;
+        }
     }
 }

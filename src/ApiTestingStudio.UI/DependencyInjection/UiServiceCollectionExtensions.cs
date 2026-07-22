@@ -38,6 +38,7 @@ public static class UiServiceCollectionExtensions
         services.AddSingleton<IDialogService, DialogService>();
 
         // View models. The shell composes its menu/toolbar/panel view models internally.
+        services.AddSingleton<WelcomeDocumentViewModel>();
         services.AddSingleton<StatusBarViewModel>();
         services.AddSingleton<RecentWorkspacesMenuViewModel>();
         services.AddSingleton<ServiceExplorerViewModel>();
@@ -60,6 +61,7 @@ public static class UiServiceCollectionExtensions
         // switcher. Both are singletons added to / referenced by the shell.
         services.AddSingleton<ProfilesPanelViewModel>();
         services.AddSingleton<EnvironmentSwitcherViewModel>();
+        services.AddSingleton<ProfileSwitcherViewModel>();
 
         // Assertions & Test Cases (Sprint 11): the Test Cases tool panel and the Test Results document.
         // Both are singletons added to / referenced by the shell.

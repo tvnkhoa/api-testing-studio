@@ -124,6 +124,7 @@ public sealed partial class ProfilesPanelViewModel : ToolPanelViewModel
 
         await ReportAsync(_profiles.CreateAsync(draft, cancellationToken)).ConfigureAwait(true);
         await ReloadProfilesAsync(cancellationToken).ConfigureAwait(true);
+        _messenger.Send(new ProfilesChangedMessage());
     }
 
     [RelayCommand(CanExecute = nameof(HasProfile))]
@@ -142,6 +143,7 @@ public sealed partial class ProfilesPanelViewModel : ToolPanelViewModel
 
         await ReportAsync(_profiles.UpdateAsync(profile.Id, draft, cancellationToken)).ConfigureAwait(true);
         await ReloadProfilesAsync(cancellationToken).ConfigureAwait(true);
+        _messenger.Send(new ProfilesChangedMessage());
     }
 
     [RelayCommand(CanExecute = nameof(HasProfile))]
@@ -159,6 +161,7 @@ public sealed partial class ProfilesPanelViewModel : ToolPanelViewModel
 
         await ReportAsync(_profiles.DeleteAsync(profile.Id, cancellationToken)).ConfigureAwait(true);
         await ReloadProfilesAsync(cancellationToken).ConfigureAwait(true);
+        _messenger.Send(new ProfilesChangedMessage());
     }
 
     // ---- Environments -------------------------------------------------------------------------

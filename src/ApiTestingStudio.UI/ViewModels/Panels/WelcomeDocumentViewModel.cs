@@ -1,17 +1,27 @@
+using ApiTestingStudio.UI.Messaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+
 namespace ApiTestingStudio.UI.ViewModels.Panels;
 
 /// <summary>
-/// The default document shown in the centre pane when the shell opens. Gives the docking manager a
-/// document pane to host and persist; feature documents (Runner, Workflow, Dashboard) replace it in
-/// later sprints.
+/// The first-run document shown in the centre pane when the shell opens. Explains the product and
+/// offers three call-to-action buttons — Open sample, Import, and Add service — each raised as a
+/// <see cref="WelcomeActionMessage"/> the shell routes to the matching flow. Import/Add-service are
+/// gated on an open workspace; Open sample always works and is the primary first-run entry point.
 /// </summary>
-public sealed class WelcomeDocumentViewModel : DocumentPanelViewModel
+public sealed partial class WelcomeDocumentViewModel : DocumentPanelViewModel
 {
     public const string PanelContentId = "document.welcome";
 
-    public WelcomeDocumentViewModel()
+    private readonly IMessenger _messenger;
+
+    public WelcomeDocumentViewModel(IMessenger messenger)
         : base(PanelContentId, "Welcome")
     {
+        ArgumentNullException.ThrowIfNull(messenger);
+        _messenger = messenger;
     }
 
     /// <summary>Headline shown on the welcome document.</summary>
@@ -19,6 +29,22 @@ public sealed class WelcomeDocumentViewModel : DocumentPanelViewModel
 
     /// <summary>Sub-text shown on the welcome document.</summary>
     public string Message { get; } =
-        "Create or open a workspace from the File menu to get started. " +
-        "Feature panels dock into this shell in the sprints ahead.";
+        "A workflow-first, 100% offline API testing workspace. Send requests, chain them into visual " +
+        "workflows, test as a role, and stress-test — all local, no cloud. Open the sample workspace " +
+        "below to explore, or import an existing API to get started.";
+
+    /// <summary>True when a workspace is open, enabling the Import / Add service actions.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddServiceCommand))]
+    private bool _isWorkspaceOpen;
+
+    [RelayCommand]
+    private void OpenSample() => _messenger.Send(new WelcomeActionMessage(WelcomeAction.OpenSample));
+
+    [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
+    private void Import() => _messenger.Send(new WelcomeActionMessage(WelcomeAction.Import));
+
+    [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
+    private void AddService() => _messenger.Send(new WelcomeActionMessage(WelcomeAction.AddService));
 }

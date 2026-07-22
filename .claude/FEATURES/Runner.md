@@ -75,3 +75,12 @@ Persistence: `RequestHistory` table + `Endpoints.DefaultHeaders`/`DefaultBody` c
 - GraphQL / gRPC / WebSocket request types.
 - Auth / profiles / environments substitution (Sprint 10) — values are literal for now.
 - Assertions against responses (Sprint 11).
+
+## Sprint 16 update (Consolidation Phase 1)
+
+- **Cancel works:** the Send button now has a real Cancel (`IncludeCancelCommand`) that aborts the
+  in-flight request via the existing `CancellationToken` path.
+- **Run As:** the Runner applies the active toolbar profile (`IProfileService.GetActiveIdAsync`) when
+  sending, so requests can authenticate as a role.
+- **No silent empties:** unresolved `{{variables}}` in a sent request surface as an inline warning
+  banner and a Logs entry, instead of being substituted silently.

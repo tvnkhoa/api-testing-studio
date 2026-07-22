@@ -140,9 +140,10 @@ public sealed class ProfileServiceTests
     private readonly InMemoryProfileRepository _profiles = new();
     private readonly FakeSecretProtector _protector = new();
     private readonly FakeWorkspaceSession _session = new() { Current = new Workspace { Name = "WS" } };
+    private readonly InMemoryWorkspaceSettingRepository _settings = new();
     private readonly ProfileService _sut;
 
-    public ProfileServiceTests() => _sut = new ProfileService(_profiles, _protector, _session);
+    public ProfileServiceTests() => _sut = new ProfileService(_profiles, _protector, _session, _settings);
 
     [Fact]
     public async Task Create_encrypts_secret_fields()
@@ -174,6 +175,35 @@ public sealed class ProfileServiceTests
         var updated = (await _sut.UpdateAsync(created.Id, new ProfileDraft { Name = "Admin", Password = "" })).Value;
 
         updated.ProtectedPassword.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetActive_then_GetActive_round_trips_the_profile_id()
+    {
+        var created = (await _sut.CreateAsync(new ProfileDraft { Name = "Admin" })).Value;
+
+        await _sut.SetActiveAsync(created.Id);
+
+        (await _sut.GetActiveIdAsync()).Should().Be(created.Id);
+    }
+
+    [Fact]
+    public async Task SetActive_with_unknown_id_fails()
+    {
+        var result = await _sut.SetActiveAsync(Guid.NewGuid());
+
+        result.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Deleting_the_active_profile_clears_the_active_selection()
+    {
+        var created = (await _sut.CreateAsync(new ProfileDraft { Name = "Admin" })).Value;
+        await _sut.SetActiveAsync(created.Id);
+
+        await _sut.DeleteAsync(created.Id);
+
+        (await _sut.GetActiveIdAsync()).Should().BeNull();
     }
 }
 

@@ -4,6 +4,7 @@ using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Backup;
 using ApiTestingStudio.Application.Packaging;
 using ApiTestingStudio.Application.Settings;
+using ApiTestingStudio.Application.Workspaces;
 using ApiTestingStudio.Shared.Results;
 using ApiTestingStudio.UI.Messaging;
 using ApiTestingStudio.UI.Services;
@@ -56,6 +57,8 @@ public sealed partial class ShellViewModel : ObservableObject
     private readonly TimelineViewModel _timeline;
     private readonly IWorkflowEditorViewModelFactory _workflowEditorFactory;
     private readonly LogViewerViewModel _logs;
+    private readonly WelcomeDocumentViewModel _welcome;
+    private readonly ISampleWorkspaceBuilder _sampleBuilder;
 
     public ShellViewModel(
         IWorkspaceService workspaceService,
@@ -82,6 +85,9 @@ public sealed partial class ShellViewModel : ObservableObject
         TimelineViewModel timeline,
         LogViewerViewModel logs,
         EnvironmentSwitcherViewModel environmentSwitcher,
+        ProfileSwitcherViewModel profileSwitcher,
+        WelcomeDocumentViewModel welcome,
+        ISampleWorkspaceBuilder sampleBuilder,
         IWorkflowEditorViewModelFactory workflowEditorFactory,
         IMessenger messenger,
         ILogger<ShellViewModel> logger)
@@ -110,6 +116,9 @@ public sealed partial class ShellViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(timeline);
         ArgumentNullException.ThrowIfNull(logs);
         ArgumentNullException.ThrowIfNull(environmentSwitcher);
+        ArgumentNullException.ThrowIfNull(profileSwitcher);
+        ArgumentNullException.ThrowIfNull(welcome);
+        ArgumentNullException.ThrowIfNull(sampleBuilder);
         ArgumentNullException.ThrowIfNull(workflowEditorFactory);
         ArgumentNullException.ThrowIfNull(messenger);
         ArgumentNullException.ThrowIfNull(logger);
@@ -135,15 +144,18 @@ public sealed partial class ShellViewModel : ObservableObject
         _dashboard = dashboard;
         _timeline = timeline;
         _logs = logs;
+        _welcome = welcome;
+        _sampleBuilder = sampleBuilder;
         _workflowEditorFactory = workflowEditorFactory;
         _logger = logger;
 
         Environments = environmentSwitcher;
+        Profiles = profileSwitcher;
         StatusBar = statusBarViewModel;
         RecentWorkspaces = recentWorkspaces;
         RecentWorkspaces.OpenRequested += OnRecentOpenRequested;
 
-        Documents.Add(new WelcomeDocumentViewModel());
+        Documents.Add(_welcome);
         Tools.Add(_explorer);
         Tools.Add(_workflows);
         Tools.Add(_profiles);
@@ -159,6 +171,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
         // A finished test run (Sprint 11) opens (or focuses) the Test Results document with its outcomes.
         messenger.Register<ShowTestResultsMessage>(this, (_, m) => ShowTestResults(m));
+
+        // Welcome-screen call-to-action buttons route through the shell (Sprint 16).
+        messenger.Register<WelcomeActionMessage>(this, (_, m) => OnWelcomeAction(m.Action));
 
         Menu = new MainMenuViewModel(this, RecentWorkspaces);
         Toolbar = new ToolbarViewModel(this);
@@ -179,6 +194,9 @@ public sealed partial class ShellViewModel : ObservableObject
 
     /// <summary>The active-environment switcher shown in the toolbar (Sprint 10).</summary>
     public EnvironmentSwitcherViewModel Environments { get; }
+
+    /// <summary>The active "Run As" profile switcher shown in the toolbar (Sprint 16).</summary>
+    public ProfileSwitcherViewModel Profiles { get; }
 
     public RecentWorkspacesMenuViewModel RecentWorkspaces { get; }
 
@@ -221,6 +239,39 @@ public sealed partial class ShellViewModel : ObservableObject
         var name = Path.GetFileNameWithoutExtension(location);
         var result = await _workspaceService.CreateAsync(location, name, description: null, cancellationToken).ConfigureAwait(true);
         await AfterWorkspaceChangeAsync(result, $"Created workspace '{name}'.", cancellationToken).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    private async Task OpenSampleWorkspaceAsync(CancellationToken cancellationToken)
+    {
+        var location = _fileDialog.PromptCreateWorkspace();
+        if (location is null)
+        {
+            return;
+        }
+
+        var result = await _sampleBuilder.BuildAsync(location, cancellationToken).ConfigureAwait(true);
+        await AfterWorkspaceChangeAsync(result, "Opened the sample workspace.", cancellationToken).ConfigureAwait(true);
+    }
+
+    /// <summary>Routes a Welcome-screen call-to-action to the matching flow.</summary>
+    private void OnWelcomeAction(WelcomeAction action)
+    {
+        switch (action)
+        {
+            case WelcomeAction.OpenSample:
+                _ = OpenSampleWorkspaceCommand.ExecuteAsync(null);
+                break;
+            case WelcomeAction.Import when IsWorkspaceOpen:
+                _ = ImportCommand.ExecuteAsync(null);
+                break;
+            case WelcomeAction.AddService when IsWorkspaceOpen:
+                _ = _explorer.AddServiceCommand.ExecuteAsync(null);
+                break;
+            default:
+                _statusBar.SetMessage("Open or create a workspace first — try 'Open sample workspace'.");
+                break;
+        }
     }
 
     [RelayCommand]
@@ -376,9 +427,10 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand(CanExecute = nameof(IsWorkspaceOpen))]
     private void SaveWorkspace()
-        // Workspace data is persisted continuously by the SQLite storage provider, so "Save" simply
-        // confirms the on-disk state is current. A future sprint may flush pending editor buffers.
-        => _statusBar.SetMessage("Workspace saved.");
+        // Every edit is written through immediately by the SQLite storage provider — there is no
+        // in-memory buffer to flush — so "Save" is an autosave confirmation, not a persist action.
+        // The message states that honestly rather than implying a manual save just occurred.
+        => _statusBar.SetMessage("All changes are saved automatically.");
 
     [RelayCommand]
     private async Task ToggleThemeAsync(CancellationToken cancellationToken)
@@ -450,7 +502,11 @@ public sealed partial class ShellViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void About() => _statusBar.SetMessage("API Testing Studio — offline workflow-first API testing. Sprint 04 shell.");
+    private void About()
+    {
+        var version = typeof(ShellViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+        _statusBar.SetMessage($"API Testing Studio v{version} — offline, workflow-first API testing by Silicon Stack.");
+    }
 
     [RelayCommand]
     private void Exit() => CloseRequested?.Invoke(this, EventArgs.Empty);
@@ -508,6 +564,7 @@ public sealed partial class ShellViewModel : ObservableObject
             await _stress.LoadAsync(cancellationToken).ConfigureAwait(true);
             await _logs.LoadAsync(cancellationToken).ConfigureAwait(true);
             await Environments.LoadAsync(cancellationToken).ConfigureAwait(true);
+            await Profiles.LoadAsync(cancellationToken).ConfigureAwait(true);
         }
         else
         {
@@ -523,6 +580,7 @@ public sealed partial class ShellViewModel : ObservableObject
             Documents.Remove(_dashboard);
             Documents.Remove(_timeline);
             Environments.Clear();
+            Profiles.Clear();
             CloseWorkflowDocuments();
         }
     }
@@ -530,6 +588,7 @@ public sealed partial class ShellViewModel : ObservableObject
     private void SyncWorkspaceState()
     {
         IsWorkspaceOpen = _session.IsOpen;
+        _welcome.IsWorkspaceOpen = _session.IsOpen;
         StatusBar.RefreshWorkspace();
         OnPropertyChanged(nameof(Title));
     }

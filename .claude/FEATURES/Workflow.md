@@ -98,3 +98,13 @@ strategy and does not yet load node plugins.
 - Loop strategies beyond count/collection (while-condition, retry-with-backoff).
 - Visual diff of two workflow runs.
 - Live collaborative editing is out of scope (100% offline product).
+
+## Sprint 16 update (Consolidation Phase 1)
+
+- **Variable context is seeded:** `WorkflowEngine.RunAsync` now seeds the run context from the active
+  workspace + environment scopes when no context is supplied, so designer / test / stress / replay
+  runs resolve `{{vars}}` instead of silently getting empty strings.
+- **Unresolved tokens warn:** a Request node records unresolved `{{tokens}}` as `NodeRunResult.Warnings`;
+  the designer surfaces them (status bar + Logs) after a run.
+- **Per-node "Run As":** the Request node inspector has a profile picker bound to `RequestNodeConfig.ProfileId`.
+- Edge data-mapping and Switch/Variable nodes remain deferred to Sprint 17+.

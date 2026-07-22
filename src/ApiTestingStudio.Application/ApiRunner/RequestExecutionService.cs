@@ -56,7 +56,8 @@ public sealed class RequestExecutionService : IRequestExecutionService
             return Result.Failure<HttpExecutionResult>(RequestExecutionErrors.NoWorkspaceOpen);
         }
 
-        request = await ResolveAndAuthorizeAsync(request, profileId, cancellationToken).ConfigureAwait(false);
+        var unresolved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        request = await ResolveAndAuthorizeAsync(request, profileId, unresolved, cancellationToken).ConfigureAwait(false);
 
         if (string.IsNullOrWhiteSpace(request.Url))
         {
@@ -77,27 +78,32 @@ public sealed class RequestExecutionService : IRequestExecutionService
 
         await RecordHistoryAsync(endpointId, request, result.Value, cancellationToken).ConfigureAwait(false);
         await _runRecorder.RecordRequestAsync(endpointId, request, result.Value, cancellationToken).ConfigureAwait(false);
-        return result;
+
+        // Carry any unresolved {{tokens}} back to the caller so the Runner can warn instead of the
+        // substitution silently producing empty values.
+        return unresolved.Count > 0
+            ? Result.Success(result.Value with { Warnings = [.. unresolved] })
+            : result;
     }
 
     /// <summary>
     /// Resolves <c>{{variables}}</c> in the request against the workspace + active-environment scopes
     /// and, when a profile is selected, applies its authorization header.
     /// </summary>
-    private async Task<HttpRequestModel> ResolveAndAuthorizeAsync(HttpRequestModel request, Guid? profileId, CancellationToken cancellationToken)
+    private async Task<HttpRequestModel> ResolveAndAuthorizeAsync(HttpRequestModel request, Guid? profileId, ICollection<string> unresolved, CancellationToken cancellationToken)
     {
         var context = await _scopeSeeder.BuildContextAsync(cancellationToken).ConfigureAwait(false);
 
         var resolved = request with
         {
-            Url = _resolver.Resolve(request.Url, context),
+            Url = _resolver.Resolve(request.Url, context, unresolved),
             QueryParams = request.QueryParams
-                .Select(p => p with { Value = _resolver.Resolve(p.Value, context) })
+                .Select(p => p with { Value = _resolver.Resolve(p.Value, context, unresolved) })
                 .ToList(),
             Headers = request.Headers
-                .Select(h => h with { Value = _resolver.Resolve(h.Value, context) })
+                .Select(h => h with { Value = _resolver.Resolve(h.Value, context, unresolved) })
                 .ToList(),
-            Body = string.IsNullOrEmpty(request.Body) ? request.Body : _resolver.Resolve(request.Body, context),
+            Body = string.IsNullOrEmpty(request.Body) ? request.Body : _resolver.Resolve(request.Body, context, unresolved),
         };
 
         if (profileId is { } id)

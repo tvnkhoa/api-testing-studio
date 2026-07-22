@@ -81,6 +81,14 @@ public sealed record HttpExecutionResult
     public required HttpResponseModel Response { get; init; }
 
     public required RequestTiming Timing { get; init; }
+
+    /// <summary>
+    /// Non-fatal warnings raised while preparing the request — currently the <c>{{tokens}}</c> that
+    /// could not be resolved against the active environment/workspace scopes and were substituted
+    /// with empty strings. Empty when everything resolved. Surfaced so a hollow substitution is
+    /// never silent (the QA-trust fix for Sprint 16).
+    /// </summary>
+    public IReadOnlyList<string> Warnings { get; init; } = [];
 }
 
 /// <summary>

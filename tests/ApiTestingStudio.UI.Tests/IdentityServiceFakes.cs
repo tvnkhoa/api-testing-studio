@@ -24,6 +24,12 @@ internal sealed class FakeProfileService : IProfileService
 
     public Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         => Task.FromResult(Result.Success());
+
+    public Task<Guid?> GetActiveIdAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<Guid?>(null);
+
+    public Task<Result> SetActiveAsync(Guid? profileId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Result.Success());
 }
 
 /// <summary>Empty <see cref="IEnvironmentService"/> for shell/panel tests.</summary>

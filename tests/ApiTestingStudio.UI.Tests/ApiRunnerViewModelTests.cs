@@ -14,11 +14,12 @@ public sealed class ApiRunnerViewModelTests
     private readonly FakeRequestHistoryService _history = new();
     private readonly FakeEndpointRepository _endpoints = new();
     private readonly FakeServiceRepository _services = new();
+    private readonly FakeProfileService _profiles = new();
     private readonly WeakReferenceMessenger _messenger = new();
     private readonly FakeStatusBarService _status = new();
 
     private ApiRunnerViewModel CreateViewModel() => new(
-        _execution, _history, _endpoints, _services, _messenger, _status,
+        _execution, _history, _endpoints, _services, _profiles, _messenger, _status,
         NullLogger<ApiRunnerViewModel>.Instance);
 
     private (Guid ServiceId, Guid EndpointId) SeedEndpoint(HttpVerb method = HttpVerb.Post, string path = "/orders")

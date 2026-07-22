@@ -92,4 +92,28 @@ public sealed class VariableResolverTests
 
         _sut.TryResolveToken("Login.body.missing", context, out _).Should().BeFalse();
     }
+
+    [Fact]
+    public void Resolve_with_tracking_collects_unresolved_tokens()
+    {
+        var context = new WorkflowContext();
+        context.SetVariable("env", "prod");
+        var unresolved = new List<string>();
+
+        var result = _sut.Resolve("{{vars.env}}/{{vars.missing}}/{{Absent.key}}", context, unresolved);
+
+        result.Should().Be("prod//");
+        unresolved.Should().BeEquivalentTo(["vars.missing", "Absent.key"]);
+    }
+
+    [Fact]
+    public void Resolve_with_tracking_reports_nothing_when_all_resolve()
+    {
+        var context = new WorkflowContext();
+        context.SetVariable("env", "prod");
+        var unresolved = new List<string>();
+
+        _sut.Resolve("region-{{vars.env}}", context, unresolved).Should().Be("region-prod");
+        unresolved.Should().BeEmpty();
+    }
 }

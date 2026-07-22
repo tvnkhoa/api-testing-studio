@@ -24,6 +24,13 @@ public sealed record NodeRunResult
     /// <summary>Failure message when <see cref="Status"/> is <see cref="RunStatus.Failed"/>.</summary>
     public string? Error { get; init; }
 
+    /// <summary>
+    /// Non-fatal warnings raised while executing the node — currently the <c>{{tokens}}</c> that
+    /// could not be resolved and were substituted with empty strings. Empty when everything
+    /// resolved. Surfaced so a hollow workflow run is never silently reported as a clean pass.
+    /// </summary>
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+
     public TimeSpan Duration { get; init; }
 
     /// <summary>Zero-based iteration index when this result came from a Loop/Parallel branch.</summary>

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Executable Scenarios (ES) harness — Sprint 15 Deliverable 13, built in Sprint 16 (item 8).
+    An on-demand xUnit runner that drives the REAL WPF app via FlaUI (UI Automation) and emits a
+    screenshot Markdown report. It is deliberately NOT referenced by the application; it launches the
+    built Host executable by path. The seed scenarios are gated behind the ES_RUN=1 environment
+    variable so a normal `dotnet test` sweep does not spend minutes driving the GUI.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!--
+      FlaUI ships .NET Standard/Framework assemblies (NU1701). CA1305 (culture-specific formatting)
+      is not meaningful for this internal report-generating tooling project. Both suppressed here only.
+    -->
+    <NoWarn>$(NoWarn);NU1701;CA1305</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="FlaUI.Core" />
+    <PackageReference Include="FlaUI.UIA3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build the app before the harness so the Host executable exists to launch. No code dependency. -->
+    <ProjectReference Include="..\..\src\ApiTestingStudio.Host\ApiTestingStudio.Host.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

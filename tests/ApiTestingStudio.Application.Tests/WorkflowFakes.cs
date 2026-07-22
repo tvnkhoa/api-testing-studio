@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.Profiles;
+using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Application.Workflows;
 using ApiTestingStudio.Application.Workflows.Handlers;
 using ApiTestingStudio.Domain.Entities;
@@ -97,6 +98,7 @@ internal static class WorkflowTestHarness
         IRequestExecutor? executor = null,
         IDelayScheduler? scheduler = null,
         IProfileRepository? profiles = null,
+        IVariableScopeSeeder? scopeSeeder = null,
         params INodeHandler[] extraHandlers)
     {
         var authApplicator = new AuthApplicator(new FakeSecretProtector());
@@ -110,7 +112,11 @@ internal static class WorkflowTestHarness
         };
         handlers.AddRange(extraHandlers);
 
-        return new WorkflowEngine(new NodeHandlerRegistry(handlers), new VariableResolver(), new FixedClock(Now));
+        return new WorkflowEngine(
+            new NodeHandlerRegistry(handlers),
+            new VariableResolver(),
+            new FixedClock(Now),
+            scopeSeeder ?? new FakeVariableScopeSeeder());
     }
 
     public static string ConfigJson<T>(T config) => JsonSerializer.Serialize(config, JsonOptions);

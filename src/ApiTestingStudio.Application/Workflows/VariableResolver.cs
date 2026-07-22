@@ -24,6 +24,30 @@ public sealed partial class VariableResolver : IVariableResolver
                 : string.Empty);
     }
 
+    public string Resolve(string? template, IWorkflowContext context, ICollection<string> unresolvedTokens)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(unresolvedTokens);
+        if (string.IsNullOrEmpty(template))
+        {
+            return template ?? string.Empty;
+        }
+
+        return TokenRegex().Replace(
+            template,
+            match =>
+            {
+                var expr = match.Groups["expr"].Value;
+                if (TryResolveToken(expr, context, out var value))
+                {
+                    return value ?? string.Empty;
+                }
+
+                unresolvedTokens.Add(expr.Trim());
+                return string.Empty;
+            });
+    }
+
     public bool TryResolveToken(string token, IWorkflowContext context, out string? value)
     {
         ArgumentNullException.ThrowIfNull(context);

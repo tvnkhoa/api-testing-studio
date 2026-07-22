@@ -165,6 +165,18 @@ internal sealed class FakeWorkspaceService : IWorkspaceService
         => Task.FromResult(Result.Success());
 }
 
+/// <summary>Scripted <see cref="ISampleWorkspaceBuilder"/> for shell Welcome/open-sample tests.</summary>
+internal sealed class FakeSampleWorkspaceBuilder : ISampleWorkspaceBuilder
+{
+    public string? LastLocation { get; private set; }
+
+    public Task<Result<Workspace>> BuildAsync(string location, CancellationToken cancellationToken = default)
+    {
+        LastLocation = location;
+        return Task.FromResult(Result.Success(new Workspace { Name = "Sample API Workspace" }));
+    }
+}
+
 /// <summary>In-memory MRU store.</summary>
 internal sealed class FakeRecentWorkspacesService : IRecentWorkspacesService
 {

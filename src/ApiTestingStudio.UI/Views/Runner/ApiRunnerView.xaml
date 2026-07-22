@@ -37,8 +37,11 @@
                          Text="{Binding Builder.Url, UpdateSourceTrigger=PropertyChanged}"
                          AutomationProperties.Name="Request URL"
                          ToolTip="Request URL" />
-                <Button Grid.Column="2" Content="Send" MinWidth="72"                        Command="{Binding SendCommand}" />
-                <Button Grid.Column="3" Content="Cancel" MinWidth="60" Margin="{StaticResource Spacing.Sm.LeftThickness}"                        Command="{Binding SendCancelCommand}" />
+                <Button Grid.Column="2" Content="Send" MinWidth="72" Command="{Binding SendCommand}"
+                        AutomationProperties.Name="Send request" />
+                <Button Grid.Column="3" Content="Cancel" MinWidth="60" Margin="{StaticResource Spacing.Sm.LeftThickness}"
+                        Command="{Binding SendCancelCommand}"
+                        AutomationProperties.Name="Cancel request" />
             </Grid>
 
             <!-- Request builder tabs -->
@@ -85,17 +88,27 @@
             <Grid Grid.Row="3">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal"
+                <!-- Unresolved-variable warning: shown when the last send substituted empty values. -->
+                <Border Grid.Row="0" Background="{StaticResource Semantic.Warning.Brush}"
+                        Padding="{StaticResource Spacing.Sm.Thickness}" Margin="{StaticResource Spacing.Sm.BottomThickness}"
+                        Visibility="{Binding HasWarning, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding WarningMessage}" TextWrapping="Wrap"
+                               Foreground="{StaticResource Text.OnAccent.Brush}"
+                               AutomationProperties.Name="Unresolved variable warning" />
+                </Border>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal"
                             Visibility="{Binding Response.HasResponse, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="{Binding Response.StatusText}" FontWeight="SemiBold" Margin="{StaticResource Spacing.Lg.RightThickness}" />
                     <TextBlock Text="{Binding Response.SizeText}" Margin="{StaticResource Spacing.Lg.RightThickness}" />
                     <TextBlock Text="{Binding Response.TimingText}" Opacity="0.8" />
                 </StackPanel>
 
-                <TabControl Grid.Row="1" Margin="{StaticResource Spacing.Sm.TopThickness}">
+                <TabControl Grid.Row="2" Margin="{StaticResource Spacing.Sm.TopThickness}">
                     <TabItem Header="Body">
                         <ContentControl Content="{Binding Response.Body}" />
                     </TabItem>

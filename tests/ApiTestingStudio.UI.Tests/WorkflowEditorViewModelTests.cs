@@ -40,6 +40,7 @@ public sealed class WorkflowEditorViewModelTests
             new FakeRunRecorder(),
             _endpoints,
             _services,
+            new FakeProfileService(),
             new FakeDialogService(),
             [],
             NullLogger<WorkflowEditorViewModel>.Instance);

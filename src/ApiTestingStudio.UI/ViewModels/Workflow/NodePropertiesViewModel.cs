@@ -58,6 +58,16 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
     [ObservableProperty]
     private string? _requestBody;
 
+    /// <summary>
+    /// The "Run As" profile applied to this request node, or the "(none)" option for an
+    /// unauthenticated call. Populated from the workspace's profiles by the editor.
+    /// </summary>
+    [ObservableProperty]
+    private ProfileOption? _requestProfile;
+
+    /// <summary>Profiles selectable on a Request node — a leading "(none)" plus the workspace profiles.</summary>
+    public ObservableCollection<ProfileOption> AvailableProfiles { get; } = [new ProfileOption(null, "(none)")];
+
     // Condition
     [ObservableProperty]
     private string _conditionLeft = string.Empty;
@@ -96,6 +106,21 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
     /// <summary>The assertions configured on the selected Assertion node (edited via the dialog).</summary>
     public ObservableCollection<AssertionRowViewModel> Assertions { get; } = [];
 
+    /// <summary>
+    /// Replaces the selectable "Run As" profiles (keeping the leading "(none)" option). Called by the
+    /// editor when a workflow loads so Request nodes can pick a profile that actually exists.
+    /// </summary>
+    public void SetAvailableProfiles(IEnumerable<ProfileOption> profiles)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        AvailableProfiles.Clear();
+        AvailableProfiles.Add(new ProfileOption(null, "(none)"));
+        foreach (var profile in profiles)
+        {
+            AvailableProfiles.Add(profile);
+        }
+    }
+
     /// <summary>Binds the inspector to a node (or clears it when null).</summary>
     public void Load(NodeViewModel? node)
     {
@@ -120,6 +145,8 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
                     RequestMethod = r.Method;
                     RequestUrl = r.Url;
                     RequestBody = r.Body;
+                    RequestProfile = AvailableProfiles.FirstOrDefault(o => o.Id == r.ProfileId)
+                        ?? AvailableProfiles[0];
                     break;
                 case ConditionNodeConfig c:
                     ConditionLeft = c.Left;
@@ -188,7 +215,7 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
     private object? BuildConfig() => _node!.Kind switch
     {
         WorkflowNodeKind.Api => (_committed.Config as RequestNodeConfig ?? new RequestNodeConfig())
-            with { Method = RequestMethod, Url = RequestUrl, Body = RequestBody },
+            with { Method = RequestMethod, Url = RequestUrl, Body = RequestBody, ProfileId = RequestProfile?.Id },
         WorkflowNodeKind.Condition => (_committed.Config as ConditionNodeConfig ?? new ConditionNodeConfig())
             with { Left = ConditionLeft, Operator = ConditionOperator, Right = ConditionRight },
         WorkflowNodeKind.Loop => (_committed.Config as LoopNodeConfig ?? new LoopNodeConfig())
@@ -303,6 +330,9 @@ public sealed partial class NodePropertiesViewModel : ObservableObject
         Enabled = draft.Enabled,
     };
 }
+
+/// <summary>A selectable "Run As" profile in the Request node inspector; <see cref="Id"/> is null for "(none)".</summary>
+public sealed record ProfileOption(Guid? Id, string Name);
 
 /// <summary>One assertion row shown in the Assertion node's property inspector list.</summary>
 public sealed class AssertionRowViewModel

@@ -80,6 +80,12 @@
                                     <TextBlock Text="Body" Margin="{StaticResource Spacing.Xs.TopThickness}" />
                                     <TextBox Text="{Binding RequestBody, UpdateSourceTrigger=LostFocus}"
                                              AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap" AutomationProperties.Name="Body" />
+                                    <TextBlock Text="Run as (profile)" Margin="{StaticResource Spacing.Xs.TopThickness}" />
+                                    <ComboBox ItemsSource="{Binding AvailableProfiles}"
+                                              SelectedItem="{Binding RequestProfile}"
+                                              DisplayMemberPath="Name"
+                                              AutomationProperties.Name="Run as profile"
+                                              ToolTip="Profile applied as authorization when this node sends its request" />
                                 </StackPanel>
 
                                 <!-- Condition -->
@@ -172,7 +178,9 @@
                                     <TextBox Text="{Binding AssertionSourceNode, UpdateSourceTrigger=LostFocus}" AutomationProperties.Name="Source node" />
                                     <DockPanel Margin="{StaticResource Spacing.Sm.TopThickness}">
                                         <TextBlock Text="Assertions" FontWeight="SemiBold" VerticalAlignment="Center" DockPanel.Dock="Left" />
-                                        <Button Content="Add" HorizontalAlignment="Right"                                                Command="{Binding AddAssertionCommand}" />
+                                        <Button Content="Add" HorizontalAlignment="Right"
+                                                AutomationProperties.Name="Add assertion"
+                                                Command="{Binding AddAssertionCommand}" />
                                     </DockPanel>
                                     <ItemsControl ItemsSource="{Binding Assertions}" Margin="{StaticResource Spacing.Xs.TopThickness}">
                                         <ItemsControl.ItemTemplate>
@@ -181,9 +189,11 @@
                                                     <DockPanel>
                                                         <Button Content="✕" DockPanel.Dock="Right" Margin="{StaticResource Spacing.Xs.LeftThickness}" Style="{StaticResource CompactButton}"
                                                                 ToolTip="Remove"
+                                                                AutomationProperties.Name="Remove assertion"
                                                                 Command="{Binding DataContext.RemoveAssertionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                 CommandParameter="{Binding}" />
                                                         <Button Content="Edit" DockPanel.Dock="Right" Style="{StaticResource CompactButton}"
+                                                                AutomationProperties.Name="Edit assertion"
                                                                 Command="{Binding DataContext.EditAssertionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                 CommandParameter="{Binding}" />
                                                         <TextBlock Text="{Binding Summary}" VerticalAlignment="Center"

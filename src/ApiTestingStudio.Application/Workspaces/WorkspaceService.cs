@@ -1,5 +1,8 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Environments;
+using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Domain.Entities;
+using ApiTestingStudio.Domain.Enums;
 using ApiTestingStudio.Plugin.Abstractions.Storage;
 using ApiTestingStudio.Shared.Results;
 
@@ -9,18 +12,32 @@ namespace ApiTestingStudio.Application.Workspaces;
 /// Default <see cref="IWorkspaceService"/>. Orchestrates the workspace lifecycle over the
 /// storage provider, stamps timestamps via <see cref="IClock"/>, and keeps the recent-workspaces
 /// list up to date. Holds no persistence types itself — all storage work goes through the provider.
+/// A freshly created workspace is seeded with a default active environment and a starter
+/// <c>baseUrl</c> variable so imports/workflows have something to resolve against immediately.
 /// </summary>
 public sealed class WorkspaceService : IWorkspaceService
 {
+    /// <summary>Starter variable seeded into every new workspace so <c>{{baseUrl}}</c> resolves.</summary>
+    public const string DefaultBaseUrlKey = "baseUrl";
+
     private readonly IStorageProvider _storage;
     private readonly IRecentWorkspacesService _recent;
     private readonly IClock _clock;
+    private readonly IEnvironmentService _environments;
+    private readonly IVariableService _variables;
 
-    public WorkspaceService(IStorageProvider storage, IRecentWorkspacesService recent, IClock clock)
+    public WorkspaceService(
+        IStorageProvider storage,
+        IRecentWorkspacesService recent,
+        IClock clock,
+        IEnvironmentService environments,
+        IVariableService variables)
     {
         _storage = storage;
         _recent = recent;
         _clock = clock;
+        _environments = environments;
+        _variables = variables;
     }
 
     public async Task<Result<Workspace>> CreateAsync(
@@ -57,8 +74,34 @@ public sealed class WorkspaceService : IWorkspaceService
             return Result.Failure<Workspace>(created.Error);
         }
 
+        // The storage provider opens the new workspace, so it is now the active session — seed it
+        // with usable defaults before handing it back to the caller.
+        await SeedNewWorkspaceAsync(cancellationToken).ConfigureAwait(false);
+
         await TouchRecentAsync(location, workspace.Name, now, cancellationToken).ConfigureAwait(false);
         return Result.Success(workspace);
+    }
+
+    /// <summary>
+    /// Seeds a default active "Development" environment and a starter workspace-scoped
+    /// <c>baseUrl</c> variable. Best-effort: a seeding hiccup never fails workspace creation.
+    /// </summary>
+    private async Task SeedNewWorkspaceAsync(CancellationToken cancellationToken)
+    {
+        var environment = await _environments.CreateAsync("Development", EnvironmentKind.Development, cancellationToken).ConfigureAwait(false);
+        if (environment.IsSuccess)
+        {
+            await _environments.SetActiveAsync(environment.Value.Id, cancellationToken).ConfigureAwait(false);
+        }
+
+        await _variables.CreateAsync(
+            new VariableDraft
+            {
+                Scope = VariableScope.Workspace,
+                Key = DefaultBaseUrlKey,
+                Value = "https://api.example.com",
+            },
+            cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<Result<Workspace>> OpenAsync(string location, CancellationToken cancellationToken = default)

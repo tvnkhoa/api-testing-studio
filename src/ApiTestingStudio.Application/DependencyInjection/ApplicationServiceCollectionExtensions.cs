@@ -30,6 +30,7 @@ public static class ApplicationServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton<IWorkspaceService, WorkspaceService>();
+        services.AddSingleton<ISampleWorkspaceBuilder, SampleWorkspaceBuilder>();
 
         // Service Explorer (Sprint 05): tree read + service/folder CRUD, endpoint CRUD, per-workspace
         // tree state. These depend on the catalog repositories bound by AddInfrastructure.

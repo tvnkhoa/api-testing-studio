@@ -52,6 +52,7 @@ public sealed class ShellViewModelTests
             new FakeRequestHistoryService(),
             new FakeEndpointRepository(),
             new FakeServiceRepository(),
+            new FakeProfileService(),
             messenger,
             status,
             NullLogger<ApiRunnerViewModel>.Instance);
@@ -74,6 +75,12 @@ public sealed class ShellViewModelTests
             new FakeEnvironmentService(),
             session,
             messenger);
+        var profileSwitcher = new ProfileSwitcherViewModel(
+            new FakeProfileService(),
+            session,
+            messenger);
+        var welcome = new WelcomeDocumentViewModel(messenger);
+        var sampleBuilder = new FakeSampleWorkspaceBuilder();
         var testCases = new TestCasesPanelViewModel(
             new FakeTestSuiteRepository(),
             new FakeTestCaseRepository(),
@@ -112,7 +119,7 @@ public sealed class ShellViewModelTests
             workspaceService, session, theme, dock, status, dialog, dialogService, packageService,
             backupService, recoveryService, appSettings, statusVm, recentVm, explorer,
             runner, workflows, profiles, testCases, testResults, stress, dashboard, timeline, logs, environmentSwitcher,
-            new FakeWorkflowEditorViewModelFactory(), messenger,
+            profileSwitcher, welcome, sampleBuilder, new FakeWorkflowEditorViewModelFactory(), messenger,
             NullLogger<ShellViewModel>.Instance);
 
         return new ShellHarness(vm, workspaceService, session, recent, theme, dock, status, dialog,

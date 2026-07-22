@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Application.ApiRunner;
+using ApiTestingStudio.Application.Profiles;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.UI.Messaging;
 using ApiTestingStudio.UI.Services;
@@ -26,6 +27,7 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
     private readonly IRequestHistoryService _history;
     private readonly IEndpointRepository _endpoints;
     private readonly IServiceRepository _services;
+    private readonly IProfileService _profiles;
     private readonly IStatusBarService _statusBar;
     private readonly ILogger<ApiRunnerViewModel> _logger;
 
@@ -36,6 +38,7 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
         IRequestHistoryService history,
         IEndpointRepository endpoints,
         IServiceRepository services,
+        IProfileService profiles,
         IMessenger messenger,
         IStatusBarService statusBar,
         ILogger<ApiRunnerViewModel> logger)
@@ -45,6 +48,7 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
         ArgumentNullException.ThrowIfNull(history);
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(messenger);
         ArgumentNullException.ThrowIfNull(statusBar);
         ArgumentNullException.ThrowIfNull(logger);
@@ -53,6 +57,7 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
         _history = history;
         _endpoints = endpoints;
         _services = services;
+        _profiles = profiles;
         _statusBar = statusBar;
         _logger = logger;
 
@@ -69,6 +74,16 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
     [NotifyCanExecuteChangedFor(nameof(ReplayCommand))]
     private RequestHistoryEntry? _selectedHistoryEntry;
 
+    /// <summary>
+    /// Inline warning shown above the response when the last send had unresolved <c>{{variables}}</c>.
+    /// Empty when the request resolved cleanly. Also written to the log so the failure is never silent.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWarning))]
+    private string _warningMessage = string.Empty;
+
+    public bool HasWarning => !string.IsNullOrEmpty(WarningMessage);
+
     /// <summary>Loads the endpoint selected in the Service Explorer into the builder.</summary>
     public void Receive(EndpointSelectedMessage message)
     {
@@ -76,12 +91,14 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
         _ = LoadEndpointSafeAsync(message.EndpointId);
     }
 
-    [RelayCommand]
+    [RelayCommand(IncludeCancelCommand = true)]
     private async Task SendAsync(CancellationToken cancellationToken)
     {
+        WarningMessage = string.Empty;
         var request = Builder.Build();
+        var profileId = await _profiles.GetActiveIdAsync(cancellationToken).ConfigureAwait(true);
         var result = await _execution
-            .SendAsync(_endpointId ?? Guid.Empty, request, cancellationToken: cancellationToken)
+            .SendAsync(_endpointId ?? Guid.Empty, request, profileId, cancellationToken)
             .ConfigureAwait(true);
 
         if (result.IsFailure)
@@ -91,8 +108,22 @@ public sealed partial class ApiRunnerViewModel : DocumentPanelViewModel, IRecipi
         }
 
         Response.Show(result.Value);
+        SurfaceWarnings(result.Value.Warnings);
         _statusBar.SetMessage($"{result.Value.Response.StatusCode} · {result.Value.Timing.Total.TotalMilliseconds:0} ms");
         await RefreshHistoryAsync(cancellationToken).ConfigureAwait(true);
+    }
+
+    /// <summary>Shows unresolved-variable warnings inline and logs them, so a hollow send is never silent.</summary>
+    private void SurfaceWarnings(IReadOnlyList<string> warnings)
+    {
+        if (warnings.Count == 0)
+        {
+            return;
+        }
+
+        var tokens = string.Join(", ", warnings.Select(w => $"{{{{{w}}}}}"));
+        WarningMessage = $"Unresolved variables sent as empty: {tokens}. Check the active environment.";
+        _logger.LogWarning("Request sent with {Count} unresolved variable(s): {Tokens}", warnings.Count, tokens);
     }
 
     [RelayCommand(CanExecute = nameof(HasSelectedHistory))]

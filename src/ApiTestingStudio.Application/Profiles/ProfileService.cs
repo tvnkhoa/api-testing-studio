@@ -1,3 +1,4 @@
+using System.Globalization;
 using ApiTestingStudio.Application.Abstractions;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Shared.Results;
@@ -7,25 +8,33 @@ namespace ApiTestingStudio.Application.Profiles;
 /// <summary>
 /// Profile CRUD over <see cref="IProfileRepository"/>. Encrypts plaintext secrets from the draft via
 /// <see cref="ISecretProtector"/> so the domain only ever persists ciphertext. Workspace scope comes
-/// from <see cref="IWorkspaceSession"/>.
+/// from <see cref="IWorkspaceSession"/>. The active "Run As" profile id is stored as a per-workspace
+/// setting (mirrors <c>EnvironmentService</c>; no schema change).
 /// </summary>
 public sealed class ProfileService : IProfileService
 {
+    /// <summary>Settings key holding the active "Run As" profile id for the open workspace.</summary>
+    public const string ActiveProfileSettingKey = "active-profile-id";
+
     private readonly IProfileRepository _profiles;
     private readonly ISecretProtector _protector;
     private readonly IWorkspaceSession _session;
+    private readonly IWorkspaceSettingRepository _settings;
 
     public ProfileService(
         IProfileRepository profiles,
         ISecretProtector protector,
-        IWorkspaceSession session)
+        IWorkspaceSession session,
+        IWorkspaceSettingRepository settings)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(protector);
         ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(settings);
         _profiles = profiles;
         _protector = protector;
         _session = session;
+        _settings = settings;
     }
 
     public async Task<Result<IReadOnlyList<ProfileDefinition>>> ListAsync(CancellationToken cancellationToken = default)
@@ -141,6 +150,46 @@ public sealed class ProfileService : IProfileService
         }
 
         await _profiles.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
+
+        // Clear the active selection if it pointed at the deleted profile.
+        var active = await GetActiveIdAsync(cancellationToken).ConfigureAwait(false);
+        if (active == id)
+        {
+            await _settings.SetAsync(ActiveProfileSettingKey, null, cancellationToken).ConfigureAwait(false);
+        }
+
+        return Result.Success();
+    }
+
+    public async Task<Guid?> GetActiveIdAsync(CancellationToken cancellationToken = default)
+    {
+        if (!_session.IsOpen)
+        {
+            return null;
+        }
+
+        var raw = await _settings.GetAsync(ActiveProfileSettingKey, cancellationToken).ConfigureAwait(false);
+        return Guid.TryParse(raw, out var id) ? id : null;
+    }
+
+    public async Task<Result> SetActiveAsync(Guid? profileId, CancellationToken cancellationToken = default)
+    {
+        if (!_session.IsOpen)
+        {
+            return Result.Failure(IdentityErrors.NoWorkspaceOpen);
+        }
+
+        if (profileId is { } id)
+        {
+            var profile = await _profiles.GetAsync(id, cancellationToken).ConfigureAwait(false);
+            if (profile is null)
+            {
+                return Result.Failure(IdentityErrors.ProfileNotFound(id));
+            }
+        }
+
+        var value = profileId?.ToString(null, CultureInfo.InvariantCulture);
+        await _settings.SetAsync(ActiveProfileSettingKey, value, cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }
 

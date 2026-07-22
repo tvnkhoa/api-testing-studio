@@ -40,6 +40,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
     private readonly IRunRecorder _runRecorder;
     private readonly IEndpointRepository _endpoints;
     private readonly IServiceRepository _services;
+    private readonly Application.Profiles.IProfileService _profileService;
     private readonly ILogger<WorkflowEditorViewModel> _logger;
 
     private readonly Dictionary<NodeViewModel, Point> _dragStart = [];
@@ -61,6 +62,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         IRunRecorder runRecorder,
         IEndpointRepository endpoints,
         IServiceRepository services,
+        Application.Profiles.IProfileService profileService,
         IDialogService dialog,
         IEnumerable<IAssertion> assertions,
         ILogger<WorkflowEditorViewModel> logger)
@@ -77,6 +79,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         ArgumentNullException.ThrowIfNull(runRecorder);
         ArgumentNullException.ThrowIfNull(endpoints);
         ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(profileService);
         ArgumentNullException.ThrowIfNull(dialog);
         ArgumentNullException.ThrowIfNull(assertions);
         ArgumentNullException.ThrowIfNull(logger);
@@ -93,6 +96,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         _runRecorder = runRecorder;
         _endpoints = endpoints;
         _services = services;
+        _profileService = profileService;
         _logger = logger;
 
         var assertionKinds = assertions
@@ -138,6 +142,10 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         _description = workflow.Description;
         Title = workflow.Name;
 
+        // Populate the node inspector's "Run As" profile list before any node loads, so a node with a
+        // saved ProfileId maps to a real option rather than falling back to "(none)".
+        await LoadProfilesAsync(cancellationToken).ConfigureAwait(true);
+
         ClearGraph();
         var (nodes, connections) = _mapper.ToViewModel(workflow);
         foreach (var node in nodes)
@@ -153,6 +161,16 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
         RecomputeConnectivity();
         _undo.Clear();
         SelectedNode = null;
+    }
+
+    /// <summary>Loads the workspace's profiles into the node inspector's "Run As" picker.</summary>
+    private async Task LoadProfilesAsync(CancellationToken cancellationToken)
+    {
+        var result = await _profileService.ListAsync(cancellationToken).ConfigureAwait(true);
+        if (result.IsSuccess)
+        {
+            Properties.SetAvailableProfiles(result.Value.Select(p => new ProfileOption(p.Id, p.Name)));
+        }
     }
 
     /// <summary>Creates a node of <paramref name="kind"/> at a canvas point (used by palette drag-drop).</summary>
@@ -352,7 +370,7 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
                 .RunAsync(workflow, progress: progress, cancellationToken: cancellationToken)
                 .ConfigureAwait(true);
             await _runRecorder.RecordWorkflowAsync(workflow, result, cancellationToken).ConfigureAwait(true);
-            _statusBar.SetMessage($"Run {result.Status}.");
+            SurfaceRunWarnings(result);
         }
         catch (Exception ex)
         {
@@ -364,6 +382,32 @@ public sealed partial class WorkflowEditorViewModel : DocumentPanelViewModel
             IsRunning = false;
             RunCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    /// <summary>
+    /// Reports the run status and, when any node substituted unresolved <c>{{variables}}</c>, warns
+    /// (status bar + log) instead of letting a hollow run read as a clean pass.
+    /// </summary>
+    private void SurfaceRunWarnings(WorkflowRunResult result)
+    {
+        var unresolved = result.Nodes
+            .SelectMany(n => n.Warnings)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (unresolved.Count == 0)
+        {
+            _statusBar.SetMessage($"Run {result.Status}.");
+            return;
+        }
+
+        var tokens = string.Join(", ", unresolved.Select(t => $"{{{{{t}}}}}"));
+        _statusBar.SetMessage($"Run {result.Status} — {unresolved.Count} unresolved variable(s): {tokens}.");
+        _logger.LogWarning(
+            "Workflow {WorkflowId} ran with {Count} unresolved variable(s): {Tokens}",
+            _workflowId,
+            unresolved.Count,
+            tokens);
     }
 
     private void OnNodeProgress(NodeRunResult result)

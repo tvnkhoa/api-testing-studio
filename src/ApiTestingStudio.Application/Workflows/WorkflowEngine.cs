@@ -1,4 +1,5 @@
 using ApiTestingStudio.Application.Abstractions;
+using ApiTestingStudio.Application.Variables;
 using ApiTestingStudio.Domain.Entities;
 using ApiTestingStudio.Domain.Enums;
 
@@ -13,12 +14,18 @@ public sealed class WorkflowEngine : IWorkflowEngine
     private readonly INodeHandlerRegistry _registry;
     private readonly IVariableResolver _resolver;
     private readonly IClock _clock;
+    private readonly IVariableScopeSeeder _scopeSeeder;
 
-    public WorkflowEngine(INodeHandlerRegistry registry, IVariableResolver resolver, IClock clock)
+    public WorkflowEngine(
+        INodeHandlerRegistry registry,
+        IVariableResolver resolver,
+        IClock clock,
+        IVariableScopeSeeder scopeSeeder)
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _scopeSeeder = scopeSeeder ?? throw new ArgumentNullException(nameof(scopeSeeder));
     }
 
     public async Task<WorkflowRunResult> RunAsync(
@@ -30,7 +37,13 @@ public sealed class WorkflowEngine : IWorkflowEngine
     {
         ArgumentNullException.ThrowIfNull(workflow);
         options ??= WorkflowRunOptions.Default;
-        context ??= new WorkflowContext();
+
+        // Seed the run's variable context from the active workspace + environment scopes when the
+        // caller did not supply one. Without this, every caller other than the API Runner (the
+        // designer, test runner, stress runner, replay) ran with an empty context and resolved
+        // {{vars}} to silent empty strings — the Sprint-16 trust fix. A no-workspace session yields
+        // an empty context (the seeder returns early), preserving prior test behavior.
+        context ??= await _scopeSeeder.BuildContextAsync(cancellationToken).ConfigureAwait(false);
 
         var start = _clock.UtcNow;
 

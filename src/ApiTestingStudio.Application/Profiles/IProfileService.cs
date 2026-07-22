@@ -19,4 +19,10 @@ public interface IProfileService
     Task<Result<ProfileDefinition>> UpdateAsync(Guid id, ProfileDraft draft, CancellationToken cancellationToken = default);
 
     Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns the active "Run As" profile id for the open workspace, or null.</summary>
+    Task<Guid?> GetActiveIdAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Sets (or clears, when null) the active "Run As" profile for the open workspace.</summary>
+    Task<Result> SetActiveAsync(Guid? profileId, CancellationToken cancellationToken = default);
 }

@@ -78,3 +78,12 @@ to `RunAsync`) before a request is sent.
 - Nested / computed variables and default-value fallback syntax.
 - Per-environment variable diff and bulk edit.
 - Escaping literal `{{`/`}}` in payloads.
+
+## Sprint 16 update (Consolidation Phase 1)
+
+- Resolution is now reached by **every** engine path (Runner already did; workflow / test / stress /
+  replay now seed via `IVariableScopeSeeder` in the engine).
+- `IVariableResolver.Resolve(template, context, unresolvedTokens)` overload collects tokens it could
+  not resolve so callers warn instead of substituting a silent empty string.
+- New workspaces are seeded with a workspace-scoped `baseUrl` variable so `{{baseUrl}}` resolves out
+  of the box.
